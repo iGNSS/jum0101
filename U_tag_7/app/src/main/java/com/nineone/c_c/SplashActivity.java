@@ -41,7 +41,10 @@ public class SplashActivity extends AppCompatActivity {
             Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.READ_PHONE_NUMBERS
+            Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+            Manifest.permission.BLUETOOTH_CONNECT
     };
     private String[] permissions;
     private boolean cheack_boolean = false;
@@ -64,6 +67,7 @@ public class SplashActivity extends AppCompatActivity {
             switch(android.os.Build.VERSION.SDK_INT) {
                 case 31:
                 case 30:
+                    Log.e("asd71", String.valueOf(Build.VERSION.SDK_INT));
                     permissions=permissions11;
                     checkPermissions(permissions11);
                     break;
@@ -86,10 +90,13 @@ public class SplashActivity extends AppCompatActivity {
             result = ContextCompat.checkSelfPermission(this, pm);
             if (result != PackageManager.PERMISSION_GRANTED) {
                 permissionList.add(pm);
+                Log.e("asd88",pm);
             }
+            Log.e("asd89",pm);
         }
         if (!permissionList.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
+            Log.e("asd90","asd");
+           // ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
             return false;
         } else {
             cheack_boolean=true;
@@ -108,11 +115,11 @@ public class SplashActivity extends AppCompatActivity {
         if (requestCode == MULTIPLE_PERMISSIONS) {
             if (grantResults.length > 0) {
                 for (int i = 0; i < permissions.length; i++) {
+                    Log.e("asd112","asd");
                     if (permissions[i].equals(this.permissions[i])) {
                         if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                             showToast_PermissionDeny();
                         }else{
-                            Log.e("asd114","asd");
                             cheack_boolean=true;
                             //Toast.makeText(this, "11", Toast.LENGTH_SHORT).show();
 
@@ -126,9 +133,13 @@ public class SplashActivity extends AppCompatActivity {
                 }
                 Log.e("asd123","asd");
             } else {
+                Log.e("asd124","asd");
                 showToast_PermissionDeny();
+
             }
+            Log.e("asd125","asd");
         }
+        Log.e("asd126","asd");
 
     }
     private void showToast_PermissionDeny() {

@@ -88,7 +88,7 @@ public class TagAdapter {
                 }
             }
         }else{
-            for (int a=0; a<5; a++) {
+            for (int a=0; a<tag_items.size(); a++) {
                 String[] array = tag_items.get(a).getItem_Name().split("-");
                 if (array.length >= 3) {
                     top5.append(array[2]).append("_").append(tag_items.get(a).getItem_Rssi()).append(" , ");

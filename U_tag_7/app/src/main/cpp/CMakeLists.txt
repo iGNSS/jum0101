@@ -23,8 +23,8 @@ add_library( # Sets the name of the library.
         # Provides a relative path to your source file(s).
         Acc_lib.cpp
         Acc_lib.h
-        U_Tag_07_08.cpp
-        U_Tag_07_08.h
+        U_Tag_all.cpp
+        U_Tag_all.h
         native-lib.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a

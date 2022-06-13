@@ -28,11 +28,14 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.Messenger;
 import android.os.ParcelUuid;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -40,6 +43,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -48,22 +52,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-
+import com.nineone.c_c.databinding.ActivityMainBinding;
 public class background_Service extends Service implements SensorEventListener {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+       return null;
     }
     private static SensorManager mSensorManager;
     private Sensor mAccelerometer; // 가속도 센스
     private Sensor mGyroerometer; // 자이로 센스
     private Sensor mMagnetometer; // 자력계 센스
     private Sensor mBarometer; // 기압계
+
     public background_Service() {
-
-
-
     }
 
     private PowerManager powerManager;
@@ -81,7 +83,9 @@ public class background_Service extends Service implements SensorEventListener {
     private boolean mService_Advertiserstart = false;
     private String phonenumber;
     private String phonenumber_back;
-
+    static {
+        System.loadLibrary("c_c");
+    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -104,10 +108,10 @@ public class background_Service extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
         if (ACTION_STOP_SERVICE.equals(intent.getAction())) {
             onDestroy();
-            Log.e("onDestroy", "serviceddd");
+            // Log.e("onDestroy", "serviceddd");
         }
 
-        Log.e("BLE33", String.valueOf(intent)+", "+String.valueOf(flags));
+        // Log.e("BLE33", String.valueOf(intent)+", "+String.valueOf(flags));
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
        /* IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBroadcastReceiver1, filter1);
@@ -127,14 +131,14 @@ public class background_Service extends Service implements SensorEventListener {
                 int sub2 = phonenumber.length()-((a*2)-2);//12-8-2=6,12-6-2=4*/
                 String stringco= phonenumber.substring(sub1,sub2);
                 int parsedResult = (int) Long.parseLong(stringco, 16);
-                Log.e("phonenumber1", String.valueOf(parsedResult));
+                // Log.e("phonenumber1", String.valueOf(parsedResult));
                 byte convert = (byte) (parsedResult);
                 arrayBytes4[num]=convert;//7 8   5 6   3 4
                 num--;
             }
-            Log.e("phonenumber3", Arrays.toString(arrayBytes4));
+            // Log.e("phonenumber3", Arrays.toString(arrayBytes4));
         }else{
-            phonenumber_back="1234";
+            phonenumber_back="0123";
             for (int a = 0; a < 4; a++) {
                 int parsedResult = (int) Long.parseLong(String.valueOf(a), 16);
                 byte convert = (byte) (parsedResult);
@@ -148,7 +152,7 @@ public class background_Service extends Service implements SensorEventListener {
         Intent stopSelf = new Intent(this, background_Service.class);
         stopSelf.setAction(ACTION_STOP_SERVICE);
 
-        PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf,PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf,PendingIntent.FLAG_IMMUTABLE);
 
         builder = new NotificationCompat.Builder(this, "default");
         builder.setSmallIcon(R.mipmap.ic_launcher);
@@ -156,8 +160,13 @@ public class background_Service extends Service implements SensorEventListener {
         builder.setContentText("스캔 중");
         builder.addAction(R.drawable.ic_launcher_foreground,"Close", pStopSelf);
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Intent notificationIntent = new Intent(this, MainActivity.class)
+                .setAction(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK| Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
         // PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         builder.setContentIntent(pendingIntent);
 
@@ -178,12 +187,18 @@ public class background_Service extends Service implements SensorEventListener {
         scanbuilder.setManufacturerData(0x004c, new byte[] {});
         //scanbuilder.setDeviceName("NI-201");
         ScanFilter filter = scanbuilder.build();
-        btLeScanFilters.add(filter);
+        //btLeScanFilters.add(filter);
         btLeScanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build ();
-        mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings,leScanCallback);
+     //   mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings,leScanCallback);
+        mBluetoothLeScanner.startScan(leScanCallback);
         main_ble();
-
-
+        for(int a=0;a<=15;a++){
+            arrayBytes16_8[a]=0x00;
+        }
+        ByteBuffer byteBuffer = ByteBuffer.wrap(arrayBytes16_8);
+        long high = byteBuffer.getLong();
+        long low = byteBuffer.getLong();
+        hiuuid_8 = new UUID(high, low);
         tagAdapter = new TagAdapter(getApplicationContext());
 
         return START_NOT_STICKY;
@@ -221,8 +236,11 @@ public class background_Service extends Service implements SensorEventListener {
             stopSelf();
 
 
-        Log.e("serviceddd","serviceddd");
+        // Log.e("serviceddd","serviceddd");
     }
+
+
+
     private final byte[] arrayBytes16_7 = new byte[16];
     private final byte[] arrayBytes16_8 = new byte[16];
     private final byte[] arrayBytes4 = new byte[4];
@@ -230,17 +248,19 @@ public class background_Service extends Service implements SensorEventListener {
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, final ScanResult result){
+            // Log.e("BLE", "Discovery onScanResult00: " + result.getDevice().getName());
             if (result.getDevice().getName() != null) {
+                // Log.e("BLE", "Discovery onScanResult01: " + result.getDevice().getName());
                 if (result.getDevice().getName().startsWith("NI-201")) {
-                    Log.e("BLE", "Discovery onScanResult00: " + result);
-                    //   Log.e("BLE", "Discovery onScanResult011: " + result.getDevice().getName());
-                    //    Log.e("BLE", "Discovery onScanResult012: " + Arrays.toString(result.getScanRecord().getBytes()));
-                    //    Log.e("BLE", "Discovery onScanResult013: " + result.getDevice().getAddress());
-                    //    Log.e("BLE", "Discovery onScanResult02: " + byteArrayToHex(result.getScanRecord().getBytes()));
-                    /*Log.e("BLE", "Discovery onScanResult1: " + result);
-                    Log.e("BLE", "Discovery onScanResult2: " + result.getScanRecord());
-                    Log.e("BLE", "Discovery onScanResult3: " + Arrays.toString(result.getScanRecord().getBytes()));
-                    Log.e("BLE", "Discovery onScanResult4: " + result.getScanRecord().getBytes());*/
+                    // Log.e("BLE", "Discovery onScanResult02: " + result.getDevice().getName());
+                    //   // Log.e("BLE", "Discovery onScanResult011: " + result.getDevice().getName());
+                    //    // Log.e("BLE", "Discovery onScanResult012: " + Arrays.toString(result.getScanRecord().getBytes()));
+                    //    // Log.e("BLE", "Discovery onScanResult013: " + result.getDevice().getAddress());
+                    //    // Log.e("BLE", "Discovery onScanResult02: " + byteArrayToHex(result.getScanRecord().getBytes()));
+                    /*// Log.e("BLE", "Discovery onScanResult1: " + result);
+                    // Log.e("BLE", "Discovery onScanResult2: " + result.getScanRecord());
+                    // Log.e("BLE", "Discovery onScanResult3: " + Arrays.toString(result.getScanRecord().getBytes()));
+                    // Log.e("BLE", "Discovery onScanResult4: " + result.getScanRecord().getBytes());*/
                     if (!isonoff) {
                         addScanResult(result);
                     }else{
@@ -252,7 +272,7 @@ public class background_Service extends Service implements SensorEventListener {
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             for (ScanResult result : results) {
-                //Log.e("BLE", "Discovery onBatchScanResults: " + result.getDevice().getName().getBytes());
+                //// Log.e("BLE", "Discovery onBatchScanResults: " + result.getDevice().getName().getBytes());
                 addScanResult( result );
             }
         }
@@ -266,12 +286,12 @@ public class background_Service extends Service implements SensorEventListener {
             int device_addbyte_num2 = (int) Long.parseLong(String.valueOf(_result.getScanRecord().getBytes()[9+19]), 16);
             byte device_addbyte_num2_1= (byte) device_addbyte_num2;
             byte device_addbyte_rssi = (byte) _result.getRssi();
-            Log.e("tagAdaptercount", String.valueOf(tagAdapter.getItemCount()));
-            Log.e("tagAdapter1name", device_addName);
-            //Log.e("tagAdapter1rssi", String.valueOf(device_addRssi));
-            Log.e("tagAdapter1num1", String.valueOf(device_addbyte_num1));
-            Log.e("tagAdapter1num2", String.valueOf(device_addbyte_num2));
-           // Log.e("tagAdapter1rssi", String.valueOf(device_addbyte_rssi));
+            // Log.e("tagAdaptercount", String.valueOf(tagAdapter.getItemCount()));
+            // Log.e("tagAdapter1name", device_addName);
+            //// Log.e("tagAdapter1rssi", String.valueOf(device_addRssi));
+            // Log.e("tagAdapter1num1", String.valueOf(device_addbyte_num1));
+            // Log.e("tagAdapter1num2", String.valueOf(device_addbyte_num2));
+           // // Log.e("tagAdapter1rssi", String.valueOf(device_addbyte_rssi));
            /* for (int a = 0; a < 16; a++) {
                 arrayBytes16[a] = newScanRecord[(sensorStartIdx+15) - a];//9+15=24
             }*/
@@ -279,7 +299,7 @@ public class background_Service extends Service implements SensorEventListener {
             //0 3 6 9 12 15
             if(tagAdapter.getItemCount()>=5) {
                 for (int a = 0; a <= 4; a++) {
-                    arrayBytes16_7[(a * 3)] = tagAdapter.getItemInmlist().get(a).getItem_byte_rssi();  //0 3 6 9 12 15
+                    arrayBytes16_7[(a * 3)] = tagAdapter.getItemInmlist().get(a).getItem_byte_rssi();    //0 3 6 9  12
                     arrayBytes16_7[(a * 3) + 1] = tagAdapter.getItemInmlist().get(a).getItem_byte_num2();//1 4 7 10 13
                     arrayBytes16_7[(a * 3) + 2] = tagAdapter.getItemInmlist().get(a).getItem_byte_num1();//2 5 8 11 14
                 }
@@ -296,7 +316,8 @@ public class background_Service extends Service implements SensorEventListener {
                 }
             }
             arrayBytes16_7[15] = 0x07;  //0 3 6 9 12 15
-            ByteBuffer byteBuffer = ByteBuffer.wrap(arrayBytes16_7);
+
+          /*  ByteBuffer byteBuffer = ByteBuffer.wrap(arrayBytes16_7);
             long high = byteBuffer.getLong();
             long low = byteBuffer.getLong();
             UUID hiuuid_7 = new UUID(high, low);
@@ -307,7 +328,7 @@ public class background_Service extends Service implements SensorEventListener {
 
             UUID suuid = UUID.nameUUIDFromBytes(arrayBytes16_7);
             String datad = new String(arrayBytes16_7);
-            Log.e("uuid_main_00", tagAdapter.getItemInName().toString());
+            // Log.e("uuid_main_00", tagAdapter.getItemInName().toString());
 
             if (!mService_Advertiserstart) {
                 Runnable runnable10;//.addServiceUuid(pUuid)
@@ -315,7 +336,8 @@ public class background_Service extends Service implements SensorEventListener {
                     runnable10 = new Runnable() {
                         @Override
                         public void run() {
-                          //  send_7_8 = true;
+                           // send_7_8 = true;
+
                             ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
                             mService_AdvData = new AdvertiseData.Builder()
                                     .setIncludeDeviceName(true)
@@ -324,14 +346,14 @@ public class background_Service extends Service implements SensorEventListener {
                                     .addServiceData(pUuid, arrayBytes4)
                                     .build();
                             handler2();
-                            Log.e("UUID_service2", "asdasd2");
+                            // Log.e("UUID_service2", "asdasd2");
                         }
                     };
                 }else{
                     runnable10 = new Runnable() {
                         @Override
                         public void run() {
-                            send_7_8 = false;
+                           // send_7_8 = false;
                             arrayBytes16_8[15] = 0x08;
                             ParcelUuid pUuid = new ParcelUuid(hiuuid_8);
                             mService_AdvData = new AdvertiseData.Builder()
@@ -341,14 +363,14 @@ public class background_Service extends Service implements SensorEventListener {
                                     .addServiceData(pUuid, arrayBytes4)
                                     .build();
                             handler2();
-                            Log.e("UUID_service2", "asdasd2");
+                            // Log.e("UUID_service3", "asdasd2");
                         }
                     };
                 }
                 mService_Advertiserstart = true;
-                listcange_handler.postDelayed(runnable10, 2000);
+                listcange_handler.postDelayed(runnable10, 1000);
                 // add the device to the result list
-            }
+            }*/
         }
     };
     private boolean send_7_8 = false;
@@ -360,14 +382,14 @@ public class background_Service extends Service implements SensorEventListener {
         return builder.toString();
     }
     private void handler1() {
-        Log.e("tagAdaptercount", String.valueOf(tagAdapter.getItemCount()));
-        Log.e("tagAdapter1name", tagAdapter.getItemInName().toString());
-        Log.e("tagAdapter1rssi", tagAdapter.getItemInRssi().toString());
+        // Log.e("tagAdaptercount", String.valueOf(tagAdapter.getItemCount()));
+        // Log.e("tagAdapter1name", tagAdapter.getItemInName().toString());
+        // Log.e("tagAdapter1rssi", tagAdapter.getItemInRssi().toString());
         mhandler_setContentTitle.postDelayed(new Runnable() {
             public void run() {
                 builder.setContentTitle(tagAdapter.getItemTop5());
                 //builder.setContentText(tagAdapter.getItemTop5());
-                Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
+                // Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
                 mNotificationManager.notify(1, builder.build());
             }
         }, 0);
@@ -378,22 +400,24 @@ public class background_Service extends Service implements SensorEventListener {
                 public void run() {
                     builder.setContentText(tagAdapter.getItemTop5());
                     //builder.setContentText(tagAdapter.getItemTop5());
-                    //  Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
+                    //  // Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
                     mNotificationManager.notify(1, builder.build());
                 }
             }, 0);
-            // Log.e("asd","asdasd");
+            // // Log.e("asd","asdasd");
             mhandler1_startAdvertising.postDelayed(new Runnable() {
                 public void run() {
                     mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+                    // Log.e("BLE", "Discovery onScanResult011: " + mService_AdvCallback.toString());
                 }
             }, 0);
             mhandler2_stopAdvertising.postDelayed(new Runnable() {
                 public void run() {
                     mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
                     mService_Advertiserstart = false;
+                    // Log.e("BLE", "Discovery onScanResult012: " +  mService_AdvCallback.toString());
                 }
-            }, 1000);
+            }, 500);
         }
     }
     private TagAdapter tagAdapter;
@@ -403,7 +427,7 @@ public class background_Service extends Service implements SensorEventListener {
     private final MyHandler listcange_handler = new MyHandler(this);
     private float[] arrayfloat=new float[6];
     private native float[] Utag_Arrary(float accx,float accy,float accz,float gyrox,float gyroy,float gyroz);
-    private float[] fasf = new float[3];
+    private float[] fasf = new float[5];
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
@@ -426,14 +450,100 @@ public class background_Service extends Service implements SensorEventListener {
             //textBaro.setText("기압계 센서값\nx: " + String.format("%.4f", presure) +" hPa \n 고도: "+height+"m" );
 
         }*/
-        Log.e("onAccuracyChange",arrayfloat[0]+","+ arrayfloat[1]+","+  arrayfloat[2]+","+  arrayfloat[3]+","+  arrayfloat[4]+","+  arrayfloat[5]);
+        // Log.e("onAccuracyChange",arrayfloat[0]+","+ arrayfloat[1]+","+  arrayfloat[2]+","+  arrayfloat[3]+","+  arrayfloat[4]+","+  arrayfloat[5]);
         fasf = Utag_Arrary(arrayfloat[0], arrayfloat[1], arrayfloat[2], arrayfloat[3], arrayfloat[4], arrayfloat[5]);
+        sendMessage();
+        // Log.e("onAccuracyChange1",fasf[0]+","+ fasf[1]+","+  fasf[2]+","+  fasf[3]+","+  fasf[4]);
+        int intBits1 = (int) fasf[0];
+        arrayBytes16_8[13] = (byte) (intBits1 >> 8);
+        arrayBytes16_8[14] = (byte) (intBits1);
+        // Log.e("onAccuracyChange2",fasf[2]+" , "+(byte) (intBits1 >> 24)+","+ (byte) (intBits1 >> 16)+","+(byte) (intBits1 >> 8)+" ,"+(byte) (intBits1));
+        int intBits2 =  Float.floatToIntBits(fasf[2]);
+        arrayBytes16_8[9] = (byte) (intBits2 >> 24);
+        arrayBytes16_8[10] = (byte) (intBits2 >> 16);
+        arrayBytes16_8[11] = (byte) (intBits2 >> 8);
+        arrayBytes16_8[12] = (byte) (intBits2);
+        arrayBytes16_8[0] = 0x01;
+        // Log.e("onAccuracyChange3",(byte) (intBits2 >> 24)+","+ (byte) (intBits2 >> 16)+","+(byte) (intBits2 >> 8)+" ,"+(byte) (intBits2));
 
-       // textBaro.setText("  "+fasf[0]+" , "+fasf[1]+" , "+fasf[2]);
+        ByteBuffer UUID_byteBuffer = ByteBuffer.wrap(arrayBytes16_8);
+        long high_08 = UUID_byteBuffer.getLong();
+        long low_08 = UUID_byteBuffer.getLong();
+        hiuuid_8 = new UUID(high_08, low_08);
+        if(tagAdapter.getItemCount()>=5) {
+            for (int a = 0; a <= 4; a++) {
+                arrayBytes16_7[(a * 3)] = tagAdapter.getItemInmlist().get(a).getItem_byte_rssi();  //0 3 6 9 12 15
+                arrayBytes16_7[(a * 3) + 1] = tagAdapter.getItemInmlist().get(a).getItem_byte_num2();//1 4 7 10 13
+                arrayBytes16_7[(a * 3) + 2] = tagAdapter.getItemInmlist().get(a).getItem_byte_num1();//2 5 8 11 14
+            }
+        }else{
+            for(int a = 0; a <= 4; a++) {
+                arrayBytes16_7[(a * 3)] = 0;  //0 3 6 9 12 15
+                arrayBytes16_7[(a * 3) + 1] = 0;//1 4 7 10 13
+                arrayBytes16_7[(a * 3) + 2] = 0;//2 5 8 11 14
+            }
+        }
+        arrayBytes16_7[15] = 0x07;  //0 3 6 9 12 15
+        arrayBytes16_8[15] = 0x08;
+        //
+        ByteBuffer byteBuffer = ByteBuffer.wrap(arrayBytes16_7);
+        long high = byteBuffer.getLong();
+        long low = byteBuffer.getLong();
+        UUID hiuuid_7 = new UUID(high, low);
+        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+        bb.putLong(hiuuid_7.getMostSignificantBits());
+        bb.putLong(hiuuid_7.getLeastSignificantBits());
+        bb.array();
+        UUID suuid = UUID.nameUUIDFromBytes(arrayBytes16_7);
+        String datad = new String(arrayBytes16_7);
+        // Log.e("uuid_main_00", tagAdapter.getItemInName().toString());
+
+        if (!mService_Advertiserstart) {
+            Runnable runnable10;//.addServiceUuid(pUuid)
+            if (!send_7_8) {
+                runnable10 = new Runnable() {
+                    @Override
+                    public void run() {
+                         send_7_8 = true;
+
+                        ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
+                        mService_AdvData = new AdvertiseData.Builder()
+                                .setIncludeDeviceName(true)
+                                .setIncludeTxPowerLevel(false)
+                                //.addServiceUuid(pUuid)
+                                .addServiceData(pUuid, arrayBytes4)
+                                .build();
+                        handler2();
+                        // Log.e("UUID_service2", "asdasd2");
+                    }
+                };
+            } else {
+                runnable10 = new Runnable() {
+                    @Override
+                    public void run() {
+                        send_7_8 = false;
+                        arrayBytes16_8[15] = 0x08;
+                        ParcelUuid pUuid = new ParcelUuid(hiuuid_8);
+                        mService_AdvData = new AdvertiseData.Builder()
+                                .setIncludeDeviceName(true)
+                                .setIncludeTxPowerLevel(false)
+                                //.addServiceUuid(pUuid)
+                                .addServiceData(pUuid, arrayBytes4)
+                                .build();
+                        handler2();
+                        // Log.e("UUID_service3", "asdasd2");
+                    }
+                };
+            }
+            mService_Advertiserstart = true;
+            listcange_handler.postDelayed(runnable10, 1000);
+            //
+        }
+        // textBaro.setText("  "+fasf[0]+" , "+fasf[1]+" , "+fasf[2]);
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
-        Log.e("onAccuracyChanged","onAccuracyChanged");
+        // Log.e("onAccuracyChanged","onAccuracyChanged");
     }
     private static class MyHandler extends Handler {
         private final WeakReference<background_Service> mActivity;
@@ -508,7 +618,7 @@ public class background_Service extends Service implements SensorEventListener {
             final String action = intent.getAction();
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                Log.e("off1", action);
+                // Log.e("off1", action);
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
@@ -516,25 +626,25 @@ public class background_Service extends Service implements SensorEventListener {
                         //startActivityForResult(enableIntent, REQUEST_ENABLE_BT3);
                     //   onDestroy();
                         Toast.makeText(getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
-                        Log.e("off1", "off1");
+                        // Log.e("off1", "off1");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
-                        Log.e("off2", "off2");
+                        // Log.e("off2", "off2");
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        Log.e("off3", "off3");
+                        // Log.e("off3", "off3");
 
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
-                        Log.e("off4", "off4");
+                        // Log.e("off4", "off4");
                         break;
                     default:
-                        Log.e("off5", String.valueOf(state));
+                        // Log.e("off5", String.valueOf(state));
                         break;
                 }
             }
             if (action.equals(LocationManager.PROVIDERS_CHANGED_ACTION)) {
-                Log.e("off6", action + ", " + intent);
+                // Log.e("off6", action + ", " + intent);
 
             }
             if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
@@ -543,14 +653,22 @@ public class background_Service extends Service implements SensorEventListener {
                 boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
                 boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
                 if (isGpsEnabled || isNetworkEnabled) {
-                    Log.e("off7", String.valueOf(isGpsEnabled));
+                    // Log.e("off7", String.valueOf(isGpsEnabled));
                 } else {
                     onDestroy();
                     Toast.makeText(getApplication(), "GPS가 종료되었습니다.\n GPS를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
 
-                    Log.e("off8", String.valueOf(isGpsEnabled));
+                    // // Log.e("off8", String.valueOf(isGpsEnabled));
                 }
             }
         }
     };
+
+    private void sendMessage(){
+        Log.d("messageService", "Broadcasting message");
+        Intent intent = new Intent("custom-event-name");
+        intent.putExtra("messageString", "This is my first message!");
+        intent.putExtra("messageFloat", fasf);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
 }
