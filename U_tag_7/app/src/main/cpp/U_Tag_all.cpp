@@ -1,17 +1,6 @@
 //
-// Created by user on 2022-06-08.
+// Created by user on 2022-06-03.
 //
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// PDR Calculation
-// update : 2021-12-11
-// Tag 를 이용한 PDR 계산/걸음추정/방향추정/Normal Step Detection
-// return [step count, step length, heading]
-// 스마트 태그 : GPS & IMU & Barometer
-// 신정훈, 유창수, 이정호
-// 2022년 4월 02일
-////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "U_Tag_all.h"
 #include <android/log.h>
@@ -23,19 +12,14 @@
 #include <cstdio>
 #include <ctime>
 #include <cmath>
-//#include <Adafruit_TinyUSB.h> // for Serial
+//#include <Adafruit_TinyUSB.h> // for //Serial
 
 #define FILENAME    "/N1_eeprom1.txt"
 
-// BLE Service
-/*BLEDfu  bledfu;  // OTA DFU service
-BLEDis  bledis;  // device information
-BLEUart bleuart; // uart over ble
-BLEBas  blebas;  // battery
-MS5x barometer(&Wire);
-ICM20948 IMU(Wire, 0x68);*/
 typedef unsigned char  byte;
 int status;
+
+
 /*************************** GPIO SETUP START ***************************************/
 #define UART_TX           (0)   //P0.25
 #define UART_RX           (1)   //P0.24
@@ -251,117 +235,140 @@ static int str_heading_flag = 0;
 /*********************** *******************************************************************/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////추가 영역 끝
 void PDR_Gyro_Cal(float gyroX,float gyroY,float gyroZ);
+
+
 void ms5607_check();
+
 void icm20948_check(float accX, float accY, float accZ, float gyrox, float gyroy, float gyroz);
+
 void pdrStart();
+
 void BeaconMode();
+
 void Uart_Mode();
+
 void serial1Read_OK();
+
 void bleSend();
+
 float averaging(int idx, float acc, float acc1, const int windowsize);
+
 float calRollUsingAcc(float pDouble[3]);
 float calPitchUsingAcc(float pDouble[3]);
+
 float calGyrozNavFrame(float roll, float pitch, float pDouble[3]);
 float calGyroHeading(int idx, float time, float before, float d, float gyro);
 void stepDataUpdata(float d);
+
 jboolean
 normalStepDetection(float pDouble[3], float pDouble1[3], float pDouble2[3], float pDouble3[3]);
+
 void strDetection();
+
 float calgyroBufferMean(int count);
+
 int normalStepCheck(jboolean flag, int count);
+
 void stepDetection();
+
 float calPitchUsingAcc(float pDouble[3]);
+
 float calGyrozNavFrame(float roll, float pitch, float pDouble[3]);
+
 float calGyroHeading(int idx, float time, float before, float d, float gyro);
+
 float calNorm(float pDouble[3], int i);
 void eepromecheck();
 
-void adcheck();
+struct timeval getTime;
 
-void data_display();
+struct timespec time1, time2;
 
-void datamake_1();
-
-void datamake_2();
-
-void icm20948start();
-void ms5607_start();
-
-void EEPRead();
-void EeepWrite();
-clock_t time_c;
-struct timespec start, end,endtime;
 clock_t start1, start2, end1, end2;
 float res1, res2 ,res3;
 long res4;
-
+struct timespec start_time, loop_end_time,delaytime,endtime;
+uint64_t delta_us;
 void setup()
 {
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_2");
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    uint64_t start_time = start.tv_sec * 1000 + start.tv_nsec / 1000000;
-    time_c = clock();
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start_time);
+    uint64_t start_time_millis = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
 
-//  while ( !Serial ) delay(10);   // for nrf52840 with native usb
-   // adcheck();
-    icm20948start();
-    ms5607_start();
+//  while ( !//Serial ) delay(10);   // for nrf52840 with native usb
     for(int i=0; i<10; i++)
     {
-       // ms5607_check();
+        //  ms5607_check();
     }
-    EEPRead();
+    clock_gettime(CLOCK_REALTIME, &time1);
+    start1 = clock();
     eepromecheck();
     memset(Rx1_Buffer, 0, sizeof(Rx1_Buffer));
-    User_State_Time = start_time;//millis();
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_3");
+     User_State_Time = 0;//millis();//long
 }
-uint64_t delta_us;
-uint64_t delta_us2;
 void loop(float accX, float accY, float accZ, float gyrox, float gyroy, float gyroz)
 {
-   // //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_6");
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    delta_us = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
-    delta_us2 = (end.tv_sec - start.tv_sec) * 10000 + (end.tv_nsec - start.tv_nsec) / 100000;
     end1 = clock();
-    long timea= end1-time_c;
-    unsigned long curr_ms = delta_us;//millis();
+    res1 = (float)(end1 - start1)/CLOCKS_PER_SEC;
+    res2 = end1/10000;
+    res3 = (float)(end1 - start1)/CLOCKS_MONO;
+    res4 = end1/1000;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &loop_end_time);
+    delta_us = (loop_end_time.tv_sec - start_time.tv_sec) * 1000 + (loop_end_time.tv_nsec - start_time.tv_nsec) / 1000000;
+
+     unsigned long curr_ms = delta_us;//millis();
     static unsigned long prev_interval_ms;
     static unsigned long prev_ms;
 
+    currentTime = delta_us;// millis();//float
+    currentTime_Long = delta_us;// millis();//long
+    //if ((curr_ms - prev_interval_ms) > 24 ) //25ms 단위로 호출
+    //{
+    prev_interval_ms = curr_ms;
+    //ms5607_check();
+    icm20948_check( accX,  accY,  accZ,  gyrox,  gyroy,  gyroz);//가속도 자이로                      // IMU Sensor Data Read
+    pdrStart();
+    prev_ms = delta_us;//millis();
+    // }
+    if (bleConnect == 0) {
+        //  BeaconMode();
+     }
 
-    currentTime = delta_us;//millis();
-    currentTime_Long = delta_us;//millis();
-    if ((curr_ms - prev_interval_ms) > 10 ) //25ms 단위로 호출
-    {
-      //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_7");
-        prev_interval_ms = curr_ms;
-
-        // ms5607_check();
-        icm20948_check(accX,  accY,  accZ,  gyrox,  gyroy,  gyroz);                   // IMU Sensor Data Read
-      //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_11");
-        pdrStart();
-        prev_ms = delta_us;//millis();
-    }
-    // if (bleConnect == 0) BeaconMode();
-    // else Uart_Mode();    // UART MODE;
 }
 void eepromecheck()
 {
     if((unit8_eeprom_Buffer[1] == 2) && (unit8_eeprom_Buffer[2] == 1)&&(unit8_eeprom_Buffer[20] == 3) )
     {
         Startcode = unit8_eeprom_Buffer[1];
+        ////Serial.printf("Startcode = %d",Startcode);
+
         Update = unit8_eeprom_Buffer[2];
+        ////Serial.printf("Update = %d",Update);
+
         ID = unit8_eeprom_Buffer[3];
+        ////Serial.printf("ID = %d",ID);
+
         int m_high = unit8_eeprom_Buffer[4];
         int m_low  = unit8_eeprom_Buffer[5];
         MINOR = (m_high*256) + m_low;
+        ////Serial.printf("MINOR = %d",MINOR);
+
         TXPOWER = unit8_eeprom_Buffer[6];
+        ////Serial.printf("TXPOWER = %d", TXPOWER);
+
         S_ID = unit8_eeprom_Buffer[7];
+        ////Serial.printf("S_ID = %d",S_ID);
+
         GyroCal = unit8_eeprom_Buffer[8];
+        ////Serial.printf("GyroCal = %d",GyroCal);
+
         Ms5607_ADC_Set = unit8_eeprom_Buffer[12];
+        ////Serial.printf("Ms5607_ADC_Set = %d",Ms5607_ADC_Set);
+
+        ////Serial.printf("SystemVersion = %d",SystemVersion);
+
         Endcode = unit8_eeprom_Buffer[20];
+        ////Serial.printf("Endcode = %d",Endcode);
+
         if(GyroCal == 1)
         {
             memcpy(&Gyr_Cal_x,&unit8_eeprom_Buffer[21],4);
@@ -370,103 +377,34 @@ void eepromecheck()
             meanGyro[0] = Gyr_Cal_x;
             meanGyro[1] = Gyr_Cal_y;
             meanGyro[2] = Gyr_Cal_z;
+            //    //Serial.println("GyroCal Setting");
         }
+        //  else //Serial.println("GyroCal Not Setting");
     }
-}
-
-void ms5607_start()
-{
- /*   int senscheckcount = 0;
-    byte MS5607_ADC_SET[4] = {0x02, 0x04, 0x06, 0x08};  // MS5xxx_CMD_ADC_512, MS5xxx_CMD_ADC_1024, MS5xxx_CMD_ADC_2048, MS5xxx_CMD_ADC_4096
-
-    barometer.setSamples(MS5607_ADC_SET[Ms5607_ADC_Set]);
-    barometer.setPressPa();
-    while(barometer.connect()>0)
-    {
-        if(senscheckcount < 100)
-        {
-            senscheckcount++;
-        }
-        else
-        {
-            Baro_Sensor = 0;
-           // NVIC_SystemReset();
-            break ;
-        }
-    }*/
-
-}
-
-void icm20948start()
-{
-    int Errorcount = 0;
-  //  status = IMU.begin();
-    if(status<0)
-    {
-       // NVIC_SystemReset();
-    }
-  //  IMU.configAccel(ICM20948::ACCEL_RANGE_4G, ICM20948::ACCEL_DLPF_BANDWIDTH_246HZ);  // 4G , 246Hz
-  //  IMU.configGyro(ICM20948::GYRO_RANGE_2000DPS, ICM20948::GYRO_DLPF_BANDWIDTH_197HZ); // 500dps, 197Hz
-  //  Serial.println(F("ICM-20948 Connected to Sensor"));
+    //  else //Serial.println("NRF52840 Parameter Not Setting");
 }
 
 
-void startAdv(void)
-{
-  /* BLEBeacon beacon(beaconUuid, MAJOR, MINOR, ID);
-    Bluefruit.Advertising.setBeacon(beacon);
-    Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
-    Bluefruit.Advertising.addService(bleuart);
-    Bluefruit.ScanResponse.addName();
-    Bluefruit.Advertising.restartOnDisconnect(true);
-    Bluefruit.Advertising.setInterval(Beacon_Interval, Beacon_Interval);    // in unit of 0.625 ms
-    Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
-    Bluefruit.Advertising.start(Adv_Timeout);   */   // 0 = Don't stop advertising after n seconds
-}
 
+void datamake_2();
 
-void connect_callback(uint16_t conn_handle)
-{
-   // BLEConnection* connection = Bluefruit.Connection(conn_handle);
-    //char central_name[32] = { 0 };
-   // connection->getPeerName(central_name, sizeof(central_name));
-    //bleConnect = 1;
-   // if(GyroCalMode != 1)
-    //{
-    //    EEPRead();
-   // }
-}
-
-
-void disconnect_callback(uint16_t conn_handle, uint8_t reason)
-{
-    (void) conn_handle;
-    (void) reason;
-    bleConnect = 0;
-
-}
-
-//do stuff
-
-
+void data_display();
 
 void BeaconMode()
 {
-    if ((currentTime_Long - checkTime) > Beacon_Change_Time )
+    if ((currentTime_Long - checkTime) > Beacon_Change_Time )//long
     {
         if (ID == 7)
         {
-            checkTime = delta_us;//millis();
+            checkTime = delta_us;//millis();//long
             memset(Rx1_Buffer, 0, sizeof(Rx1_Buffer));
-          //  adcheck();
+            //Serial1.println("OK");  // Left BLE RSSI CALL
             serial1Read_OK();       // Left BLE RX Read
             if((currentTime-User_State_Time) > User_Check_Time) Userstate =0x00;
             else Userstate = 0x10;
             Userstate = (Userstate & 0xF0) | (D_Count & 0x0F) ;
             GpsState = (GpsState & 0xF0) | (D_Count & 0x0F) ;
             data_display();
-            datamake_1();
-            startAdv();
             ID = 8;
             SensorCheck = 0;
         }
@@ -474,57 +412,21 @@ void BeaconMode()
         {
             checkTime = delta_us;//millis();
             datamake_2();
-            startAdv();
             ID = 7;
         }
         else ;
         Rx1count = 0;
-    }
-}
-void Uart_Mode()
-{
-    if(currentTime - blesendTime > BLE_Send_Time)
-    {
-       // bleSend();
 
-        blesendTime = delta_us;// millis();
-    }
-
-    //while (bleuart.available())
-    //{
-       // Ble_RxBuffer[blerxcount] = bleuart.read();
-        blerxcount++;
-   // }
-
-    if(blerxcount == 20)
-    {
-        if((Ble_RxBuffer[0] == 0x02) && (Ble_RxBuffer[19] == 0x03)) {
-            for (byte i = 0; i < blerxcount; i++) {
-                if (i != 7) unit8_eeprom_Buffer[i + 1] = Ble_RxBuffer[i];
-                else;
-
-            }
-            unit8_eeprom_Buffer[19] = SystemVersion;
-
-            if ((Ble_RxBuffer[7] == 1) && (Imu_Sensor == 1)) {
-                //PDR_Gyro_Cal(gyroX, gyroY, gyroZ);
-            }
-            else {
-                EeepWrite();
-            }
-
-        }
-        else
-        blerxcount = 0;
     }
 }
 
 void data_display()
 {
     float DIR = 0;
-    currentTime = delta_us;//millis();
+    currentTime = delta_us;//millis();//float
     Baro_Check_Count++;
 }
+
 
 void serial1Read_OK()
 {
@@ -532,9 +434,8 @@ void serial1Read_OK()
     unsigned long serial_ms = delta_us;//millis();
     while (Rx1count < 38) {
         currentTime = delta_us;//millis();
-        if ((currentTime - serial_ms) > 4000){
+        if ((currentTime - serial_ms) > 4000)
             break;
-        }
     }
     N1 = (Rx1_Buffer[18]*256) + Rx1_Buffer[17];
     N2 = (Rx1_Buffer[19]*256) + Rx1_Buffer[18];
@@ -549,41 +450,34 @@ void serial1Read_OK()
     Rx1count = 0;
 }
 
+
 void ms5607_check()
 {
-    double barotemp;
-    prepressure = pressure;
-   /* barometer.checkUpdates();
-    if (barometer.isReady())
-    {
-        temperature = barometer.GetTemp(); // Returns temperature in C
-        pressure = barometer.GetPres(); // Returns pressure in Pascals
-        Mean_temp = int(temperature * 100);
-        barotemp = ( (pressure+prepressure) / 2) - 80000;
-        precount++;
+    /*   double barotemp;
+       prepressure = pressure;
+       barometer.checkUpdates();
+       if (barometer.isReady())
+       {
+           temperature = barometer.GetTemp(); // Returns temperature in C
+           pressure = barometer.GetPres(); // Returns pressure in Pascals
+           Mean_temp = int(temperature * 100);
+           barotemp = ( (pressure+prepressure) / 2) - 80000;
+           precount++;
 
-        if(Baro_Check_Count >1)
-        {
-            Pre_Mean_baro = Mean_baro;
-            Mean_baro = uint16_t(barotemp);
-            Baro_Check_Count = 0;
-            precount=0;
-            Baro_Check_Time = end1/1000;//millis();
-        }
-    }
-    else ;*/
-}
-
-void adcheck()
-{
-   // int adcvalue = 0;
-  //  adcvalue = analogRead(PIN_VBAT);
-  //  Mean_battvolt = byte (((float)adcvalue * mv_per_lsb) / 100);
+           if(Baro_Check_Count >1)
+           {
+               Pre_Mean_baro = Mean_baro;
+               Mean_baro = uint16_t(barotemp);
+               Baro_Check_Count = 0;
+               precount=0;
+               Baro_Check_Time = millis();
+           }
+       }
+       else ;*/
 }
 
 void icm20948_check(float accX, float accY, float accZ, float gyrox, float gyroy, float gyroz)
 {
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_8");
     float Pow_X, Pow_Y, Pow_Z;
     fax = accX;
     fay = accY;
@@ -606,27 +500,15 @@ void icm20948_check(float accX, float accY, float accZ, float gyrox, float gyroy
 
     if ((Av < (980 - ACC_Move_Range)) || (Av > (980 + ACC_Move_Range)))
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_9");
         User_State_Time = delta_us;//millis();
         MoveEvent = 1;
+//    //Serial.printf(" Av = %d,  MoveEvent = %d" , Av , MoveEvent);
+//    //Serial.println(" ");
     }
     else MoveEvent = 0;
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_10");
+
 }
 
-void datamake_1()
-{
-    memset(beaconUuid, 0, sizeof(beaconUuid));
-    memcpy(&beaconUuid[0], &Mean_battvolt, 1);    // Byte BATT 0
-    memcpy(&beaconUuid[1], &StepCounter, 2);      // int StepCounter
-    memcpy(&beaconUuid[3], &Direction, 4);        // float Direction
-    memcpy(&beaconUuid[7], &StepWidth, 1);        // byte StepWidth  14
-    memcpy(&beaconUuid[8], &Mean_baro, 2);        // int BAROMETER
-    memcpy(&beaconUuid[10],&Rx1_Buffer[33], 1);   // InOut State
-    memcpy(&beaconUuid[11], &pre_RN, 2);          // unsigned int GPS 상대 좌표 X
-    memcpy(&beaconUuid[13], &pre_RE, 2);          // unsigned int GPS 상대 좌표 Y
-    memcpy(&beaconUuid[15], &Userstate, 1);        // int BAROMETER
-}
 
 void datamake_2()
 {
@@ -636,21 +518,17 @@ void datamake_2()
     if(D_Count == 0x0f) D_Count = 0;
     else  D_Count++;
 }
-
-
 //sensordata input [time(ms), accx, accy, accz, gyrox, gyroy, gyroz], datasize : 7
 //float* pdrStart(float sensordata[])
 void pdrStart()
 {
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_12");
     //Data Preprocessing
 //  float cur_time = sensordata[0]; //ms
     float cur_time = currentTime; //ms
     float acc[3] = {fax, fay, faz}; //accx accy accz
     float gyro[3] = {fgx - meanGyro[0], fgy - meanGyro[1], fgz - meanGyro[2]}; //gyro calibration, gyrox gyroy gyroz
-
-
-    float norm_acc = calNorm(acc, 3); //acc norm calculation
+    __android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlds1 %f %f %f", acc[0],acc[1],acc[2]);
+     float norm_acc = calNorm(acc, 3); //acc norm calculation
 
     float avg_norm_acc = averaging(idx, pre_avg_norm_acc, norm_acc, avg_norm_acc_windowsize);
     pre_avg_norm_acc = avg_norm_acc;
@@ -658,12 +536,10 @@ void pdrStart()
     //avg_norm_buffer update
     if (idx < 3)
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_13");
         smoothing_norm_buffer[idx] = avg_norm_acc;
     }
     else
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_14");
         smoothing_norm_buffer[0] = smoothing_norm_buffer[1];
         smoothing_norm_buffer[1] = smoothing_norm_buffer[2];
         smoothing_norm_buffer[2] = avg_norm_acc;
@@ -685,16 +561,14 @@ void pdrStart()
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////추가 영역 시작
     float avg_nav_gyro_z = averaging(idx, pre_avg_nav_gyro_z, nav_gyro_z, avg_gyro_windowsize);
     pre_avg_nav_gyro_z = avg_nav_gyro_z;
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_15");
+
     //gyro cali cali
     if (gyro_cali_flag)
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_16");
         heading_gyro = calGyroHeading(idx, cur_time, time_before, avg_nav_gyro_z - gyro_cali_bias, heading_gyro);
     }
     else
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_17");
         heading_gyro = calGyroHeading(idx, cur_time, time_before, avg_nav_gyro_z, heading_gyro);
     }
 
@@ -714,15 +588,13 @@ void pdrStart()
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////추가 영역 끝
 
     float att[3] = {avg_roll, avg_pitch, heading_gyro};
-
     //Acc Step Detection
     if (idx >= avg_norm_acc_windowsize)
     {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_18");
         stepDetection();
         if (step_result == 1)
         { //if peak
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_19");
+
             memcpy(acc_step_peak, acc_step_detection, sizeof(acc_step_detection));
             //0 : time  1 : value 2 : heading
             acc_step_count++; //acc step count up
@@ -730,7 +602,6 @@ void pdrStart()
         }
         else if (step_result == 2)
         {
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_20");
             memcpy(acc_step_valley, acc_step_detection, sizeof(acc_step_detection));
             //0 : time  1 : value 2 : heading
         }
@@ -739,31 +610,17 @@ void pdrStart()
 
     if (acc_step_count != acc_step_count_before)
     { //step count change
-      //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worldd1 %d %d",acc_step_count,acc_step_count_before);
         if (acc_step_count > 1)
         {
             jboolean normal_check_flag = normalStepDetection(acc_step_peak, acc_step_valley, pre_acc_step_peak, pre_acc_step_valley);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_21 %f %f %f %f",acc_step_peak[0],acc_step_valley[0],pre_acc_step_peak[0],pre_acc_step_valley[0]);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_22 %f %f %f %f",acc_step_peak[1],acc_step_valley[1],pre_acc_step_peak[1],pre_acc_step_valley[1]);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_23 %hhu %d",normal_check_flag,normal_check_count);
-
             normal_check_count = normalStepCheck(normal_check_flag, normal_check_count);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlddd2 %hhu %d",normal_check_flag,normal_check_count);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Tag_end_242 %d",normal_check_count);
-          //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worldd2 %d %d %d",acc_step_count,acc_step_count_before,normal_check_count);
             if (normal_check_count == 2)
             {
-                //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_25 %d %d %d",acc_step_count,acc_step_count_before,normal_check_count);
-//
                 normal_step_count++;
             }
         }
-     //   //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worldd4 %d %d %d",acc_step_count,acc_step_count_before,normal_check_count);
-
         if (acc_step_count <= 3)
         {
-       //     //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worldd5 %d %d %d",acc_step_count,acc_step_count_before,normal_check_count);
-
             normal_step_count++;
         }
 
@@ -771,8 +628,6 @@ void pdrStart()
 
         if (normal_step_count != normal_step_count_before)
         {//Normal step count change
-         //   //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worldd5 %d %d",acc_step_count,acc_step_count_before);
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_26 %d %d",normal_step_count,normal_step_count_before);
             pdr_data[0] = normal_step_count; //add step count   // int
             pdr_data[1] = step_length;       //add step length
             pdr_data[2] = acc_step_peak[2] * rad2deg;  //add heading(degree)
@@ -802,23 +657,21 @@ void pdrStart()
                 gyro_cali_step_count = 0;
                 gyro_buffer_count = 0;
                 normal_step_gyro_z_buffer[gyro_buffer_size] = {0,};
-                //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_28");
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////추가 영역 끝
-            //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_29");
+
             StepCounter   = normal_step_count;           // int
             Direction     = acc_step_peak[2] * rad2deg;  // float
             pdr_data[3] = Direction;
             Direction_int = int16_t (Direction * 100);
             StepWidth     = byte (step_length * 100);    // byte
             pdr_data[4] = StepWidth;
+
         }
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_30");
         memcpy(pre_acc_step_peak, acc_step_peak, sizeof(acc_step_peak));
         memcpy(pre_acc_step_valley, acc_step_valley, sizeof(acc_step_peak));
     }
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_31 %d",idx);
     idx++;
     acc_step_count_before = acc_step_count;
     time_before = cur_time;
@@ -975,7 +828,7 @@ jboolean valleyUpdater(float local_valley_value, float last_valley_value){
 jboolean peakFinder(float last_peak[], float local_valley[], float time_before){
     if ((last_peak[1] - local_valley[1]) > acc_step_amp_threshold){
         if ((time_before - last_peak[0]) > acc_step_interval){
-            return true;
+             return true;
         }
         else{
             return false;
@@ -1014,10 +867,9 @@ void stepDetection()
     step_result = 0; //step result 초기화
 
     int localpvfinder = localPVFinder(smoothing_norm_buffer); //0 : none  1 : peak  2 : valley
-
     if(localpvfinder == 1)
     { //find peak
-        local_peak[0] = time_before;
+       local_peak[0] = time_before;
         local_peak[1] = smoothing_norm_buffer[1];
         local_peak[2] = heading_gyro;
         local_peak_flag = true;
@@ -1039,7 +891,7 @@ void stepDetection()
             memcpy(acc_step_detection, last_valley, sizeof(last_valley));
             step_result = 2;
             last_valley[0] = 9999;
-            last_valley[1] = 9999;
+            last_valley[1] = 9999;//9999;
             last_valley[2] = 0;
             updating = 1;
         }
@@ -1081,21 +933,13 @@ void stepDetection()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 jboolean normalStepDetection(float step_peak[], float step_valley[], float pre_step_peak[], float pre_step_valley[]){
     float diff_peak_value = abs(step_peak[1] - pre_step_peak[1]);
-  //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlddd31 %f %f %f <0.6",step_peak[0],pre_step_peak[0],diff_peak_value);
     float diff_valley_value = abs(step_valley[1] - pre_step_valley[1]);
-   // //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlddd32 %f %f %f <0.6",step_valley[0],pre_step_valley[0],diff_valley_value);
     float diff_peak_time_value = step_peak[0] - pre_step_peak[0];
-  //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlddd33 %f %f %f <1000",step_peak[0],pre_step_peak[0],diff_peak_time_value);
     float diff_valley_time_value = step_valley[0] - pre_step_valley[0];
-   // //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worlddd34 %f %f %f <1000",step_valley[0],pre_step_valley[0],diff_valley_time_value);
-    clock_gettime(CLOCK_MONOTONIC_RAW, &endtime);
-    uint64_t delta_us3 = (endtime.tv_sec - start.tv_sec) * 1000 + (endtime.tv_nsec - start.tv_nsec) / 1000000;
-  //  //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello Worltttt  %llu %llu",delta_us3,delta_us);
+
     jboolean normal_check = 0;
-    if ((diff_peak_value < 0.6) && (diff_valley_value < 0.6) && (diff_peak_time_value < 1000) && (diff_valley_time_value < 1000)) /////////////////////////////////////////////////////////////////diff_peak(valley)_value 0.4 -> 0.6 변경
+    if ((diff_peak_value < 0.6) && (diff_valley_value < 0.6) && (diff_peak_time_value < 1400) && (diff_valley_time_value < 1400)) /////////////////////////////////////////////////////////////////diff_peak(valley)_value 0.4 -> 0.6 변경
     {
-
-
         normal_check = 1;
         return normal_check;
     }
@@ -1103,7 +947,6 @@ jboolean normalStepDetection(float step_peak[], float step_valley[], float pre_s
 }
 
 int normalStepCheck(jboolean normal_check_flag, int normal_check_count){
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_24 %d %d",normal_check_flag,normal_check_count);
     if (normal_check_flag == 1)
     {
         normal_check_count++;
@@ -1174,7 +1017,6 @@ void strDetection()
     else{
         str_heading_flag = 0;
     }
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_27 %d",str_heading_flag);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////추가 영역 끝
 
@@ -1191,12 +1033,14 @@ void ICM20948_readGyroData(float gyroX,float gyroY,float gyroZ)
 }
 
 void PDR_Gyro_Cal(float gyroX,float gyroY,float gyroZ)
+
 {
     float total_Gyr_X = 0;
     float total_Gyr_Y = 0;
     float total_Gyr_Z = 0;
     int   Cal_cnt     = 0;
 
+    //Serial.println(" ******************** PDR_Gyro_Cal Start ************************** ");
 
     for(Cal_cnt = 0; Cal_cnt < GyrLoopCount; Cal_cnt++)
     {
@@ -1204,6 +1048,8 @@ void PDR_Gyro_Cal(float gyroX,float gyroY,float gyroZ)
         total_Gyr_X += gyroCount[0];//result.gx;
         total_Gyr_Y += gyroCount[1];//result.gy;
         total_Gyr_Z += gyroCount[2];//result.gz;
+        //Serial.printf("Cal_cnt = %06d \tgyroCount[0] = %6f \tgyroCount[1] = %6f \tgyroCount[2] = %6f ", Cal_cnt, gyroCount[0], gyroCount[1], gyroCount[2]);
+        //Serial.println(" ");
     }
     Gyr_Cal_x = (float)total_Gyr_X / (float)Cal_cnt;
     Gyr_Cal_y = (float)total_Gyr_Y / (float)Cal_cnt;   ////////////  total_Gyr_Y로 수정
@@ -1212,57 +1058,40 @@ void PDR_Gyro_Cal(float gyroX,float gyroY,float gyroZ)
     meanGyro[0] = Gyr_Cal_x;
     meanGyro[1] = Gyr_Cal_y;
     meanGyro[2] = Gyr_Cal_z;
-
+    //Serial.println("");
+    //Serial.println("");
+    //Serial.printf("Cal_cnt = %06d \tGyr_Cal_x    = %6f \tGyr_Cal_y    = %6f \tGyr_Cal_z    = %6f ", Cal_cnt, Gyr_Cal_x, Gyr_Cal_y, Gyr_Cal_z);
+    //Serial.println(" ");
     memcpy(&unit8_eeprom_Buffer[21],&Gyr_Cal_x,4);
     memcpy(&unit8_eeprom_Buffer[25],&Gyr_Cal_y,4);
     memcpy(&unit8_eeprom_Buffer[29],&Gyr_Cal_z,4);
     unit8_eeprom_Buffer[8] = 1;
-    EeepWrite();
 }
 
-void EEPRead()
-{
-   /* file.open(FILENAME, FILE_O_READ);
-    if ( file )
-    {
-        uint32_t readlen;
-        char buffer[64] = { 0 };
-        file.read(buffer, 64);
-        for(int i =0; i<64; i++) unit8_eeprom_Buffer[i] = buffer[i];
-
-        for(int i =0; i<20; i++)
-        {
-            Ble_TxBuffer[i] = unit8_eeprom_Buffer[i+1];
-        }
-        Ble_TxBuffer[0] = 0x02;
-        Ble_TxBuffer[18] = SystemVersion;
-        Ble_TxBuffer[19] = 0x03;
-        file.close();
-    }*/
-}
-
-void EeepWrite()
-{
-    //InternalFS.format();
-    memcpy(&char_eeprom_Buffer[0],&unit8_eeprom_Buffer[0],64);
-
-  //  NVIC_SystemReset();
-}
 jboolean asd=false;
 
+
+
 float *
-U_Tag_all::NEWACCGYR2(float accX, float accY, float accZ, float gyrox, float gyroy, float gyroz) {
+U_Tag_all::NEWACCGYR2(float accx, float accy, float accz, float gyrox, float gyroy, float gyroz) {
     if (!asd) {
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_1");
         setup();
-        //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_4");
         asd=true;
     }
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_5");
-    loop( accX,  accY,  accZ,  gyrox,  gyroy,  gyroz);
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Tag_end_32 %d",idx);
-    float * retrnfloat = pdr_data;
+  //  accX=accx; accY=accy; accZ=accz;
+  //  gyroX=gyrox; gyroY=gyroy; gyroZ=gyroz;
+    loop( accx,  accy,  accz,  gyrox,  gyroy,  gyroz);
+   float * retrnfloat = pdr_data;
 
-    //__android_log_print(ANDROID_LOG_DEBUG, "CHK","Hello World24 %f %f %f", retrnfloat[0],retrnfloat[1],retrnfloat[2]);
     return retrnfloat;
+}
+
+void U_Tag_all::reset() {
+    pdr_data[0]=0;
+    pdr_data[1]=0;
+    pdr_data[2]=0;
+    pdr_data[3]=0;
+    pdr_data[4]=0;
+    normal_step_count=0;
+    normal_step_count_before=0;
 }

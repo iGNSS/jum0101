@@ -9,6 +9,7 @@
 class U_Tag_all {
 public:
     float * NEWACCGYR2(float accX, float accY, float accZ, float gyrox, float gyroy, float gyroz)  ;
+    static void reset();
 };
 
 

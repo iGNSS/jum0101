@@ -18,17 +18,17 @@
 
 
     <TextView
-        android:id="@+id/textViewAcc"
+        android:id="@+id/textView_PhonNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />
     <TextView
-        android:id="@+id/textViewGyr"
+        android:id="@+id/textViewData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />
     <TextView
-        android:id="@+id/textViewBaro"
+        android:id="@+id/textViewTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!" />

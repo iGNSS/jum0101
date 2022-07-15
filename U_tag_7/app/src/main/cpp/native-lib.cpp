@@ -53,7 +53,7 @@ Java_com_nineone_c_1c_MainActivity_Utag_1Arrary(JNIEnv *env3, jobject thiz, jflo
 }
 extern "C"
 JNIEXPORT jfloatArray JNICALL
-Java_com_nineone_c_1c_background_1Service_Utag_1Arrary(JNIEnv *env3, jobject thiz, jfloat accX,jfloat accY, jfloat accZ, jfloat gyroX,jfloat gyroY, jfloat gyroZ) {
+Java_com_nineone_Tag_1Ble_1uuid_1send_1app_background_1Service_Utag_1Arrary(JNIEnv *env3, jobject thiz, jfloat accX,jfloat accY, jfloat accZ, jfloat gyroX,jfloat gyroY, jfloat gyroZ) {
     U_Tag_all uTag0708 = U_Tag_all();
     jfloatArray result = env3->NewFloatArray(5);
 
@@ -70,4 +70,12 @@ Java_com_nineone_c_1c_background_1Service_Utag_1Arrary(JNIEnv *env3, jobject thi
     // __android_log_print(ANDROID_LOG_DEBUG, "CHK", "Hello World3");
     return result;
     // TODO: implement Utag_Arrary()
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_nineone_Tag_1Ble_1uuid_1send_1app_MainActivity_reset(JNIEnv *env, jobject thiz) {
+    U_Tag_all uTag0708 = U_Tag_all();
+    uTag0708.reset();
+    // TODO: implement reset()
 }

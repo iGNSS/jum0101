@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.nineone.c_c">
+    package="com.nineone.Tag_Ble_uuid_send_app">
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -53,7 +53,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.C_C">
         <activity
-            android:name=".SplashActivity"
+            android:name="com.nineone.Tag_Ble_uuid_send_app.SplashActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -63,11 +63,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="com.nineone.Tag_Ble_uuid_send_app.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat" />
         <service
-            android:name=".background_Service"
+            android:name="com.nineone.Tag_Ble_uuid_send_app.background_Service"
             android:enabled="true"
             android:foregroundServiceType="location" />
      <!--   <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>-->
