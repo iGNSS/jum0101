@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PictureMap</string>
+    <string name="delete_word_preamble">Deleting </string>
+</resources>

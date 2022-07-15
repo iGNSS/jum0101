@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_album.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_album_click.xml" value="0.15833333333333333" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_camara.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_list_click.xml" value="0.1656534954407295" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_main.xml" value="0.1656534954407295" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_manu.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_read_data.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_scanner.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_test_file.xml" value="0.18432971014492755" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/activity_walk_list.xml" value="0.1" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/list_data.xml" value="0.15833333333333333" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/mata_data.xml" value="0.1" />
+        <entry key="..\:/Users/user/AndroidStudioProjects/PictureMap (9)/app/src/main/res/layout/record.xml" value="0.18432971014492755" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
