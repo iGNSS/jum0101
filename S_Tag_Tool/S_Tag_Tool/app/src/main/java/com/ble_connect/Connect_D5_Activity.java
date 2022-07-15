@@ -2,26 +2,11 @@ package com.ble_connect;
 
 import static java.lang.Thread.sleep;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.widget.TextViewCompat;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStore;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Person;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -31,26 +16,20 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.Process;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,23 +41,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.nineone.s_tag_tool.MainActivity;
-import com.nineone.s_tag_tool.MainFragment;
 import com.nineone.s_tag_tool.R;
-import com.nineone.s_tag_tool.ScannedDevice;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,34 +61,27 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-public class Connect_Activity extends AppCompatActivity {
+
+public class Connect_D5_Activity extends AppCompatActivity {
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int UART_PROFILE_READY = 10;
@@ -132,9 +100,8 @@ public class Connect_Activity extends AppCompatActivity {
     String txHex = "";
     TextView vw_txtmacaddrValue;
     TextView vw_txt_tag_adress;
-    TextView gyo_cal, tag_ver;
-    EditText tag_type, tag_no, tag_copy_no;
-    EditText O2alarm,COalarm,H2Salarm,CO2alarm,CH4alarm;
+    EditText tag_type, tag_no;
+    EditText tag_copy_type, tag_copy_no;
     Button btn_sendtotag;
 
     String dataToServer;
@@ -158,30 +125,19 @@ public class Connect_Activity extends AppCompatActivity {
     };
     private static final int MULTIPLE_PERMISSIONS = 101;
     private TextView senser_tag_type_Text = null;
-   // private Spinner senser_tag_type_Spinner = null;
+     private Spinner senser_tag_copy_type_Spinner = null;
     private Spinner rfPowerSpinner = null;
-    private Spinner sensorSpinner = null;
-    private Spinner calSpinner = null;
-    private Spinner sensor_operation_cycle_Spinner = null;
-    private Spinner senser_tag_copy_type_Spinner = null;
     private byte[] tagsend_data5 = new byte[20];
     private boolean connect_fail=false;
     int sensorType = 0;
     private String phonenumber;
     private RequestQueue requestQueue;
-    private LinearLayout mCA_layout, mD5_layout;
-    private boolean D5_true_false = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_connect);
+        setContentView(R.layout.activity_connect_d5);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle("연결");
-        mCA_layout = findViewById(R.id.CA_layout);
-        mCA_layout.setVisibility(View.VISIBLE);
-        mD5_layout = findViewById(R.id.D5_layout);
-        mD5_layout.setVisibility(View.GONE);
-        D5_true_false=false;
+        actionBar.setTitle("D5 연결");
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
@@ -224,7 +180,7 @@ public class Connect_Activity extends AppCompatActivity {
             checkPermissions();
         }
         //tag type setting
-        senser_tag_type_Text = findViewById(R.id.tag_type_text);
+        senser_tag_type_Text = findViewById(R.id.tag_type_d5_text);
        /* String[] tag_models = getResources().getStringArray(R.array.tag_type);
         ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, tag_models);
         tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
@@ -240,7 +196,7 @@ public class Connect_Activity extends AppCompatActivity {
         });
         senser_tag_type_Spinner.setSelection(0);*/
         //RF setting
-        rfPowerSpinner = findViewById(R.id.rfPower);
+        rfPowerSpinner = findViewById(R.id.rfPower_d5);
         String[] models = getResources().getStringArray(R.array.my_array);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, models);
         adapter.setDropDownViewResource(R.layout.customer_spinner);
@@ -254,89 +210,8 @@ public class Connect_Activity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
             }
         });
-        rfPowerSpinner.setSelection(0);
+        rfPowerSpinner.setSelection(0);//tag_copy_type_d5_spinner
         //Sensor 셋팅.
-
-        String[] sensorItems;
-        sensorSpinner = findViewById(R.id.sensor_type);
-        sensorItems = getResources().getStringArray(R.array.my_sensor);
-        ArrayAdapter<String> sensoradapter =
-                new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, sensorItems);
-        sensoradapter.setDropDownViewResource(R.layout.customer_spinner);
-        sensorSpinner.setAdapter(sensoradapter);
-
-        sensorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
-                Log.e("onItemSelected", String.valueOf(position)+", "+sensorSpinner.getSelectedItem().toString());
-                ui_ture_false(position);
-               // sensorType =position;
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
-            }
-        });
-       // sensorSpinner.setSelection(0);
-        //자이로 칼 여부
-        String[] calItems;
-        calSpinner = findViewById(R.id.cal_run);
-        calItems = getResources().getStringArray(R.array.my_cal);
-        ArrayAdapter<String> caladapter =
-                new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, calItems);
-        caladapter.setDropDownViewResource(R.layout.customer_spinner);
-        calSpinner.setAdapter(caladapter);
-
-        calSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String cal_check_status = gyo_cal.getText().toString();
-                if (cal_check_status.equals("보정 완료") && position == 1) {
-                    //Toast.makeText(getApplication(), "Cal On..\r\n" + position, Toast.LENGTH_LONG).show();
-                    new AlertDialog.Builder(Connect_Activity.this)
-                            .setTitle("Gyro 보정")
-                            .setMessage("다시 한번 Gyro 보정을 하시겠습니까 ?")
-                            .setIcon(R.drawable.nrfuart_hdpi_icon)
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    // 확인시 처리 로직
-                                    Toast.makeText(getApplication(), "전송 버튼을 선택하면 자이로 보정을 실시합니다.", Toast.LENGTH_LONG).show();
-                                }
-                            })
-                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    // 취소시 처리 로직
-                                    selectValue(calSpinner, "Off");
-                                    Toast.makeText(getApplication(), "선택을 취소 하였습니다.", Toast.LENGTH_LONG).show();
-                                }
-                            })
-                            .show();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                //textView.setText("선택하세요");
-            }
-        });
-
-        String[] sensor_operation_cycle_Items;
-        sensor_operation_cycle_Spinner = findViewById(R.id.operation_cycle_mode_Spinner);
-        sensor_operation_cycle_Items = getResources().getStringArray(R.array.my_operation);
-        ArrayAdapter<String> sensor_operation_cycle_adapter =
-                new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, sensor_operation_cycle_Items);
-        sensor_operation_cycle_adapter.setDropDownViewResource(R.layout.customer_spinner);
-        sensor_operation_cycle_Spinner.setAdapter(sensor_operation_cycle_adapter);
-
-        sensor_operation_cycle_Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
-            }
-        });
-        sensor_operation_cycle_Spinner.setSelection(0);
-
         senser_tag_copy_type_Spinner = findViewById(R.id.tag_copy_type_d5_spinner);
         String[] tag_models = getResources().getStringArray(R.array.tag_type);
         ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, tag_models);
@@ -353,8 +228,6 @@ public class Connect_Activity extends AppCompatActivity {
         });
         senser_tag_copy_type_Spinner.setSelection(0);
 
-
-
         btn_sendtotag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -368,37 +241,15 @@ public class Connect_Activity extends AppCompatActivity {
 
                     boolean send_ok_check = true;
                     String tag_type_val = senser_tag_type_Text.getText().toString();
-                   // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
-                    int tagtype_val = 0;
-                    switch (tag_type_val) {
-                    //    case "선택":
-                          //  customToastView("[단말기 타입] 을 선택해 주세요.");
-                          //  Toast.makeText(getApplication(), "[단말기 타입] 을 선택해 주세요.", Toast.LENGTH_LONG).show();
-                       //     tagtype_val = 0;
-                       //     break;
-                        case "00C8":
-                            tagtype_val = 0xC8;
-                            break;
-                        case "00C9":
-                            tagtype_val = 0xC9;
-                            break;
-                        case "00CA":
-                            tagtype_val = 0xCA;
-                            break;
-                        case "0007":
-                            tagtype_val = 0x07;
-                            break;
-                        case "00D5":
-                            tagtype_val = 0xD5;
-                            break;
-                        default:
-                            tagtype_val = 0;
-                            break;
-                    }
-                    if (tagtype_val > 0) {
-                        tagsend_data[2] = (byte) tagtype_val ;
+                        /* if (tagtype_val > 0) {
+                        tagsend_data[2] = (byte) (tagtype_val );
                         tagsend_data[3] = (byte) (tagtype_val >> 8);
-                    } else {
+                    }*/
+                    if (Integer.parseInt(tag_type_val) > 0) {
+                        tagsend_data[2] = (byte) (Integer.parseInt(tag_type_val) );
+                        tagsend_data[3] = (byte) (Integer.parseInt(tag_type_val) >> 8);
+                    }
+                else {
                         send_ok_check = false;
                         customToastView("[단말기 타입] 선택해 주세요.");
                     }
@@ -416,184 +267,102 @@ public class Connect_Activity extends AppCompatActivity {
 
                             } else {
                                 send_ok_check = false;
-                               // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
+                                // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
                                 customToastView("[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.");
                             }
                         } else {
                             send_ok_check = false;
-                           // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
+                            // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
 
                             customToastView("[단말기 번호] 입력한 데이터 타입이 안 맞습니다");
                         }
                     } else {
                         send_ok_check = false;
-                       // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
+                        // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
                         customToastView("[단말기 번호] 정보를 입력해 주세요");
 
                     }
 
                     int rfPower_val = Integer.parseInt(rfPowerSpinner.getSelectedItem().toString());
                     tagsend_data[8] = (byte) rfPower_val;
-                    if(!D5_true_false) {
-                        //Sensor Type 가져오기
-                        String sensortype_val = (sensorSpinner.getSelectedItem().toString());
-                        int sensor_type_var = 0;
-                        switch (sensortype_val) {
-                            case "0(없음)":
-                                sensor_type_var = 0;
-                                break;
-                            case "1(O2)":
-                                sensor_type_var = 1;
-                                break;
-                            case "2(5종)":
-                                sensor_type_var = 2;
-                                break;
-                            case "CO2":
-                                sensor_type_var = 4;
-                                break;
-                            case "CH4":
-                                sensor_type_var = 5;
-                                break;
-                        }
-                        tagsend_data[9] = (byte) sensor_type_var;
 
-                        //GYro Cal 동작 여부 가져오기
-                        String cal_run = (calSpinner.getSelectedItem().toString());
-                        int cal_run_var = 0;
-                        if ("On".equals(cal_run)) {
-                            cal_run_var = 1;
-                        }
-                        //Log.e("칼 실행 여부", )
-                        tagsend_data[10] = (byte) cal_run_var;
+                    String tag_type_copy_val = (senser_tag_copy_type_Spinner.getSelectedItem().toString());
+                    int tagtype_copy_val = 0;
+                    switch (tag_type_copy_val) {
+                        case "선택":
+                            customToastView("[단말기 타입] 을 선택해 주세요.");
+                            Toast.makeText(getApplication(), "[단말기 타입] 을 선택해 주세요.", Toast.LENGTH_LONG).show();
+                            tagtype_copy_val = 0;
+                            break;
+                        case "00C8":
+                            tagtype_copy_val = 0xC8;
+                            break;
+                        case "00C9":
+                            tagtype_copy_val = 0xC9;
+                            break;
+                        case "00CA":
+                            tagtype_copy_val = 0xCA;
+                            break;
+                        case "0007":
+                            tagtype_copy_val = 0x07;
+                            break;
+                        case "00D5":
+                            tagtype_copy_val = 0xD5;
+                            break;
+                    }
+                    if (tagtype_copy_val > 0) {
+                        tagsend_data[9] = (byte) (tagtype_copy_val );
+                        tagsend_data[10] = (byte) (tagtype_copy_val >> 8);
+                    } else {
+                        send_ok_check = false;
+                        customToastView("[단말기 타입] 선택해 주세요.");
+                    }
 
-                        int sensor_operation_cycle_val = Integer.parseInt(sensor_operation_cycle_Spinner.getSelectedItem().toString());
-                        tagsend_data[11] = (byte) sensor_operation_cycle_val;
+                    String tag_copy_no_var = tag_no.getText().toString().trim();
+                    if (tag_copy_no_var.length() > 0) {
+                        boolean isNumeric = tag_copy_no_var.matches("[+-]?\\d*(\\.\\d+)?");
+                        if (isNumeric) {
+                            int tag_no_val = Integer.parseInt(tag_copy_no_var);
+                            if (tag_no_val > 0) {
+                                tagsend_data[11] = (byte) (tag_no_val);
+                                tagsend_data[12] = (byte) (tag_no_val >> 8);
+                                tagsend_data[13] = (byte) (tag_no_val >> 16);
+                                tagsend_data[14] = (byte) (tag_no_val >> 24);
 
-                        if (O2alarm.getText().toString().length() != 0) {
-                            float tag_O2alarm = Float.parseFloat(O2alarm.getText().toString().trim());
-                            //   int tag_O2alarm2 = (int) Long.parseLong(O2alarm.getText().toString().trim(), 16);
-                            tagsend_data[12] = (byte) (tag_O2alarm * 10);
-                        } else {
-                            tagsend_data[12] = 0;
-                        }
-                        if (COalarm.getText().toString().length() != 0) {
-                            int tag_COalarm = Integer.parseInt(COalarm.getText().toString().trim());
-                            int tag_COalarm_set = tag_COalarm / 10;
-                            int tag_COalarm2 = (int) Long.parseLong(String.valueOf(tag_COalarm_set), 16);
-
-                            tagsend_data[13] = (byte) tag_COalarm_set;
-                        } else {
-                            tagsend_data[13] = 0;
-                        }
-                        if (H2Salarm.getText().toString().length() != 0) {
-                            int tag_H2Salarm = Integer.parseInt(H2Salarm.getText().toString().trim());
-                            tagsend_data[14] = (byte) tag_H2Salarm;
-                        } else {
-                            tagsend_data[14] = 0;
-                        }
-                        if (CO2alarm.getText().toString().length() != 0) {
-                            int tag_CO2alarm = Integer.parseInt(CO2alarm.getText().toString().trim());
-                            tagsend_data[15] = (byte) (tag_CO2alarm);
-                            tagsend_data[16] = (byte) (tag_CO2alarm >> 8);
-                        } else {
-                            tagsend_data[15] = 0;
-                            tagsend_data[16] = 0;
-                        }
-                        if (CH4alarm.getText().toString().length() != 0) {
-                            int tag_CH4alarm = Integer.parseInt(CH4alarm.getText().toString().trim());
-                            tagsend_data[17] = (byte) (tag_CH4alarm);
-                            tagsend_data[18] = (byte) (tag_CH4alarm >> 8);
-
-                            Log.e("ashex", asHex(tagsend_data));
-                        } else {
-                            tagsend_data[17] = 0;
-                            tagsend_data[18] = 0;
-                        }
-                    }else{
-                        String tag_type_copy_val = (senser_tag_copy_type_Spinner.getSelectedItem().toString());
-                        int tagtype_copy_val = 0;
-                        switch (tag_type_copy_val) {
-                            case "선택":
-                                customToastView("[단말기 타입] 을 선택해 주세요.");
-                                Toast.makeText(getApplication(), "[단말기 타입] 을 선택해 주세요.", Toast.LENGTH_LONG).show();
-                                tagtype_copy_val = 0;
-                                break;
-                            case "00C8":
-                                tagtype_copy_val = 0xC8;
-                                break;
-                            case "00C9":
-                                tagtype_copy_val = 0xC9;
-                                break;
-                            case "00CA":
-                                tagtype_copy_val = 0xCA;
-                                break;
-                            case "0007":
-                                tagtype_copy_val = 0x07;
-                                break;
-                            case "00D5":
-                                tagtype_copy_val = 0xD5;
-                                break;
-                        }
-                        if (tagtype_copy_val > 0) {
-                            tagsend_data[9] = (byte) (tagtype_copy_val );
-                            tagsend_data[10] = (byte) (tagtype_copy_val >> 8);
-                        } else {
-                            send_ok_check = false;
-                            customToastView("[단말기 타입] 선택해 주세요.");
-                        }
-
-                        String tag_copy_no_var = tag_copy_no.getText().toString().trim();
-                        if (tag_copy_no_var.length() > 0) {
-                            boolean isNumeric = tag_copy_no_var.matches("[+-]?\\d*(\\.\\d+)?");
-                            if (isNumeric) {
-                                int tag_no_val = Integer.parseInt(tag_copy_no_var);
-                                if (tag_no_val > 0) {
-                                    tagsend_data[11] = (byte) (tag_no_val);
-                                    tagsend_data[12] = (byte) (tag_no_val >> 8);
-                                    tagsend_data[13] = (byte) (tag_no_val >> 16);
-                                    tagsend_data[14] = (byte) (tag_no_val >> 24);
-
-                                } else {
-                                    send_ok_check = false;
-                                    // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
-                                    customToastView("[카피 단말기 번호] 입력한 데이터가 너무 크거나 적습니다.");
-                                }
                             } else {
                                 send_ok_check = false;
-                                // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
-
-                                customToastView("[카피 단말기 번호] 입력한 데이터 타입이 안 맞습니다");
+                                // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
+                                customToastView("[카피 단말기 번호] 입력한 데이터가 너무 크거나 적습니다.");
                             }
                         } else {
                             send_ok_check = false;
-                            // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
-                            customToastView("[카피 단말기 번호] 정보를 입력해 주세요");
+                            // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
 
+                            customToastView("[카피 단말기 번호] 입력한 데이터 타입이 안 맞습니다");
                         }
-                        tagsend_data[15] = 0;
-                        tagsend_data[16] = 0;
-                        tagsend_data[17] = 0;
-                        tagsend_data[18] = 0;
+                    } else {
+                        send_ok_check = false;
+                        // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
+                        customToastView("[카피 단말기 번호] 정보를 입력해 주세요");
+
                     }
+                    tagsend_data[15] = 0;
+                    tagsend_data[16] = 0;
+                    tagsend_data[17] = 0;
+                    tagsend_data[18] = 0;
                     if (send_ok_check) {
                         long countnow = System.currentTimeMillis();
                         SimpleDateFormat aftertime = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.KOREA);
                         String nowtime = aftertime.format(countnow);
                         String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
-                         String send_hex_data = asHex(tagsend_data);
+                        String send_hex_data = asHex(tagsend_data);
                         Log.e("전송 데이터", send_hex_data);
                         mService.writeRXCharacteristic(tagsend_data);
                         customToastView("전송 완료");
                         connect_fail = false;
-                        if(!D5_true_false) {
-                            String senser_data = O2alarm.getText().toString() + ',' + COalarm.getText().toString() + ',' + H2Salarm.getText().toString() + ',' + CO2alarm.getText().toString() + ',' + CH4alarm.getText().toString();
-                            String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
-                            Network_Confirm(send_data);
-                        }else{
-                          //  String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + ","+ tag_copy_no.getText().toString();
-                          //  String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
-                          //  Network_Confirm(send_data);
-                        }
+                       String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime;
+                        Network_Confirm(send_data);
+
                     }
                 } else {
                     customToastView("태그를 연결해 주세요");
@@ -611,7 +380,7 @@ public class Connect_Activity extends AppCompatActivity {
             }
         };
         connect_handler.postDelayed(runnable10, 2000);
-       // Initialize();
+        // Initialize();
     }
     private boolean mConnecting_true = false;
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -620,14 +389,14 @@ public class Connect_Activity extends AppCompatActivity {
             Log.d(TAG, "onServiceConnected mService= " + mService);
             if (!mService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
-              //  Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-              //  startActivity(intent);
+                //  Intent intent = new Intent(Connect_D5_Activity.this, MainActivity.class);
+                //  startActivity(intent);
                 finish();
             }
 
-                  //  senser_adress_connect();
+            //  senser_adress_connect();
 
-           //
+            //
 
         }
         public void onServiceDisconnected(ComponentName classname) {
@@ -635,17 +404,16 @@ public class Connect_Activity extends AppCompatActivity {
         }
     };
     private final MyHandler connect_handler = new MyHandler(this);
-    private final MyHandler D5_connect_handler = new MyHandler(this);
     private static class MyHandler extends Handler {
-        private final WeakReference<Connect_Activity> mActivity;
+        private final WeakReference<Connect_D5_Activity> mActivity;
 
-        public MyHandler(Connect_Activity activity) {
-            mActivity = new WeakReference<Connect_Activity>(activity);
+        public MyHandler(Connect_D5_Activity activity) {
+            mActivity = new WeakReference<Connect_D5_Activity>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            Connect_Activity activity = mActivity.get();
+            Connect_D5_Activity activity = mActivity.get();
             if (activity != null) {
 
             }
@@ -654,15 +422,15 @@ public class Connect_Activity extends AppCompatActivity {
 
     private void senser_adress_connect(){
         Intent intent = getIntent();
-        String sneser_adress_save = intent.getStringExtra("address");
+        String sneser_adress_save = intent.getStringExtra("address2");
         Log.e("STag", "351");
         connect_fail=true;
         if (mBtAdapter.isEnabled() && sneser_adress_save != null) {
             if (mService != null) {
                 mbluetootDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(sneser_adress_save);
-               // mConnecting_true = true;
+                // mConnecting_true = true;
                 mService.connect(sneser_adress_save);
-            //    connect_check_flag = true;
+                //    connect_check_flag = true;
             }
         }
     }
@@ -692,7 +460,7 @@ public class Connect_Activity extends AppCompatActivity {
                     public void run() {
                         btn_sendtotag.setBackgroundTintList(ContextCompat.getColorStateList(getApplication(), R.color.blue));
 
-                      //  btn_sendtotag.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.blue));
+                        //  btn_sendtotag.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.blue));
                         btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_CONNECT_MSG");
@@ -712,13 +480,13 @@ public class Connect_Activity extends AppCompatActivity {
                         result = "";
                         //
 
-                      //  mConnecting_true = false;
+                        //  mConnecting_true = false;
                         connect_check_flag = true;
                         Saving_File_name = TagName + "_" + mbluetootDevice.toString().replace(":", "") + "_" + StartTime;
 
                         dataToServer = "";
 
-                        listAdapter.add("[" + currentDateTimeString + "] Connected to: " + mbluetootDevice.getName());
+                  //      listAdapter.add("[" + currentDateTimeString + "] Connected to: " + mbluetootDevice.getName());
                         invalidateOptionsMenu();
                     }
                 });
@@ -732,27 +500,25 @@ public class Connect_Activity extends AppCompatActivity {
                         Log.d(TAG, "UART_DISCONNECT_MSG");
                         // btnConnectDisconnect.setText(R.string.str_connect);
                         btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.gray));
-                      //  btn_sendtotag.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.gray3));
+                        //  btn_sendtotag.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.gray3));
                         btn_sendtotag.setBackgroundTintList(ContextCompat.getColorStateList(getApplication(), R.color.gray3));
                         connect_check_flag = false;
                         cetting_boolean = false;
-                       // mConnecting_true = false;
+                        // mConnecting_true = false;
                         cetting_count = 0;
                         UI_reset();
 
-                        listAdapter.add("[" + currentDateTimeString + "] Disconnected to: " + mbluetootDevice.getName());
+                       // listAdapter.add("[" + currentDateTimeString + "] Disconnected to: " + mbluetootDevice.getName());
 
                         mService.close();
                         //setUiState();
 
 
-                      //  Toast.makeText(getApplication(), mbluetootDevice.getName() + " 연결해제", Toast.LENGTH_SHORT).show();
-                        if(connect_fail && !D5_connect_true) {
+                        //  Toast.makeText(getApplication(), mbluetootDevice.getName() + " 연결해제", Toast.LENGTH_SHORT).show();
+                        if(connect_fail) {
                             customToastView(mbluetootDevice.getName() + " 연결실패");
-                        }else if(!connect_fail && !D5_connect_true){
+                        }else{
                             customToastView(mbluetootDevice.getName() + " 연결해제");
-                        }else if(D5_connect_true){
-                            customToastView("D5 확인. 연결 중");
                         }
                         connect_fail = false;
                         try {
@@ -799,13 +565,13 @@ public class Connect_Activity extends AppCompatActivity {
                                 cetting_count++;
                                 if (txValue[0] == 0x02 && txValue[19] == 0x03) {
                                     rcount++;
-                                    cetting_count = 0;
-                                    cetting_boolean = true;
-                                    Log.e("Tag_number753", "753");
+                                    cetting_count=0;
+                                    cetting_boolean=true;
+                                    Log.e("Tag_number753","753");
                                     if (rcount == 1) {
                                         String r_data_hex = asHex(txValue);
                                         int rece_tag_type = ConvertToIntLittle(txValue, 2);
-                                        Log.e("Tag_Rece3", txValue[1] + ", " + txValue[2]);
+                                        Log.e("Tag_Rece3", txValue[1]+", "+txValue[2]);
                                         String tag_type_str = "";
                                         switch (rece_tag_type) {
                                             case 200:
@@ -822,127 +588,33 @@ public class Connect_Activity extends AppCompatActivity {
                                                 break;
                                         }
                                         // selectValue(senser_tag_type_Spinner, tag_type_str);
-                                        String v1 = String.format("%02X", rece_tag_type & 0xFF);
-                                        String v2 = String.format("%02X", rece_tag_type >> 16 & 0xFF);
-                                        String v3 = v2 + v1;
-
-                                        senser_tag_type_Text.setText(v3);
+                                        String tag1 = String.format("%02X", rece_tag_type & 0xFF);
+                                        String tag2 = String.format("%02X", rece_tag_type>>16 & 0xFF);
+                                        String tag3 = tag2 + tag1;
+                                        senser_tag_type_Text.setText(tag3);
 
                                         int rece_tag_no = ConvertToIntLittle2(txValue, 4);
                                         tag_no.setText(rece_tag_no + "");
 
+                                        // selectValue(senser_tag_type_Spinner, tag_type_str);
                                         int rece_rf_power = txValue[8];
                                         selectValue(rfPowerSpinner, rece_rf_power);
-                                        if(!D5_true_false) {
-                                            int rece_sensor_type = txValue[9] & 0xff;
-                                            String sensor_type_str = "";
-                                            switch (rece_sensor_type) {
-                                                case 0:
-                                                    sensor_type_str = "0(없음)";
-                                                    break;
-                                                case 1:
-                                                    sensor_type_str = "1(O2)";
-                                                    break;
-                                                case 2:
-                                                    sensor_type_str = "2(5종)";
-                                                    break;
-                                                case 4:
-                                                    sensor_type_str = "CO2";
-                                                    break;
-                                                case 5:
-                                                    sensor_type_str = "CH4";
-                                                    break;
-                                            }
-                                            Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
-                                            selectValue(sensorSpinner, sensor_type_str);
 
-                                            int rece_cal_status = txValue[10] & 0xff;
-                                            String gro_cal_status = "보정 안됨 ";
-                                            //   String calSpinnertext ="Off";
-                                            if (rece_cal_status == 1) {
-                                                gro_cal_status = "보정 완료";
-                                                //   calSpinnertext = "On";
-                                            }
-                                            Log.e("Tag Rece cal Type: ", rece_cal_status + "/" + gro_cal_status);
-                                            gyo_cal.setText(gro_cal_status + "");
-                                            //selectValue(calSpinner, calSpinnertext);
+                                        int rece_copy_type = ConvertToIntLittle2(txValue, 9);
 
-                                       /* int rece_sensor_power_on = txValue[11] & 0xff;
-                                        Log.e("Tag sensor Power On: ", rece_sensor_power_on + "");
-                                        selectValue(sensor_power_on_Spinner, rece_sensor_power_on);*/
+                                        String C1 = String.format("%02X", rece_copy_type & 0xFF);
+                                        String C2 = String.format("%02X", rece_copy_type>>16 & 0xFF);
+                                        String C3 = C2 + C1;
+                                        selectValue(senser_tag_copy_type_Spinner,C3);
 
-                                            int rece_operation_cycle_on = txValue[11] & 0xff;
-                                            Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
-                                            selectValue(sensor_operation_cycle_Spinner, rece_operation_cycle_on);
-                                            float rece_O2_no = txValue[12] & 0xff;
-                                            float rece_O2_no2 = (float) (rece_O2_no * 0.1);
-                                            O2alarm.setText(String.valueOf(rece_O2_no2));
-                                            //   if (rece_sensor_type == 2) {
-                                            int rece_CO_no = txValue[13] & 0xff;
-                                            int rece_CO_no_SET = rece_CO_no * 10;
-                                            COalarm.setText(String.valueOf(rece_CO_no_SET));
-                                            int rece_H2S_no = txValue[14] & 0xff;
-                                            H2Salarm.setText(String.valueOf(rece_H2S_no));
+                                        int rece_copy_tag_no = ConvertToIntLittle2(txValue, 11);
+                                        tag_copy_no.setText(rece_copy_tag_no + "");
 
-                                            int rece_CO2_no = ConvertToIntLittle(txValue, 15);
-                                            CO2alarm.setText(String.valueOf(rece_CO2_no));
-
-                                            int rece_CH4_no = ConvertToIntLittle(txValue, 17);
-                                            CH4alarm.setText(String.valueOf(rece_CH4_no));
-                                        }else{
-                                            int rece_copy_type = ConvertToIntLittle(txValue, 9);
-                                            String C1 = String.format("%02X", rece_copy_type & 0xFF);
-                                            String C2 = String.format("%02X", rece_copy_type>>16 & 0xFF);
-                                            String C3 = C2 + C1;
-                                            Log.e("C3c3",C3);
-                                            String tag_copy_type_str = "";
-                                            switch (rece_copy_type) {
-                                                case 200:
-                                                    tag_copy_type_str = "00C8";
-                                                    break;
-                                                case 201:
-                                                    tag_copy_type_str = "00C9";
-                                                    break;
-                                                case 202:
-                                                    tag_copy_type_str = "00CA";
-                                                    break;
-                                                case 7:
-                                                    tag_copy_type_str = "0007";
-                                                    break;
-                                                case 213:
-                                                    tag_copy_type_str = "00D5";
-                                                    break;
-                                            }
-                                            selectValue(senser_tag_copy_type_Spinner,tag_copy_type_str);
-
-                                            int rece_copy_tag_no = ConvertToIntLittle2(txValue, 11);
-                                            tag_copy_no.setText(rece_copy_tag_no + "");
-                                        }
-                                        if (v3.equals("00D5")&&!D5_true_false) {
-                                            D5_true_false=true;
-                                            mCA_layout.setVisibility(View.GONE);
-                                            mD5_layout.setVisibility(View.VISIBLE);
-                                            customToastView("D5화면으로 변경");
-                                            Runnable runnable10 = new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    //  startScan();
-                                                    rcount=0;
-
-                                                       /* Intent intent = getIntent();
-                                                        String sneser_adress_save = intent.getStringExtra("address");
-                                                        Intent intent2 = new Intent(Connect_Activity.this, Connect_D5_Activity.class);
-                                                        intent2.putExtra("address2", sneser_adress_save);
-                                                        startActivity(intent2);
-                                                        finish();*/
-                                                }
-                                            };
-                                            D5_connect_handler.postDelayed(runnable10, 3000);
-                                        }
                                     } else {
                                         int rece_cal_status = txValue[7] & 0xff;
                                         Log.e("Cal 상태 체크", rece_cal_status + "");
                                     }
+
                                 }
                                 // Log.e("STag", "End...." + accelerometerX);
                             } else {
@@ -963,27 +635,18 @@ public class Connect_Activity extends AppCompatActivity {
             }
         }
     };
-    private boolean D5_connect_true=false;
     private void UI_reset(){
         vw_txtmacaddrValue.setText("");
         vw_txt_tag_adress.setText("");
         //tag_type.setText("");
+
+        senser_tag_type_Text.setText("");
         tag_no.setText("0");
         selectValue(rfPowerSpinner, "0");
-
-        selectValue(sensorSpinner, "0(없음)");
-        gyo_cal.setText("보정 안됨");
-        selectValue(calSpinner, "Off");
-        senser_tag_type_Text.setText("");
-
+        selectValue(senser_tag_copy_type_Spinner, "선택");
+        tag_copy_no.setText("0");
         // selectValue(senser_tag_type_Spinner, "선택");
-        selectValue(sensor_operation_cycle_Spinner, "0");
 
-        O2alarm.setText("");
-        COalarm.setText("");
-        H2Salarm.setText("");
-        CO2alarm.setText("");
-        CH4alarm.setText("");;
     }
     private void selectValue(Spinner spinner, Object value) {
         for (int i = 0; i < spinner.getCount(); i++) {
@@ -1135,8 +798,8 @@ public class Connect_Activity extends AppCompatActivity {
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
                     Toast.makeText(this, "Problem in BT Turning ON ", Toast.LENGTH_SHORT).show();
-                 //   Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-                  //  startActivity(intent);
+                    //   Intent intent = new Intent(Connect_D5_Activity.this, MainActivity.class);
+                    //  startActivity(intent);
                     finish();
                 }
                 break;
@@ -1193,11 +856,11 @@ public class Connect_Activity extends AppCompatActivity {
     public boolean onOptionsItemSelected(final MenuItem item) {
         final int itemId = item.getItemId();
         if (itemId == android.R.id.home) {
-            //Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-           // startActivity(intent);
+            //Intent intent = new Intent(Connect_D5_Activity.this, MainActivity.class);
+            // startActivity(intent);
             connect_fail = false;
             onBackPressed();
-           // finish();
+            // finish();
             return true;
         }else if (itemId == R.id.action_connect) {
             connect_fail=true;
@@ -1216,13 +879,13 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
     private void ui_init() {
-        listAdapter = new ArrayAdapter<String>(this, R.layout.message_detail);
+      //  listAdapter = new ArrayAdapter<String>(this, R.layout.message_detail);
 
-        vw_txtmacaddrValue = (TextView) findViewById(R.id.macaddrValue);
-        vw_txt_tag_adress = (TextView) findViewById(R.id.macaddrValue2);
+        vw_txtmacaddrValue = (TextView) findViewById(R.id.macaddrValue_d5);
+        vw_txt_tag_adress = (TextView) findViewById(R.id.macaddrValue2_d5);
         // intervalTime = (EditText) findViewById(R.id.interval);
-       //tag_type = (EditText) findViewById(R.id.tag_type);
-        tag_no = (EditText) findViewById(R.id.tag_no);
+        //tag_type = (EditText) findViewById(R.id.tag_type);
+        tag_no = (EditText) findViewById(R.id.tag_no_d5);
         tag_no.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -1239,21 +902,6 @@ public class Connect_Activity extends AppCompatActivity {
                 }
             }
         });
-
-        gyo_cal = (TextView) findViewById(R.id.gyo_cal);
-        O2alarm = (EditText) findViewById(R.id.tag_O2_edit);
-        O2alarm.setFilters(new InputFilter[]{new InputDoubleFilterMinMax(0, 25.5, 1,(Connect_Activity) Connect_Activity.this)});
-        COalarm = (EditText) findViewById(R.id.tag_CO_edit);
-        COalarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "2550",(Connect_Activity) Connect_Activity.this)});
-        H2Salarm = (EditText) findViewById(R.id.tag_H2S_edit);
-        H2Salarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "255",(Connect_Activity) Connect_Activity.this)});
-        CO2alarm = (EditText) findViewById(R.id.tag_CO2_edit);
-        CO2alarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "60000",(Connect_Activity) Connect_Activity.this)});
-        CH4alarm = (EditText) findViewById(R.id.tag_CH4_edit);
-        CH4alarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "60000",(Connect_Activity) Connect_Activity.this)});
-        //tag_ver = (TextView) findViewById(R.id.tag_ver);
-        btn_sendtotag = (Button) findViewById(R.id.btn_sendTotag);
-
         tag_copy_no = (EditText) findViewById(R.id.tag_copy_no_d5);
         tag_copy_no.addTextChangedListener(new TextWatcher() {
             @Override
@@ -1271,92 +919,33 @@ public class Connect_Activity extends AppCompatActivity {
                 }
             }
         });
+        //tag_ver = (TextView) findViewById(R.id.tag_ver);
+        btn_sendtotag = (Button) findViewById(R.id.btn_sendTotag_d5);
     }
     private int ui_T_F=0;
     private void ui_ture_false(int mposition) {
         Log.e("Tag_number71248","1248");
         if(mposition==0){
             ui_T_F=0;
-           // rcount=0;
-           // UI_reset();
-            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            // rcount=0;
+            // UI_reset();
+           /* O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
             O2alarm.setFocusable(false);//포커싱과
-            O2alarm.setClickable(false);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            COalarm.setFocusable(false);//포커싱과
-            COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            H2Salarm.setFocusable(false);//포커싱과
-            H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CO2alarm.setFocusable(false);//포커싱과
-            CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CH4alarm.setFocusable(false);//포커싱과
-            CH4alarm.setClickable(false);
+            O2alarm.setClickable(false);*/
+
         }else if(mposition == 1){
             ui_T_F=1;
 
-            O2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
+           /* O2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
             O2alarm.setFocusable(true);//포커싱과
             O2alarm.setClickable(true);
-            O2alarm.setFocusableInTouchMode(true);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            COalarm.setFocusable(false);//포커싱과
-            COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            H2Salarm.setFocusable(false);//포커싱과
-            H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CO2alarm.setFocusable(false);//포커싱과
-            CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CH4alarm.setFocusable(false);//포커싱과
-            CH4alarm.setClickable(false);
+            O2alarm.setFocusableInTouchMode(true);*/
+
         }else if(mposition == 2){
             ui_T_F=2;
 
-            O2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
-            O2alarm.setFocusable(true);//포커싱과
-            O2alarm.setClickable(true);
-            O2alarm.setFocusableInTouchMode(true);
-            COalarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
-            COalarm.setFocusable(true);//포커싱과
-            COalarm.setClickable(true);
-            COalarm.setFocusableInTouchMode(true);
-            H2Salarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
-            H2Salarm.setFocusable(true);//포커싱과
-            H2Salarm.setClickable(true);
-            H2Salarm.setFocusableInTouchMode(true);
-            CO2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
-            CO2alarm.setFocusable(true);//포커싱과
-            CO2alarm.setClickable(true);
-            CO2alarm.setFocusableInTouchMode(true);
-            CH4alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
-            CH4alarm.setFocusable(true);//포커싱과
-            CH4alarm.setClickable(true);
-            CH4alarm.setFocusableInTouchMode(true);
         } else{
             ui_T_F=3;
-
-            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            O2alarm.setFocusable(false);//포커싱과
-            O2alarm.setClickable(false);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            COalarm.setFocusable(false);//포커싱과
-            COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            H2Salarm.setFocusable(false);//포커싱과
-            H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CO2alarm.setFocusable(false);//포커싱과
-            CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
-            CH4alarm.setFocusable(false);//포커싱과
-            CH4alarm.setClickable(false);
-        }
-        if(D5_true_false){
-
         }
         Log.e("Tag_number71329","1329");
     }
@@ -1535,7 +1124,7 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
     private void writeLog(String data) {//csv파일 저장
-       // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
+        // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
         File file;// = new File(str_Path);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator);
@@ -1576,9 +1165,9 @@ public class Connect_Activity extends AppCompatActivity {
             bfw.close();
             Log.e("TAGddd", "ddd");
         } catch (FileNotFoundException e) {
-              Log.e("TAGddd", e.toString());
+            Log.e("TAGddd", e.toString());
         } catch (IOException e) {
-              Log.e("TAGddd", e.toString());
+            Log.e("TAGddd", e.toString());
         }
     }
 

@@ -530,8 +530,8 @@ public class MainFragment extends Fragment {
 
         long min = (ell / 1000) / 60;
         Log.e("SystemClock1", min+","+RescanBaseTime+","+ell);
-        if(2000000<ell){//현재 20초마다 나중에 20분마다로 바꿀것
-       // if (ell > bleRestartTime) {
+        if(20<min){//현재 20초마다 나중에 20분마다로 바꿀것
+       // if (ell > 1200000) {
             Log.e("SystemClock2", min+","+RescanBaseTime+","+ell);
             Log.e("BLE Scan:", " ReStart");
             RescanBaseTime = SystemClock.elapsedRealtime();

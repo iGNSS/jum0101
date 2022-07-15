@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="1dp"
+        android:paddingBottom="5dp"
+        android:orientation="vertical">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.8"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/macaddrValue_d5"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="10"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:text="Stag Setting"
+                android:background="@color/blue"
+                android:textColor="#ffffff"
+                android:textStyle="bold"
+                android:textSize="13pt" />
+
+            <TextView
+                android:id="@+id/macaddrValue2_d5"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="7"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:text="Stag Adress"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:textSize="10pt" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/rcount"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:text=" 단말기 타입"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+            <TextView
+                android:id="@+id/tag_type_d5_text"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/textview_design"
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                android:gravity="left|center"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="0dp"
+                android:textSize="25sp"
+                android:layout_width="100sp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:text=" 단말기 번호"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <EditText
+                android:id="@+id/tag_no_d5"
+                android:layout_width="100sp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="left|center"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="0dp"
+                android:background="@drawable/textview_design"
+                android:hint=""
+                android:textColor="@color/black"
+                android:textColorHint="@color/blue"
+                android:inputType="number"
+                android:maxLength="8"
+                android:text=""
+                android:textSize="10pt" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/gyrotitle"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:text=" RF 파워"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <Spinner
+                android:id="@+id/rfPower_d5"
+                android:layout_gravity="bottom"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/spinner_background"
+                android:popupBackground="@drawable/spinner_background"
+                android:spinnerMode="dropdown"
+                android:layout_width="100sp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:text=" 카피 타입"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+            <Spinner
+                android:id="@+id/tag_copy_type_d5_spinner"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/spinner_background"
+                android:popupBackground="@drawable/spinner_background"
+                android:spinnerMode="dropdown"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_width="100sp"
+
+                android:layout_height="match_parent"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/accetitle"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:text=" 카피 단말기 번호"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <EditText
+                android:id="@+id/tag_copy_no_d5"
+                android:layout_width="100sp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="left|center"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="0dp"
+                android:background="@drawable/textview_design"
+                android:hint=""
+                android:textColor="@color/black"
+                android:textColorHint="@color/blue"
+                android:inputType="number"
+                android:maxLength="8"
+                android:text=""
+                android:textSize="10pt" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="5dp" />
+
+        <LinearLayout
+            android:id="@+id/bottom2Layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.3"
+            android:layout_gravity="bottom"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_sendTotag_d5"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="2dp"
+                android:background="@color/blue"
+                android:backgroundTint="@color/blue"
+                android:textColor="#ffffff"
+                android:textSize="12pt"
+                android:includeFontPadding="false"
+                android:text="@string/str_sendtotag" />
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>
