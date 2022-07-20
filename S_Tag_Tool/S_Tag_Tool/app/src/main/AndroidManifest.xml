@@ -38,6 +38,7 @@
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustNothing"
             android:theme="@style/Theme.S_Tag_Tool"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,11 +50,7 @@
             android:name="com.ble_connect.Connect_Activity"
             android:theme="@style/Theme.S_Tag_Tool"
             android:parentActivityName=".MainActivity"
-            android:exported="true" />
-        <activity
-            android:name="com.ble_connect.Connect_D5_Activity"
-            android:theme="@style/Theme.S_Tag_Tool"
-            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true" />
         <activity android:name="com.ble_connect.DeviceListActivity"
             android:label="@string/app_name"

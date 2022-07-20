@@ -15,7 +15,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,7 +28,6 @@ import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,12 +36,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.IdRes;
@@ -52,7 +48,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -76,11 +71,8 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
 public class MainFragment extends Fragment {
@@ -110,7 +102,6 @@ public class MainFragment extends Fragment {
 
 
     long RescanBaseTime;
-    private int bleRestartTime = 5 * 1000 * 60;
 
     Spinner scanMinorId_spinner;
     LinearLayout bletypeLayout;
@@ -122,14 +113,6 @@ public class MainFragment extends Fragment {
 
     public static boolean fos_open_flag_ble=false;
 
-    //khsig_20200515 start
-    int serverResponseCode = 0;
-    TextView title;
-    String[] fileList;
-    int sendCounter = 0, doneCounter = 1;
-
-    public static String dataSaveFolder = "000_Stag";
-    String dataFileNameCheckSTR = "scenario";
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanSettings btLeScanSettings;
@@ -137,9 +120,10 @@ public class MainFragment extends Fragment {
     private static final int REQUEST_ENABLE_BT = 2;
     RecyclerView deviceListView;
     private boolean systemBoole=false;
-    private TextView empty_scan_view,empty_stop_view;
+    private LinearLayout empty_stop_view;
+    private LinearLayout empty_scan_view;
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
 //이 메소드가 호출될떄는 프래그먼트가 엑티비티위에 올라와있는거니깐 getActivity메소드로 엑티비티참조가능
         activity = (MainActivity) getActivity();
@@ -152,7 +136,7 @@ public class MainFragment extends Fragment {
         activity = null;
     }
     private String[] permissions;
-    private String[] permissions1 = {
+    private final String[] permissions1 = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -161,7 +145,7 @@ public class MainFragment extends Fragment {
 
     };
 
-    private String[] permissions2 = {
+    private final String[] permissions2 = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -175,6 +159,7 @@ public class MainFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.e("activityt_TAG", "onCreat");
 //프래그먼트 메인을 인플레이트해주고 컨테이너에 붙여달라는 뜻임
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main , container, false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -185,11 +170,11 @@ public class MainFragment extends Fragment {
             checkPermissions(permissions);
         }
         RescanBaseTime = SystemClock.elapsedRealtime();
-        locationManager = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
+        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
           // bluetoothCheck();
         scanMinorId_spinner = (Spinner) rootView.findViewById(R.id.minorid);
         String[] tag_models = getResources().getStringArray(R.array.tag_type);
-        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<String>(activity.getBaseContext(), R.layout.custom_spinner_list, tag_models);
+        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<>(activity.getBaseContext(), R.layout.custom_spinner_list, tag_models);
         tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
         scanMinorId_spinner.setAdapter(tag_spinner_adapter);
 
@@ -221,7 +206,6 @@ public class MainFragment extends Fragment {
         //라디오 그룹 설정
         radioGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup);
         radioGroup.setOnCheckedChangeListener(radioGroupButtonChangeListener);
-
         GPSSetting();
         init(rootView);
         setHasOptionsMenu(true);
@@ -249,6 +233,7 @@ public class MainFragment extends Fragment {
         deviceListView.setLayoutManager(linearLayoutManager);
         deviceListView.setItemAnimator(null);
         recyclerVierAdapter = new RecyclerViewAdapter(deviceListView,activity,getContext(),systemBoole);
+        recyclerVierAdapter.item_noti();
         deviceListView.setAdapter(recyclerVierAdapter);
 
         recyclerVierAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
@@ -270,9 +255,7 @@ public class MainFragment extends Fragment {
     private void bluetoothCheck(){
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            btLeScanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build ();
-        }
+        btLeScanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build ();
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         // 지원하지 않는다면 어플을 종료시킨다.
         if(mBluetoothAdapter == null){
@@ -358,9 +341,9 @@ public class MainFragment extends Fragment {
         @Override
         public void onScanResult(int callbackType, final ScanResult result){
             checkIfEmpty();
-             Log.e("BLE", "Discovery onScanResult00: 작동1 ");
+            // Log.e("BLE", "Discovery onScanResult00: 작동1 ");
             if (result.getDevice().getName() != null) {
-                 Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
+               //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
                 if (result.getDevice().getName().startsWith("TJ-")) {
                     //Log.e("123123",result.getDevice().getName());
                     recyclerVierAdapter.update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
@@ -374,28 +357,7 @@ public class MainFragment extends Fragment {
 
         }
     };
-    public static List<byte[]> ConvertToList(SparseArray<byte[]> sparseArray) {
-        if (sparseArray == null) return null;
-        List<byte[]> arrayList = new ArrayList<byte[]>(sparseArray.size());
 
-        for (int i = 0; i < sparseArray.size(); i++)
-            arrayList.add(sparseArray.valueAt(i));
-        return arrayList;
-    }
-    public String getUUID(AdvertiseData data){
-        List<ParcelUuid> UUIDs = data.getServiceUuids();
-        //ToastMakers.message(scannerActivity.getApplicationContext(), UUIDs.toString());
-        String UUIDx = UUIDs.get(0).getUuid().toString();
-        Log.e("UUID", " as list ->" + UUIDx);
-        return UUIDx;
-    }
-    public static byte[] asBytes(UUID uuid) {
-        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-
-        bb.putLong(uuid.getLeastSignificantBits());
-        bb.putLong(uuid.getMostSignificantBits());
-        return bb.array();
-    }
     private boolean mIsScanning = false;
     RadioGroup.OnCheckedChangeListener radioGroupButtonChangeListener = new RadioGroup.OnCheckedChangeListener() {
         @Override
@@ -448,7 +410,7 @@ public class MainFragment extends Fragment {
         }else if (itemId == R.id.action_change) {
             recyclerVierAdapter.item_Clear();
             recyclerVierAdapter.notifyDataSetChanged();
-
+            checkIfEmpty();
             return true;
         }/*else if(itemId == R.id.action_clear){
             recyclerVierAdapter.item_Clear();
@@ -467,9 +429,13 @@ public class MainFragment extends Fragment {
                 Log.e("startscan", "287");
                 activity.invalidateOptionsMenu();
             }
-            BLE_type = scanMinorId_spinner.getSelectedItem().toString();
-            if (BLE_type.equals("선택")) {
+            if(!systemBoole) {
                 BLE_type = "";
+            }else{
+                BLE_type = scanMinorId_spinner.getSelectedItem().toString();
+                if (BLE_type.equals("선택")) {
+                    BLE_type = "";
+                }
             }
             //  InputMethodManager inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             //   inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
@@ -529,9 +495,7 @@ public class MainFragment extends Fragment {
         long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
 
         long min = (ell / 1000) / 60;
-        Log.e("SystemClock1", min+","+RescanBaseTime+","+ell);
-        if(20<min){//현재 20초마다 나중에 20분마다로 바꿀것
-       // if (ell > 1200000) {
+        if(20<min){
             Log.e("SystemClock2", min+","+RescanBaseTime+","+ell);
             Log.e("BLE Scan:", " ReStart");
             RescanBaseTime = SystemClock.elapsedRealtime();
@@ -539,6 +503,7 @@ public class MainFragment extends Fragment {
         }
     }
     private final MyHandler timechange_handler = new MyHandler(this);
+    private final MyHandler start_handler = new MyHandler(this);
     private static class MyHandler extends Handler {
         private final WeakReference<MainFragment> mActivity;
 
@@ -554,16 +519,7 @@ public class MainFragment extends Fragment {
             }
         }
     }
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.e("activityt_TAG","onStop");
-        //if (mBluetoothLeScanner != null) {
-        recyclerVierAdapter.item_Clear();
-        stopScan();
-        //}
 
-    }
 
     @Override
     public void onDestroy() {
@@ -581,8 +537,9 @@ public class MainFragment extends Fragment {
         Log.e("activityt_TAG", "onPause");
         super.onPause();
         //  if (mBluetoothLeScanner != null) {
-        recyclerVierAdapter.item_Clear();
+
         stopScan();
+        recyclerVierAdapter.item_Clear();
         try {
             activity.unregisterReceiver(mBroadcastReceiver1);
         } catch (Exception ignored){
@@ -590,16 +547,52 @@ public class MainFragment extends Fragment {
         }
         // finish();
     }
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.e("activityt_TAG","onStop");
+        //if (mBluetoothLeScanner != null) {
+        // recyclerVierAdapter.item_Clear();
 
+       // stopScan();
+       // recyclerVierAdapter.item_Clear();
+        //}
+
+    }
+    @Override
+    public void onStart() {
+
+        super.onStart();
+     //   recyclerVierAdapter.item_noti();
+     //   startScan();
+        Log.e("activityt_TAG", "onStart()");
+    }
 
     @Override
     public void onResume() {
         super.onResume();
         Log.e("activityt_TAG", "onResume");
         Network_Confirm();
+        stopScan();
         recyclerVierAdapter.item_noti();
-        startScan();
+        recyclerVierAdapter.notifyDataSetChanged();
+        if(!mble_gps_false) {
 
+            Runnable runnable10;//  startScan();
+            if(!systemBoole) {
+                runnable10 = new Runnable() {
+                    @Override
+                    public void run() {
+                        //  startScan();
+                        startScan();
+                    }
+                };
+                start_handler.postDelayed(runnable10, 1000);
+            }
+
+        }
+        checkIfEmpty();
+        mble_gps_false=false;
         IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);//ble 상태 감지 필터
         activity.registerReceiver(mBroadcastReceiver1, filter1);
         IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
@@ -609,7 +602,7 @@ public class MainFragment extends Fragment {
 
         // checkSDK();
     }
-
+    private boolean mble_gps_false = false;
     private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
 
         @Override
@@ -625,12 +618,14 @@ public class MainFragment extends Fragment {
                         activity.invalidateOptionsMenu();
                         Toast.makeText(activity.getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
                         //log.e("off1", "off1");
+                        mble_gps_false=true;
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         //log.e("off2", "off2");
                         break;
                     case BluetoothAdapter.STATE_ON:
                         activity.invalidateOptionsMenu();
+
                         //log.e("off3", "off3");
                        // startService();
                         // mblecheck = true;
@@ -665,17 +660,20 @@ public class MainFragment extends Fragment {
                     //log.e("off8", String.valueOf(isGpsEnabled));
                 }
             }
-            Bundle extras = intent.getExtras();
-            NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
-            NetworkInfo.State networkstate = info.getState();
-            Log.d("TEST Internet", info.toString() + " " + networkstate.toString());
-            if (networkstate == NetworkInfo.State.CONNECTED) {
-              //  Toast.makeText(activity.getApplication(), "Internet connection is on", Toast.LENGTH_LONG).show();
-                Log.e("testCONNECTED","testCONNECTED");
-                ReadTextFile();
-            } else {
-                Log.e("testCONNECTED","distestCONNECTED");
-             //   Toast.makeText(activity.getApplication(), "Internet connection is Off", Toast.LENGTH_LONG).show();
+            if(action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
+                Log.e("NetworkInfo", action);
+                Bundle extras = intent.getExtras();
+                NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
+                NetworkInfo.State networkstate = info.getState();
+                Log.d("TEST Internet", info.toString() + " " + networkstate.toString());
+                if (networkstate == NetworkInfo.State.CONNECTED) {
+                    //  Toast.makeText(activity.getApplication(), "Internet connection is on", Toast.LENGTH_LONG).show();
+                    Log.e("testCONNECTED", "testCONNECTED");
+                    ReadTextFile();
+                } else {
+                    Log.e("testCONNECTED", "distestCONNECTED");
+                    //   Toast.makeText(activity.getApplication(), "Internet connection is Off", Toast.LENGTH_LONG).show();
+                }
             }
         }
     };
@@ -684,12 +682,12 @@ public class MainFragment extends Fragment {
         try {
             String str_Path_Full;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "test.csv";
-               // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"test.csv");
+                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "save.csv";
+               // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "test.csv";
+                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
 
-                // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "test.csv");
+                // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv");
             }
             FileInputStream is = new FileInputStream(str_Path_Full);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "EUC-KR"));
@@ -701,11 +699,15 @@ public class MainFragment extends Fragment {
                 String[] token = line.split("\\,", -1);
 
                 Log.e("aaa2", String.valueOf(row));
-                String sensor_margin=token[3]+","+token[4]+","+token[5]+","+token[6]+","+token[7];
-                arrayList.add(row,new Tag_tiem(token[0],token[1],token[2],sensor_margin));
+                String sensor_margin = null;
+                if(token.length>5) {
+                    sensor_margin = token[3] + "," + token[4] + "," + token[5] + "," + token[6] + "," + token[7];
+                }else{
+                    sensor_margin = token[3] + "," + token[4];
+                }
+                arrayList.add(row, new Tag_tiem(token[0], token[1], token[2], sensor_margin));
                 Log.e("aaa3", String.valueOf(row));
                 row++;
-
             }
 
             reader.close();
@@ -765,7 +767,13 @@ public class MainFragment extends Fragment {
                     }
                     br.close();
                     Log.e("dd-","\n"+sb.toString());
-                    fileDelete();
+                    if(sb.toString().contains("done")) {
+                        Log.e("1dd-", "\n" + sb.toString());
+                        fileDelete();
+                    }else{
+                        Log.e("2dd-","\n"+sb.toString());
+                    }
+
                 } else {
                     Log.e("dd-","\n"+con.getResponseMessage());
                     //   System.out.println(con.getResponseMessage());
@@ -778,16 +786,16 @@ public class MainFragment extends Fragment {
     }
     private static boolean fileDelete(){
        // String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
-       // str_Path_Full += "/Nineone" + File.separator + "test.csv";
+       // str_Path_Full += "/Nineone" + File.separator + "save.csv";
 
         try {
             File file;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-           //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "test.csv";
-                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"test.csv");
+           //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-           //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "test.csv";
-                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "test.csv");
+           //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "save.csv");
             }
             if(file.exists()){
                 file.delete();

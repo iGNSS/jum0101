@@ -23,7 +23,6 @@
 package com.ble_connect;
 
 
-import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -51,7 +50,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
 
 import com.nineone.s_tag_tool.R;
 
@@ -59,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static com.ble_connect.DateUtil.get_nowCsvFilename;
 public class DeviceListActivity extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
     // private BluetoothAdapter mBtAdapter;
@@ -100,7 +97,7 @@ public class DeviceListActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                if (mScanning==false) scanLeDevice(true);
+                if (!mScanning) scanLeDevice(true);
                 else finish();
             }
         });
@@ -111,7 +108,7 @@ public class DeviceListActivity extends Activity {
         /* Initialize device list container */
         deviceList = new ArrayList();
         deviceAdapter = new DeviceAdapter(this, deviceList);
-        devRssiValues = new HashMap<String, Integer>();
+        devRssiValues = new HashMap<>();
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);
@@ -146,7 +143,7 @@ public class DeviceListActivity extends Activity {
 
     }
 
-    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+    private final BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback() {
                 @Override
                 public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
@@ -211,7 +208,6 @@ public class DeviceListActivity extends Activity {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            BluetoothDevice device = deviceList.get(position);
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
 
             Bundle b = new Bundle();
@@ -280,7 +276,8 @@ public class DeviceListActivity extends Activity {
             tvrssi.setVisibility(View.VISIBLE);
             byte rssival = (byte) devRssiValues.get(device.getAddress()).intValue();
             if (rssival != 0) {
-                tvrssi.setText("Rssi = " + String.valueOf(rssival));
+                String Rssival = "Rssi = " + String.valueOf(rssival);
+                tvrssi.setText(Rssival);
             }
 
             tvname.setText(device.getName());

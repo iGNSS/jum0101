@@ -1,23 +1,14 @@
 package com.nineone.s_tag_tool;
 
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.media.SoundPool;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.transition.TransitionManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -29,24 +20,16 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -58,53 +41,10 @@ import static com.nineone.s_tag_tool.MainFragment.STAG_0007;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00C8;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00C9;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00CA;
-import static com.nineone.s_tag_tool.MainFragment.STAG_001;
-import static com.nineone.s_tag_tool.MainFragment.STAG_002;
-import static com.nineone.s_tag_tool.MainFragment.STAG_003;
-import static com.nineone.s_tag_tool.MainFragment.STAG_005;
-import static com.nineone.s_tag_tool.MainFragment.STAG_007;
-import static com.nineone.s_tag_tool.MainFragment.STAG_010;
-import static com.nineone.s_tag_tool.MainFragment.STAG_011;
-import static com.nineone.s_tag_tool.MainFragment.STAG_012;
-import static com.nineone.s_tag_tool.MainFragment.STAG_013;
-import static com.nineone.s_tag_tool.MainFragment.STAG_021;
-import static com.nineone.s_tag_tool.MainFragment.STAG_024;
-import static com.nineone.s_tag_tool.MainFragment.STAG_100;
-import static com.nineone.s_tag_tool.MainFragment.STAG_201;
-import static com.nineone.s_tag_tool.MainFragment.STAG_202;
-import static com.nineone.s_tag_tool.MainFragment.STAG_203;
-import static com.nineone.s_tag_tool.MainFragment.STAG_220;
-import static com.nineone.s_tag_tool.MainFragment.STAG_903;
-
-import com.ble_connect.Connect_Activity;
-import com.ble_connect.UartService;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final ArrayList<ScannedDevice> listData = new ArrayList<>();
-    private static final String PREFIX_RSSI = "RSSI:";
-    private static final String PREFIX_LASTUPDATED = "Last Udpated:";
-    private LayoutInflater mInflater;
-    private int mResId;
-    int ble_temp_type;
-    String sensordata_1 = "", sensordata_2 = "";
-    long u_tag_1_receTime = System.currentTimeMillis();
-    long u_tag_2_receTime = System.currentTimeMillis();
-    String[] u_tag_data_0 = new String[65000];
-    String[] u_tag_data_1 = new String[65000];
-    String[] u_tag_data_2 = new String[65000];
 
-    String[] u_tag_data_3 = new String[65000];
-    String[] u_tag_data_4 = new String[65000];
-
-    String[] u_tag_data_5 = new String[65000];
-    String[] u_tag_data_6 = new String[65000];
-
-    String[] u_tag_data_7 = new String[65000];
-    String[] u_tag_data_8 = new String[65000];
-
-    String stag_save_data = "";
-    String stag_save_data_type_7 = "";
-    String stag_save_data_type_8 = "";
     @Override
     public int getItemCount() {
         return listData.size();
@@ -113,9 +53,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private final SparseBooleanArray selectedItems = new SparseBooleanArray();
     // 직전에 클릭됐던 Item의 position
     private int prePosition = -1;
-    private Activity activity;
-    private Context mContext;
-    private boolean mScanmode;
+    private final Activity activity;
+    private final Context mContext;
+    private final boolean mScanmode;
     private SoundPool soundPool;
     private int soundPlay;
     public RecyclerViewAdapter(@NonNull RecyclerView recyclerView,Activity activity, Context mContext,boolean mScanmode) {
@@ -125,8 +65,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         this.mScanmode=mScanmode;
         startTimerTask();
     }
-    public static final int HEADER = 0;
-    public static final int CHILD = 1;
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -141,21 +79,19 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private boolean alarm_ON_OFF = false;
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        //   ViewHolder viewHolder = (ViewHolder)holder;
         final ScannedDevice item = listData.get(position);
         final ViewHolder viewHolder = (ViewHolder) holder;
         viewHolder.onBind(listData.get(position),position, selectedItems);
         int get_position = viewHolder.getAdapterPosition();
-        long countnow = System.currentTimeMillis();
         aftertime = new SimpleDateFormat("HH:mm:ss", Locale.KOREA);
-        //    if (item.getDisplayName() != null) {
         viewHolder.tagname.setText(item.getDisplayName());
         if(mScanmode){
             viewHolder.tagadress.setText(item.getDevice().getAddress());
         }
-
-        viewHolder.tagrssi.setText("" + item.getRssi()+" dBm");
-        viewHolder.tagdevicetime.setText(aftertime.format(item.getLastUpdatedMs())+"");
+        String item_Rssi = item.getRssi()+" dBm";
+        String item_updateMS = aftertime.format(item.getLastUpdatedMs());
+        viewHolder.tagrssi.setText(item_Rssi);
+        viewHolder.tagdevicetime.setText(item_updateMS);
         viewHolder.tagdata.setTextColor(ContextCompat.getColor(mContext, R.color.black));
         viewHolder.tagdata_etc.setTextColor(ContextCompat.getColor(mContext, R.color.black));
         viewHolder.tagdevicetime.setTextColor(ContextCompat.getColor(mContext, R.color.black));
@@ -180,44 +116,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         int sensorStartIdx = 9;
         int BATTVal = ble_data[sensorStartIdx] & 0xff;
         double BATTDisplayVal = BATTVal * 0.1;
-        float BAROMETER = Float.intBitsToFloat(byteArrayToInt(ble_data, sensorStartIdx + 1));
-        String default_sensor = "BATT: " + String.format("%.1f", BATTDisplayVal) + " V\r\n" + "Pressure :" + String.format("%.2f", BAROMETER) + " hPa\r\n";
-
-        int Ax = 0;
-        int Ay = 0;
-        int Az = 0;
-
         short Ax_10 = 0;
         short Ay_10 = 0;
         short Az_10 = 0;
 
-        double AXResult = 0.0;
-        double AYResult = 0.0;
-        double AZResult = 0.0;
-
-        short Max_Av = 0;
-        short Min_Av = 0;
-        short t_temp = 0;
         short temperature=0;
 
         int Move_check = 0;
 
-        int ASqart = 0;
-        double ASqartVal = 0.0;
-
-        short Gx_10 = 0;
-        short Gy_10 = 0;
-        short Gz_10 = 0;
-
         int barometerVal = 0;
-        int MoveEvent = 0;
         double BAROMETER_10 = 0.0;
 
-        int U_MoveEvent = 0;
-        int U_stepcount = 0;
-        int U_direction = 0;
-        int U_step = 0;
-        int U_userState = 0;
 
         int minor_number = 0;
         int major_number = 0;
@@ -229,7 +138,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         int H2S_errer2 = 0;
         int CO2_errer2 = 0;
         int CH4_errer2 = 0;
-        int index_num = 0;
+        String index_num = "";
+       // long index_num = 0;
         boolean mAlarm_on = false;
         String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
         switch (DeviceNameArray[1]) {
@@ -329,8 +239,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     Log.e("BLE TAG DATA", "BLE DATA Length is " + receDataLength);
                 }
                 break;*/
-            case STAG_00C8:
-            case STAG_00C9:
+            case STAG_0007:
+           case STAG_00C8:
+           case STAG_00C9:
+               sensordata = item.getScanRecordHexString();
+               viewHolder.tagdata.setText(sensordata);
+               viewHolder.tagadress.setText(item.getDevice().getAddress());
+               viewHolder.tagdata_etc.setText("");
+               if(getstopfalse){
+                   //sensordata = "수신 중지 됨";
+                   //viewHolder.tagdevicetime.setText("수신 중지 됨");
+                   viewHolder.tagadress.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                   viewHolder.tagdata.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                   viewHolder.tagdata_etc.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                   viewHolder.tagdevicetime.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                   viewHolder.tagrssi.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+               }
+                break;
+           /*  case STAG_00C9:
 
                 barometerVal = ConvertToIntLittle(ble_data, sensorStartIdx + 1);
 
@@ -346,11 +272,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 minor_number= ConvertToShortLittle(ble_data, sensorStartIdx + 18);
                 BAROMETER_10 = (barometerVal + 80000) * 0.01;
                 sensordata =
-                         "Acc: " + String.format("%.2f", Ax_10 * 0.01)
-                        + " , " + String.format("%.2f", Ay_10 * 0.01)
-                        + " , " + String.format("%.2f", Az_10 * 0.01) + "\r\n"
+                         "Acc: " + String.format(Locale.KOREA,"%.2f", Ax_10 * 0.01)
+                        + " , " + String.format(Locale.KOREA,"%.2f", Ay_10 * 0.01)
+                        + " , " + String.format(Locale.KOREA,"%.2f", Az_10 * 0.01) + "\r\n"
                         + "Move: " + String.format("%s", Move_check) + "\r\n"
-                        + "temperature: " + String.format("%.2f", temperature * 0.01)
+                        + "temperature: " + String.format(Locale.KOREA,"%.2f", temperature * 0.01)
                         + "Major: " + major_number + "\r\n"
                         + "Minor: " + minor_number;
                 sensordata_etc =  "BATT : " + String.format(Locale.KOREA, "%.2f", BATTDisplayVal) + " V   "
@@ -358,33 +284,30 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 viewHolder.tagdata.setText(sensordata);
                 viewHolder.tagdata_etc.setText(sensordata_etc);
                 break;
-            case STAG_0007:
+            case STAG_0007:*/
             case STAG_00CA:
 
                 barometerVal = ConvertToIntLittle(ble_data, sensorStartIdx + 1);
-                Move_check = ble_data[sensorStartIdx + 3] & 0xff;
-                int Sensor_Update_Time = ble_data[sensorStartIdx + 4] & 0xff;
-                //Log.e("cal1",aftertime.format(cal1.getTime()));
-               // cal1.add(Calendar.SECOND,-(Sensor_Update_Time*10));
-                //String nowtime= aftertime.format(cal1.getTime());
-                //Log.e("cal2",nowtime+","+(-(Sensor_Update_Time*10))+","+Sensor_Update_Time);
 
                  Sensor_Alarm = ble_data[sensorStartIdx + 5];
               //  int Sensor_Alarm = 250;
                  senser_type =  ((Sensor_Alarm) & 0x07);
                // Log.e("ble_data00", String.valueOf(senser_type));
                  os2_errer =  ((Sensor_Alarm >> 7)& 0x01);
-                Log.e("os2_errer", String.valueOf(os2_errer));
+               // Log.e("os2_errer", String.valueOf(os2_errer));
                  CO_errer2 =  ((Sensor_Alarm >> 6) & 0x01);
-                Log.e("CO_errer2", String.valueOf(CO_errer2));
+              //  Log.e("CO_errer2", String.valueOf(CO_errer2));
                  H2S_errer2 = ((Sensor_Alarm >> 5) & 0x01);
-                Log.e("H2S_errer2", String.valueOf(H2S_errer2));
+              //  Log.e("H2S_errer2", String.valueOf(H2S_errer2));
                  CO2_errer2 = ((Sensor_Alarm >> 4) & 0x01);
-                Log.e("CO2_errer2", String.valueOf(CO2_errer2));
+             //   Log.e("CO2_errer2", String.valueOf(CO2_errer2));
                  CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
-                Log.e("CH4_errer2", String.valueOf(CH4_errer2));
-                 index_num = Integer.parseInt(DeviceNameArray[2], 16);
-                Log.e("senser_type", String.valueOf(senser_type));
+              //  Log.e("CH4_errer2", String.valueOf(CH4_errer2));
+                if(DeviceNameArray.length>=3) {
+                    index_num = DeviceNameArray[2];
+                   // index_num = Integer.parseInt(DeviceNameArray[2], 16);
+                }
+             //   Log.e("senser_type", String.valueOf(senser_type));
                 if(!mScanmode){
                     String sneer_type_name = "";
                     if(senser_type==1){
@@ -397,8 +320,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         sneer_type_name = "BTS1"+"-"+index_num;
                     }else if(senser_type==6){
                         sneer_type_name = "BTS5"+"-"+index_num;
-                    }else {
-                       // sneer_type_name = "BTS"+(senser_type)+"-"+index_num;
                     }
 
                     viewHolder.tagadress.setText(sneer_type_name);
@@ -409,12 +330,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 int senser_O2 = ConvertToShortLittle(ble_data, sensorStartIdx + 6);
                 String senser_londing_O2_1 = String.format("%02X", ble_data[sensorStartIdx + 6]&0xff);
                 String senser_londing_O2_2 = String.format("%02X", ble_data[sensorStartIdx + 7]&0xff);
+                boolean reset = false;
                 if(senser_londing_O2_1.equals("FF") && senser_londing_O2_2.equals("FF")) {
+                    reset=true;
                     string_O2 = "센서 측정 중";
                 }else{
-                    string_O2 = String.format("%.2f", senser_O2 * 0.01) + " %  ";
+                    string_O2 = String.format(Locale.KOREA,"%.2f", senser_O2 * 0.01) + " %  ";
                 }
-
+                if(reset){
+                   viewHolder.tagbutton.setEnabled(false);
+                    viewHolder.tagbutton.getBackground().setTint(ContextCompat.getColor(mContext, R.color.gray));
+                  // viewHolder.tagbutton.setBackgroundTintList(ContextCompat.getColor(mContext, R.color.gray));
+                }else{
+                    viewHolder.tagbutton.setEnabled(true);
+                    viewHolder.tagbutton.getBackground().setTint(ContextCompat.getColor(mContext, R.color.black));
+                   // viewHolder.tagbutton.setBackgroundTintList(ContextCompat.getColor(mContext, R.color.black));
+                }
                 int senser_CO = ConvertToShortLittle(ble_data, sensorStartIdx + 8);
                 String senser_londing_CO_1 = String.format("%02X", ble_data[sensorStartIdx + 8]&0xff);
                 String senser_londing_CO_2 = String.format("%02X", ble_data[sensorStartIdx + 9]&0xff);
@@ -455,10 +386,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     string_CH4 = senser_CH4 + " ppm  ";
                 }
 
-                String senser2_CO = String.valueOf(ConvertToShortLittle(ble_data, sensorStartIdx + 8));
-                String senser3_H2S = String.valueOf(ConvertToShortLittle(ble_data, sensorStartIdx + 10));
-                String senser4_CO2 = String.valueOf(ConvertToShortLittle(ble_data, sensorStartIdx + 12));
-                String senser5_CH4 = String.valueOf(ConvertToShortLittle(ble_data, sensorStartIdx + 14));
               //  Log.e("bledata",senser_O2+", "+senser_CO+", "+senser_H2S+", "+senser_CO2+", "+senser_CH4+", ");
                 String O2_alarm = "";
                 String CO_alarm = "";
@@ -512,8 +439,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         listcange_handler.postDelayed(alarm_runnable, 1000);
                     }
                 }
-                major_number  = ConvertToIntBig(ble_data, sensorStartIdx + 16);
-                minor_number= ConvertToIntBig(ble_data, sensorStartIdx + 18);
+           //     major_number  = ConvertToIntBig(ble_data, sensorStartIdx + 16);
+            //    minor_number= ConvertToIntBig(ble_data, sensorStartIdx + 18);
 
                 BAROMETER_10 = (barometerVal + 80000) * 0.01;
                 sensordata_etc =  "BATT : " + String.format(Locale.KOREA, "%.2f", BATTDisplayVal) + " V   "
@@ -538,7 +465,18 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                             + "BM     : " + String.format(Locale.KOREA,"%.2f", BAROMETER_10) + " hPa\r\n";
                     viewHolder.tagdata.setText(sensordata);
                     viewHolder.tagdata_etc.setText(sensordata_etc);
-                } if(getstopfalse){
+                }else if(senser_type==0) {
+                    sensordata = "BATT: " + String.format(Locale.KOREA,"%.2f", BATTDisplayVal) + " V\r\n"
+                            + "BM : " + String.format(Locale.KOREA,"%.2f", BAROMETER_10) + " hPa\r\n"
+                            //+ "Move: " + Move_check + " \r\n"
+                            + "Sensor type: 에러" + "";
+                    viewHolder.tagdata.setText(sensordata);
+                }else{
+                    sensordata = "데이터 없음";
+                    Log.e("ble_data1",(Arrays.toString(ble_data)));
+                    viewHolder.tagdata.setText(sensordata);
+                }
+                if(getstopfalse){
                     //sensordata = "수신 중지 됨";
                     //viewHolder.tagdevicetime.setText("수신 중지 됨");
                     viewHolder.tagadress.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
@@ -547,22 +485,30 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     viewHolder.tagdevicetime.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
                     viewHolder.tagrssi.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
                 }
-                else if(senser_type==0) {
-                    sensordata = "BATT: " + String.format(Locale.KOREA,"%.2f", BATTDisplayVal) + " V\r\n"
-                            + "BM : " + String.format(Locale.KOREA,"%.2f", BAROMETER_10) + " hPa\r\n"
-                            //+ "Move: " + Move_check + " \r\n"
-                            + "Sensor type: 에러" + "";
-                }
+
 
 
                 break;
 
 
             default:
+                sensordata = item.getScanRecordHexString();
+                viewHolder.tagdata.setText(sensordata);
+                viewHolder.tagadress.setText(item.getDevice().getAddress());
+                viewHolder.tagdata_etc.setText("");
+                if(getstopfalse){
+                    //sensordata = "수신 중지 됨";
+                    //viewHolder.tagdevicetime.setText("수신 중지 됨");
+                    viewHolder.tagadress.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                    viewHolder.tagdata.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                    viewHolder.tagdata_etc.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                    viewHolder.tagdevicetime.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                    viewHolder.tagrssi.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
+                }
              //   Log.e("ble_data0",item.getDisplayName());
               //  Log.e("ble_data1",(Arrays.toString(ble_data)));
               //  Log.e("ble_data2", asHex(ble_data));
-                sensordata = item.getScanRecordHexString();
+               // sensordata = item.getScanRecordHexString();
         }
 
       //  viewHolder.changeVisibility(selectedItems.get(get_position));
@@ -623,16 +569,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             }
         });*/
     }
-    static String bytesToBinaryString(Byte b) {
-        StringBuilder builder = new StringBuilder();
-        String one=null;
-        for (int i = 0; i < 8; i++) {
-            builder.append(((0x80 >>> i) & b) == 0 ? '0' : '1');
 
-        }
-
-        return builder.toString();
-    }
     private OnItemClickListener mListener = null; //어뎁터 클릭기능 추가 리스너
     public interface OnItemClickListener {
         void onItemClick(View v, int position) ;
@@ -648,7 +585,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 
     public String update(BluetoothDevice newDevice, int rssi, byte[] scanRecord) {
-     //   Log.e("qweasd","asdasd");
         if ((newDevice == null) || (newDevice.getAddress() == null) || newDevice.getName() == null) {
             return "";
         }
@@ -669,15 +605,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
         }
         if (!contains) {
-            //Log.e("qweasd2","asdasd");
             String[] DeviceNameArray = newDevice.getName().trim().split("-");
             if ( DeviceNameArray.length >= 3) {
           //  if (DeviceNameArray[0].equals("NI") && DeviceNameArray.length >= 3) {
                 if (MainFragment.BLE_type.equals("")) {
                   //  Log.e("qweasd3","asdasd");
                     listData.add(new ScannedDevice(newDevice, rssi, scanRecord, now));
-                  //  Log.e("newDevice",newDevice.getName()+", "+ now);
-                    //list_notifyDataSetChanged();
                 } else if (MainFragment.BLE_type.equals(DeviceNameArray[1].toString())) {
                     listData.add(new ScannedDevice(newDevice, rssi, scanRecord, now));
                    // list_notifyDataSetChanged();
@@ -691,8 +624,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             @Override
             public int compare(ScannedDevice lhs, ScannedDevice rhs) {
                 if(MainFragment.sort_type.equals("name")){
-                    return lhs.getDisplayName().compareTo(rhs.getDisplayName());
+                    if(lhs.getDisplayName()!=null&&rhs.getDisplayName()!=null) {
+                        return lhs.getDisplayName().compareTo(rhs.getDisplayName());
+                    }else{
+                        return 0;
+                    }
                 }else{
+              //  if(MainFragment.sort_type.equals("rssi")){
                     if (lhs.getRssi() == 0) {
                         return 1;
                     } else if (rhs.getRssi() == 0) {
@@ -704,20 +642,25 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         return 1;
                     }
                     return 0;
-                }
+                }/*else{
+                    if(lhs.getDisplayName()!=null&&rhs.getDisplayName()!=null) {
+                        String[] DeviceNameArray1 = lhs.getDisplayName().trim().split("-");
+                        String[] DeviceNameArray2 = rhs.getDisplayName().trim().split("-");
+                        return DeviceNameArray1[2].compareTo(DeviceNameArray2[2]);
+                    }else{
+                        return 0;
+                    }
+                }*/
             }
         });
-        Collections.sort(listData, cmpAsc1);
-        Collections.sort(listData, cmpAsc2);
-      //  int get_position = listData.indexOf(newDevice.getName());
-      //  Log.e("get_position", String.valueOf(get_position));
+      //  Collections.sort(listData, cmpAsc1);
+      //  Collections.sort(listData, cmpAsc2);
        if(!testboolean){
            testboolean=true;
             list_notifyDataSetChanged();
 
        }
-        String summary = "";            // 사용 안함
-        return summary;
+        return "";
     }
     public Comparator<ScannedDevice> cmpAsc1 = new Comparator<ScannedDevice>() {
         @Override
@@ -734,9 +677,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         public int compare(ScannedDevice o1, ScannedDevice o2) {
             byte[] ScanRecordArray1 = o1.getScanRecord();
             byte[] ScanRecordArray2 = o2.getScanRecord();
-            Log.e("ScanRecordArray1", (ScanRecordArray1[14]&0xFF) + " , " + (ScanRecordArray2[14]&0xFF));
+           // Log.e("ScanRecordArray1", (ScanRecordArray1[14]&0xFF) + " , " + (ScanRecordArray2[14]&0xFF));
             if((ScanRecordArray1[14]&0xFF)>7||(ScanRecordArray2[14]&0xFF)>7) {
-                Log.e("ScanRecordArray2", ScanRecordArray1[14] + " , " + ScanRecordArray2[14]);
+           //     Log.e("ScanRecordArray2", ScanRecordArray1[14] + " , " + ScanRecordArray2[14]);
                 return ScanRecordArray2[14] - ScanRecordArray1[14];
             }
             return 0;
@@ -754,9 +697,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         };
         listcange_handler.postDelayed(runnable10, 0);
     }
-    private final MyHandler colorchange_handler = new MyHandler(this);
     private final MyHandler listcange_handler = new MyHandler(this);
-    private TimerTask timerTask;
     private Timer timer = new Timer();
     private void startTimerTask () {
         timer.schedule(new TimerTask() {
@@ -772,7 +713,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                             long duration = dateNow.getTime() - dateCreated.getTime();
                             long nResult  = duration/1000;
                           //  Log.e("Arrays.toString12",device.getDisplayName()+","+nResult);
-                            if (nResult>3) {
+                            if (nResult>=5) {
                                 // update
                                 device.setDisplayName(device.getDisplayName());
                                 device.setRssi(device.getRssi());
@@ -803,7 +744,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     }
 
-    private void stopTimerTask() {//타이머 스톱 함수
+    public void stopTimerTask() {//타이머 스톱 함수
         if (timer != null) {
             timer.cancel();
             timer = null;
@@ -819,15 +760,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         @Override
         public void handleMessage(Message msg) {
             RecyclerViewAdapter activity = mActivity.get();
-            if (activity != null) {
-                // ...
-            }
+            // ...
         }
     }
-    void addItem(ScannedDevice data) {
-        // 외부에서 item을 추가시킬 함수입니다.
-        listData.add(data);
-    }
+
     public void item_Clear(){
         listData.clear();
     }
@@ -837,15 +773,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
-        private TextView tagname;
-        private TextView tagadress;
-        private TextView tagrssi;
-        private TextView tagdata;
-        private TextView tagdata_etc;
-        private Button tagbutton;
-        private TextView tagdevicetime;
+        private final TextView tagname;
+        private final TextView tagadress;
+        private final TextView tagrssi;
+        private final TextView tagdata;
+        private final TextView tagdata_etc;
+        private final Button tagbutton;
+        private final TextView tagdevicetime;
         private TextView tagdevice_drow;
-        private ImageView lowicon;
+        private final ImageView lowicon;
 
       //  private LinearLayout dataLinearLayout;
         LinearLayout linearlayout;
@@ -927,14 +863,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
             listData.clear(); //The list for update recycle view
         }
+        listData.size();
         notifyDataSetChanged();
     }
-    public int byteArrayToInt(byte bytes[], int startIdx) {
-        return ((((int) bytes[startIdx + 3] & 0xff) << 24) |
-                (((int) bytes[startIdx + 2] & 0xff) << 16) |
-                (((int) bytes[startIdx + 1] & 0xff) << 8) |
-                (((int) bytes[startIdx + 0] & 0xff)));
-    }
+
 
     private int ConvertToIntLittle(byte[] txValue, int startidx) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
@@ -952,52 +884,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         int result = byteBuffer.getInt();
         return result;
     }
-    private int ConvertToIntLittle2(byte[] txValue, int startidx) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(8);
-        // by choosing big endian, high order bytes must be put
-        // to the buffer before low order bytes
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
 
-        byteBuffer.put(txValue[startidx]);
-        byteBuffer.put(txValue[startidx + 1]);
-        byteBuffer.put(txValue[startidx + 2]);
-        byteBuffer.put(txValue[startidx + 3]);
-        // for the high order bytes
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.flip();
-        int result = byteBuffer.getInt();
-        return result;
-    }
-    private int ConvertToIntBig(byte[] txValue, int startidx) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
-        // by choosing big endian, high order bytes must be put
-        // to the buffer before low order bytes
-        byteBuffer.order(ByteOrder.BIG_ENDIAN);
-        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
-        // for the high order bytes
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put(txValue[startidx]);
-        byteBuffer.put(txValue[startidx + 1]);
-
-
-        byteBuffer.flip();
-        int result = byteBuffer.getInt();
-        return result;
-    }
-
-    private short ConvertToShortBig(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.BIG_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        short shortVal = bb.getShort(0);
-        return shortVal;
-    }
 
     private short ConvertToShortLittle(byte[] txValue, int startidx) {
         ByteBuffer bb = ByteBuffer.allocate(2);
@@ -1008,52 +895,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return shortVal;
     }
 
-    public static float arr2float (byte[] arr, int start) {
 
-        int i = 0;
-        int len = 4;
-        int cnt = 0;
-        byte[] tmp = new byte[len];
-
-        for (i = start; i < (start + len); i++) {
-            tmp[cnt] = arr[i];
-            cnt++;
-        }
-
-        int accum = 0;
-        i = 0;
-        for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
-            accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
-            i++;
-        }
-        return Float.intBitsToFloat(accum);
-    }
-    private String ConvertToSensorName(int sensonCode) {
-        String sname = "";
-
-        switch (sensonCode) {
-            case 0:
-                sname = "";
-                break;
-            case 1:
-                sname = "O2";
-                break;
-            case 2:
-                sname = "CO";
-                break;
-            case 3:
-                sname = "H2S";
-                break;
-            case 4:
-                sname = "Co2";
-                break;
-        }
-        return sname;
-    }
-    public class RecyclerViewEmptySupport extends RecyclerView {
+  /*  public static class RecyclerViewEmptySupport extends RecyclerView {
         private View emptyView;
 
-        private AdapterDataObserver emptyObserver = new AdapterDataObserver() {
+        private final AdapterDataObserver emptyObserver = new AdapterDataObserver() {
 
 
             @Override
@@ -1096,9 +942,112 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             emptyObserver.onChanged();
         }
 
-        public void setEmptyView(View emptyView) {
-            this.emptyView = emptyView;
+      //  public void setEmptyView(View emptyView) { this.emptyView = emptyView; }
+    }*/
+   /*
+    static String bytesToBinaryString(Byte b) {
+        StringBuilder builder = new StringBuilder();
+        String one=null;
+        for (int i = 0; i < 8; i++) {
+            builder.append(((0x80 >>> i) & b) == 0 ? '0' : '1');
+
         }
+
+        return builder.toString();
+    }
+     public int byteArrayToInt(byte bytes[], int startIdx) {
+        return ((((int) bytes[startIdx + 3] & 0xff) << 24) |
+                (((int) bytes[startIdx + 2] & 0xff) << 16) |
+                (((int) bytes[startIdx + 1] & 0xff) << 8) |
+                (((int) bytes[startIdx + 0] & 0xff)));
+    }
+    private int ConvertToIntLittle2(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(8);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.put(txValue[startidx + 2]);
+        byteBuffer.put(txValue[startidx + 3]);
+        // for the high order bytes
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
+   private int ConvertToIntBig(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+
+
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
+
+    private short ConvertToShortBig(byte[] txValue, int startidx) {
+        ByteBuffer bb = ByteBuffer.allocate(2);
+        bb.order(ByteOrder.BIG_ENDIAN);
+        bb.put(txValue[startidx]);
+        bb.put(txValue[startidx + 1]);
+        short shortVal = bb.getShort(0);
+        return shortVal;
+    }
+    public static float arr2float (byte[] arr, int start) {
+
+        int i = 0;
+        int len = 4;
+        int cnt = 0;
+        byte[] tmp = new byte[len];
+
+        for (i = start; i < (start + len); i++) {
+            tmp[cnt] = arr[i];
+            cnt++;
+        }
+
+        int accum = 0;
+        i = 0;
+        for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
+            accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
+            i++;
+        }
+        return Float.intBitsToFloat(accum);
+    }
+    private String ConvertToSensorName(int sensonCode) {
+        String sname = "";
+
+        switch (sensonCode) {
+            case 0:
+                sname = "";
+                break;
+            case 1:
+                sname = "O2";
+                break;
+            case 2:
+                sname = "CO";
+                break;
+            case 3:
+                sname = "H2S";
+                break;
+            case 4:
+                sname = "Co2";
+                break;
+        }
+        return sname;
     }
     public static String asHex(byte bytes[]) {
         if ((bytes == null) || (bytes.length == 0)) {
@@ -1136,5 +1085,5 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         for(final byte b: a)
             sb.append(String.format("%02x ", b&0xff));
         return sb.toString();
-    }
+    }*/
 }

@@ -3,25 +3,18 @@ package com.ble_connect;
 import static java.lang.Thread.sleep;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.widget.TextViewCompat;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStore;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Person;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -31,26 +24,21 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.Process;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -63,22 +51,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.nineone.s_tag_tool.MainActivity;
-import com.nineone.s_tag_tool.MainFragment;
 import com.nineone.s_tag_tool.R;
-import com.nineone.s_tag_tool.ScannedDevice;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,40 +65,30 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+
 public class Connect_Activity extends AppCompatActivity {
     private static final int REQUEST_SELECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    private static final int UART_PROFILE_READY = 10;
     public static final String TAG = "Stag Main";
-    private static final int UART_PROFILE_CONNECTED = 20;
-    private static final int UART_PROFILE_DISCONNECTED = 21;
 
     private UartService mService = null;
     private BluetoothDevice mbluetootDevice = null;
@@ -129,17 +98,15 @@ public class Connect_Activity extends AppCompatActivity {
 
     public static String TagName, StartTime;
 
-    String txHex = "";
     TextView vw_txtmacaddrValue;
     TextView vw_txt_tag_adress;
-    TextView gyo_cal, tag_ver;
-    EditText tag_type, tag_no, tag_copy_no;
+    TextView gyo_cal;
+    EditText  tag_no, tag_copy_no;
     EditText O2alarm,COalarm,H2Salarm,CO2alarm,CH4alarm;
     Button btn_sendtotag;
 
     String dataToServer;
     // int delayTime;
-    private int connect_fail_count = 0;
     private int rcount = 0;
     private int cetting_count = 0;
     private boolean cetting_boolean = false;
@@ -147,8 +114,7 @@ public class Connect_Activity extends AppCompatActivity {
 
     boolean connect_check_flag = false;
 
-    private String[] permissions = {
-            //Manifest.permission.ACCESS_COARSE_LOCATION,
+    private final String[] permissions = {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -158,15 +124,12 @@ public class Connect_Activity extends AppCompatActivity {
     };
     private static final int MULTIPLE_PERMISSIONS = 101;
     private TextView senser_tag_type_Text = null;
-   // private Spinner senser_tag_type_Spinner = null;
     private Spinner rfPowerSpinner = null;
     private Spinner sensorSpinner = null;
     private Spinner calSpinner = null;
     private Spinner sensor_operation_cycle_Spinner = null;
     private Spinner senser_tag_copy_type_Spinner = null;
-    private byte[] tagsend_data5 = new byte[20];
     private boolean connect_fail=false;
-    int sensorType = 0;
     private String phonenumber;
     private RequestQueue requestQueue;
     private LinearLayout mCA_layout, mD5_layout;
@@ -176,6 +139,7 @@ public class Connect_Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
         ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
         actionBar.setTitle("연결");
         mCA_layout = findViewById(R.id.CA_layout);
         mCA_layout.setVisibility(View.VISIBLE);
@@ -207,12 +171,7 @@ public class Connect_Activity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
-        tagsend_data5[0] = 0x02;
-        tagsend_data5[1] = 0x01;
-        tagsend_data5[19] = 0x03;
-        for(int i=2;i<18;i++){
-            tagsend_data5[i]=0x05;
-        }
+
         service_init();
         ui_init();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
@@ -220,29 +179,15 @@ public class Connect_Activity extends AppCompatActivity {
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {                                  // 안드로이드 6.0 이상일 경우 퍼미션 체크
+    /*   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {                                  // 안드로이드 6.0 이상일 경우 퍼미션 체크
             checkPermissions();
-        }
+        }*/
         //tag type setting
         senser_tag_type_Text = findViewById(R.id.tag_type_text);
-       /* String[] tag_models = getResources().getStringArray(R.array.tag_type);
-        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, tag_models);
-        tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
-        senser_tag_type_Spinner.setAdapter(tag_spinner_adapter);
-
-        senser_tag_type_Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
-            }
-        });
-        senser_tag_type_Spinner.setSelection(0);*/
         //RF setting
         rfPowerSpinner = findViewById(R.id.rfPower);
         String[] models = getResources().getStringArray(R.array.my_array);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, models);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getBaseContext(), R.layout.custom_spinner_list, models);
         adapter.setDropDownViewResource(R.layout.customer_spinner);
         rfPowerSpinner.setAdapter(adapter);
 
@@ -261,14 +206,14 @@ public class Connect_Activity extends AppCompatActivity {
         sensorSpinner = findViewById(R.id.sensor_type);
         sensorItems = getResources().getStringArray(R.array.my_sensor);
         ArrayAdapter<String> sensoradapter =
-                new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, sensorItems);
+                new ArrayAdapter<>(getBaseContext(), R.layout.custom_spinner_list, sensorItems);
         sensoradapter.setDropDownViewResource(R.layout.customer_spinner);
         sensorSpinner.setAdapter(sensoradapter);
 
         sensorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
-                Log.e("onItemSelected", String.valueOf(position)+", "+sensorSpinner.getSelectedItem().toString());
+                Log.e("onItemSelected", (position)+", "+sensorSpinner.getSelectedItem().toString());
                 ui_ture_false(position);
                // sensorType =position;
             }
@@ -282,7 +227,7 @@ public class Connect_Activity extends AppCompatActivity {
         calSpinner = findViewById(R.id.cal_run);
         calItems = getResources().getStringArray(R.array.my_cal);
         ArrayAdapter<String> caladapter =
-                new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, calItems);
+                new ArrayAdapter<>(getBaseContext(), R.layout.custom_spinner_list, calItems);
         caladapter.setDropDownViewResource(R.layout.customer_spinner);
         calSpinner.setAdapter(caladapter);
 
@@ -293,13 +238,13 @@ public class Connect_Activity extends AppCompatActivity {
                 if (cal_check_status.equals("보정 완료") && position == 1) {
                     //Toast.makeText(getApplication(), "Cal On..\r\n" + position, Toast.LENGTH_LONG).show();
                     new AlertDialog.Builder(Connect_Activity.this)
-                            .setTitle("Gyro 보정")
-                            .setMessage("다시 한번 Gyro 보정을 하시겠습니까 ?")
+                            .setTitle("센서 보정")
+                            .setMessage("다시 한번 센서 보정을 하시겠습니까 ?")
                             .setIcon(R.drawable.nrfuart_hdpi_icon)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                     // 확인시 처리 로직
-                                    Toast.makeText(getApplication(), "전송 버튼을 선택하면 자이로 보정을 실시합니다.", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getApplication(), "전송 버튼을 선택하면 센서 보정을 실시합니다.", Toast.LENGTH_LONG).show();
                                 }
                             })
                             .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -339,7 +284,7 @@ public class Connect_Activity extends AppCompatActivity {
 
         senser_tag_copy_type_Spinner = findViewById(R.id.tag_copy_type_d5_spinner);
         String[] tag_models = getResources().getStringArray(R.array.tag_type);
-        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<String>(getBaseContext(), R.layout.custom_spinner_list, tag_models);
+        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<>(getBaseContext(), R.layout.custom_spinner_list, tag_models);
         tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
         senser_tag_copy_type_Spinner.setAdapter(tag_spinner_adapter);
 
@@ -371,11 +316,6 @@ public class Connect_Activity extends AppCompatActivity {
                    // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
                     int tagtype_val = 0;
                     switch (tag_type_val) {
-                    //    case "선택":
-                          //  customToastView("[단말기 타입] 을 선택해 주세요.");
-                          //  Toast.makeText(getApplication(), "[단말기 타입] 을 선택해 주세요.", Toast.LENGTH_LONG).show();
-                       //     tagtype_val = 0;
-                       //     break;
                         case "00C8":
                             tagtype_val = 0xC8;
                             break;
@@ -391,9 +331,7 @@ public class Connect_Activity extends AppCompatActivity {
                         case "00D5":
                             tagtype_val = 0xD5;
                             break;
-                        default:
-                            tagtype_val = 0;
-                            break;
+
                     }
                     if (tagtype_val > 0) {
                         tagsend_data[2] = (byte) tagtype_val ;
@@ -457,7 +395,7 @@ public class Connect_Activity extends AppCompatActivity {
                         }
                         tagsend_data[9] = (byte) sensor_type_var;
 
-                        //GYro Cal 동작 여부 가져오기
+                        //센서 Cal 동작 여부 가져오기
                         String cal_run = (calSpinner.getSelectedItem().toString());
                         int cal_run_var = 0;
                         if ("On".equals(cal_run)) {
@@ -479,7 +417,7 @@ public class Connect_Activity extends AppCompatActivity {
                         if (COalarm.getText().toString().length() != 0) {
                             int tag_COalarm = Integer.parseInt(COalarm.getText().toString().trim());
                             int tag_COalarm_set = tag_COalarm / 10;
-                            int tag_COalarm2 = (int) Long.parseLong(String.valueOf(tag_COalarm_set), 16);
+                          //  int tag_COalarm2 = (int) Long.parseLong(String.valueOf(tag_COalarm_set), 16);
 
                             tagsend_data[13] = (byte) tag_COalarm_set;
                         } else {
@@ -579,21 +517,48 @@ public class Connect_Activity extends AppCompatActivity {
                         long countnow = System.currentTimeMillis();
                         SimpleDateFormat aftertime = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.KOREA);
                         String nowtime = aftertime.format(countnow);
-                        String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
+                     //   String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
                          String send_hex_data = asHex(tagsend_data);
                         Log.e("전송 데이터", send_hex_data);
                         mService.writeRXCharacteristic(tagsend_data);
-                        customToastView("전송 완료");
+                      //  customToastView("전송 완료");
                         connect_fail = false;
                         if(!D5_true_false) {
                             String senser_data = O2alarm.getText().toString() + ',' + COalarm.getText().toString() + ',' + H2Salarm.getText().toString() + ',' + CO2alarm.getText().toString() + ',' + CH4alarm.getText().toString();
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
                         }else{
-                          //  String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + ","+ tag_copy_no.getText().toString();
-                          //  String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
-                          //  Network_Confirm(send_data);
+                            String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + ","+ tag_copy_no.getText().toString();
+                            String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
+                            Network_Confirm(send_data);
                         }
+                        runOnUiThread(new Runnable() {//약간의 딜레이
+                            @Override public void run() {
+                                ProgressDialog mProgressDialog = ProgressDialog.show(Connect_Activity.this,"", "전송 중 입니다.",true);
+                                data_send_handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            if (mProgressDialog!=null&&mProgressDialog.isShowing()){
+                                                mProgressDialog.dismiss();
+                                                AlertDialog.Builder builder = new AlertDialog.Builder(Connect_Activity.this);
+                                                builder.setTitle("전송 완료");
+                                                builder.setMessage("리스트로 돌아갑니다.");
+                                                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        onBackPressed();
+                                                    }
+                                                });
+                                                builder.show();
+                                            }
+                                        } catch ( Exception e ) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }, 2000);
+                            }
+                        } );
                     }
                 } else {
                     customToastView("태그를 연결해 주세요");
@@ -625,30 +590,24 @@ public class Connect_Activity extends AppCompatActivity {
                 finish();
             }
 
-                  //  senser_adress_connect();
-
-           //
-
         }
         public void onServiceDisconnected(ComponentName classname) {
             mService = null;
         }
     };
+    private final MyHandler data_send_handler = new MyHandler(this);
     private final MyHandler connect_handler = new MyHandler(this);
     private final MyHandler D5_connect_handler = new MyHandler(this);
     private static class MyHandler extends Handler {
         private final WeakReference<Connect_Activity> mActivity;
 
         public MyHandler(Connect_Activity activity) {
-            mActivity = new WeakReference<Connect_Activity>(activity);
+            mActivity = new WeakReference<>(activity);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            Connect_Activity activity = mActivity.get();
-            if (activity != null) {
 
-            }
         }
     }
 
@@ -685,7 +644,7 @@ public class Connect_Activity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Log.e("MyReceiver", "Intent: $intent");
-            final Intent mIntent = intent;
+            //final Intent mIntent = intent;
             //*********************//
             if (action.equals(UartService.ACTION_GATT_CONNECTED)) {
                 runOnUiThread(new Runnable() {
@@ -698,12 +657,13 @@ public class Connect_Activity extends AppCompatActivity {
                         Log.d(TAG, "UART_CONNECT_MSG");
 
                         vw_txtmacaddrValue.setText(mbluetootDevice.getName());
-                        vw_txt_tag_adress.setText(mbluetootDevice+"");
+                        String stringbluetootDevice = String.valueOf(mbluetootDevice);
+                        vw_txt_tag_adress.setText(stringbluetootDevice);
                         customToastView(mbluetootDevice.getName() + " 연결");
 
                         try {
                             sleep(1100);
-                        } catch (Exception ex) {
+                        } catch (Exception ignored) {
 
                         }
                         //
@@ -751,13 +711,13 @@ public class Connect_Activity extends AppCompatActivity {
                             customToastView(mbluetootDevice.getName() + " 연결실패");
                         }else if(!connect_fail && !D5_connect_true){
                             customToastView(mbluetootDevice.getName() + " 연결해제");
-                        }else if(D5_connect_true){
-                            customToastView("D5 확인. 연결 중");
-                        }
+                        }/*else if(D5_connect_true){
+                          //  customToastView("D5 확인. 연결 중");
+                        }*/
                         connect_fail = false;
                         try {
                             sleep(100);
-                        } catch (Exception ex) {
+                        } catch (Exception ignored) {
 
                         }
                         invalidateOptionsMenu();
@@ -770,7 +730,7 @@ public class Connect_Activity extends AppCompatActivity {
             //*********************//
             if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
                 mService.enableTXNotification();
-                Log.e("730", String.valueOf(mService.getSupportedGattServices()));
+               // Log.e("730", String.valueOf(mService.getSupportedGattServices()));
             }
             //*********************//
             if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
@@ -781,31 +741,28 @@ public class Connect_Activity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
-                            Log.e("ble_datae2",byteArrayToHex(txValue));
+                           // Log.e("ble_datae2",byteArrayToHex(txValue)+",");
 
                             int receDataLength = txValue.length;
-                            Log.e("Tag_Rece12", String.valueOf(receDataLength));
+                        //    Log.e("Tag_Rece12", String.valueOf(receDataLength));
                             if (receDataLength == 20) {
-                                Log.e("Tag_Rece1", txValue[0]+", "+txValue[19]);
+                              //  Log.e("Tag_Rece1", txValue[0]+", "+txValue[19]);
 
                                 if(cetting_count>30&&!cetting_boolean){
                                     cetting_boolean = true;
                                     customToastView("초기세팅이 되어있지 않습니다.\n초기 세팅을 해주세요.");
-                                  /*  Toast toastView = Toast.makeText(getApplication(), "초기세팅이 되어있지 않습니다.\n초기 세팅을 해주세요.", Toast.LENGTH_LONG);
-                                    toastView.setGravity(Gravity.CENTER,0,0);
-                                    toastView.show();
-                                    cetting_boolean=true;*/
+
                                 }
                                 cetting_count++;
                                 if (txValue[0] == 0x02 && txValue[19] == 0x03) {
                                     rcount++;
                                     cetting_count = 0;
                                     cetting_boolean = true;
-                                    Log.e("Tag_number753", "753");
+                                  //  Log.e("Tag_number753", "753");
                                     if (rcount == 1) {
                                         String r_data_hex = asHex(txValue);
                                         int rece_tag_type = ConvertToIntLittle(txValue, 2);
-                                        Log.e("Tag_Rece3", txValue[1] + ", " + txValue[2]);
+                                     //   Log.e("Tag_Rece3", txValue[1] + ", " + txValue[2]);
                                         String tag_type_str = "";
                                         switch (rece_tag_type) {
                                             case 200:
@@ -853,7 +810,7 @@ public class Connect_Activity extends AppCompatActivity {
                                                     sensor_type_str = "CH4";
                                                     break;
                                             }
-                                            Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
+                                         //   Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
                                             selectValue(sensorSpinner, sensor_type_str);
 
                                             int rece_cal_status = txValue[10] & 0xff;
@@ -863,7 +820,7 @@ public class Connect_Activity extends AppCompatActivity {
                                                 gro_cal_status = "보정 완료";
                                                 //   calSpinnertext = "On";
                                             }
-                                            Log.e("Tag Rece cal Type: ", rece_cal_status + "/" + gro_cal_status);
+                                         //   Log.e("Tag Rece cal Type: ", rece_cal_status + "/" + gro_cal_status);
                                             gyo_cal.setText(gro_cal_status + "");
                                             //selectValue(calSpinner, calSpinnertext);
 
@@ -872,7 +829,7 @@ public class Connect_Activity extends AppCompatActivity {
                                         selectValue(sensor_power_on_Spinner, rece_sensor_power_on);*/
 
                                             int rece_operation_cycle_on = txValue[11] & 0xff;
-                                            Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
+                                           // Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
                                             selectValue(sensor_operation_cycle_Spinner, rece_operation_cycle_on);
                                             float rece_O2_no = txValue[12] & 0xff;
                                             float rece_O2_no2 = (float) (rece_O2_no * 0.1);
@@ -894,7 +851,7 @@ public class Connect_Activity extends AppCompatActivity {
                                             String C1 = String.format("%02X", rece_copy_type & 0xFF);
                                             String C2 = String.format("%02X", rece_copy_type>>16 & 0xFF);
                                             String C3 = C2 + C1;
-                                            Log.e("C3c3",C3);
+                                           // Log.e("C3c3",C3);
                                             String tag_copy_type_str = "";
                                             switch (rece_copy_type) {
                                                 case 200:
@@ -922,7 +879,7 @@ public class Connect_Activity extends AppCompatActivity {
                                             D5_true_false=true;
                                             mCA_layout.setVisibility(View.GONE);
                                             mD5_layout.setVisibility(View.VISIBLE);
-                                            customToastView("D5화면으로 변경");
+                                          //  customToastView("D5화면으로 변경");
                                             Runnable runnable10 = new Runnable() {
                                                 @Override
                                                 public void run() {
@@ -941,16 +898,16 @@ public class Connect_Activity extends AppCompatActivity {
                                         }
                                     } else {
                                         int rece_cal_status = txValue[7] & 0xff;
-                                        Log.e("Cal 상태 체크", rece_cal_status + "");
+                                       // Log.e("Cal 상태 체크", rece_cal_status + "");
                                     }
                                 }
                                 // Log.e("STag", "End...." + accelerometerX);
                             } else {
-                                Log.e(TAG, "BLE DATA Length is " + receDataLength);
+                              //  Log.e(TAG, "BLE DATA Length is " + receDataLength);
                             }
 
                         } catch (Exception e) {
-                            Log.e(TAG, e.toString());
+                            //Log.e(TAG, e.toString());
                         }
                     }
                 });
@@ -994,26 +951,7 @@ public class Connect_Activity extends AppCompatActivity {
             }
         }
     }
-    public static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
-        }
-        return data;
-    }
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
 
     private void service_init() {
         Intent bindIntent = new Intent(this, UartService.class);
@@ -1379,23 +1317,20 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case MULTIPLE_PERMISSIONS: {
-                if (grantResults.length > 0) {
-                    for (int i = 0; i < permissions.length; i++) {
-                        if (permissions[i].equals(this.permissions[i])) {
-                            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                                showToast_PermissionDeny();
-                            }
+        if (requestCode == MULTIPLE_PERMISSIONS) {
+            if (grantResults.length > 0) {
+                for (int i = 0; i < permissions.length; i++) {
+                    if (permissions[i].equals(this.permissions[i])) {
+                        if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                            showToast_PermissionDeny();
                         }
                     }
-
-                } else {
-                    showToast_PermissionDeny();
                 }
-                return;
+
+            } else {
+                showToast_PermissionDeny();
             }
         }
     }
@@ -1403,63 +1338,10 @@ public class Connect_Activity extends AppCompatActivity {
         Toast.makeText(this, "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
         finish();
     }
-    // data Parcing Function
-    private short ConvertToShortBig(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.BIG_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        short shortVal = bb.getShort(0);
-        return shortVal;
-    }
-
-    private short ConvertToShortLittle(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        short shortVal = bb.getShort(0);
-        return shortVal;
-    }
 
 
-    String tmp;
 
-    public static float arr2float (byte[] arr, int start) {
 
-        int i = 0;
-        int len = 4;
-        int cnt = 0;
-        byte[] tmp = new byte[len];
-
-        for (i = start; i < (start + len); i++) {
-            tmp[cnt] = arr[i];
-            cnt++;
-        }
-
-        int accum = 0;
-        i = 0;
-        for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
-            accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
-            i++;
-        }
-        return Float.intBitsToFloat(accum);
-    }
-    private int ConvertToIntBig(byte[] txValue, int startidx) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
-        // by choosing big endian, high order bytes must be put
-        // to the buffer before low order bytes
-        byteBuffer.order(ByteOrder.BIG_ENDIAN);
-        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
-        // for the high order bytes
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put(txValue[startidx]);
-        byteBuffer.put(txValue[startidx + 1]);
-        byteBuffer.flip();
-        int result = byteBuffer.getInt();
-        return result;
-    }
     private int ConvertToIntLittle2(byte[] txValue, int startidx) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(8);
         // by choosing big endian, high order bytes must be put
@@ -1527,60 +1409,7 @@ public class Connect_Activity extends AppCompatActivity {
         /// 16進数の文字列を返す。
         return sb.toString();
     }
-    public String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder();
-        for(final byte b: a)
-            sb.append(String.format("%02x ", b&0xff));
-        return sb.toString();
-    }
 
-    private void writeLog(String data) {//csv파일 저장
-       // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
-        File file;// = new File(str_Path);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator);
-        } else {
-            file = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator );
-
-        }
-
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        String str_Path_Full;
-        //String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
-        //str_Path_Full += "/Nineone" + File.separator + "test.csv";
-        File file2 ;//= new File(str_Path_Full);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()  + File.separator+ "Nineone"+ File.separator + "test.csv";
-            file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"test.csv");
-
-        } else {
-            str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "test.csv";
-            file2 = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator , "test.csv");
-        }
-        if (!file2.exists()) {
-            try {
-                file2.createNewFile();
-            } catch (IOException ignored) {
-            }
-        }
-
-        try {
-            BufferedWriter bfw;
-
-            bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(str_Path_Full,true),  "EUC-KR"));
-            bfw.write(data + "\r\n");
-            //bfw.write(log_data);
-            bfw.flush();
-            bfw.close();
-            Log.e("TAGddd", "ddd");
-        } catch (FileNotFoundException e) {
-              Log.e("TAGddd", e.toString());
-        } catch (IOException e) {
-              Log.e("TAGddd", e.toString());
-        }
-    }
 
     private void Network_Confirm(String Network_data){
         int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
@@ -1595,8 +1424,6 @@ public class Connect_Activity extends AppCompatActivity {
             Log.e("연결 안됨.","654");
         }
     }
-
-
     public void Http_post(String post_data) {
         String[] split_data = post_data.trim().split(",");
         new Thread(() -> {
@@ -1618,10 +1445,18 @@ public class Connect_Activity extends AppCompatActivity {
 
                 JSONObject cred = new JSONObject();
                 try {
-                    cred.put("id", split_data[0]);
-                    cred.put("device_idx", split_data[1]);
-                    cred.put("time", split_data[2]);
-                    cred.put("sensor_margin", split_data[3]+","+ split_data[4]+","+ split_data[5]+","+ split_data[6]+","+ split_data[7]);
+                    if(!D5_true_false) {
+                        cred.put("id", split_data[0]);
+                        cred.put("device_idx", split_data[1]);
+                        cred.put("time", split_data[2]);
+                        cred.put("sensor_margin", split_data[3] + "," + split_data[4] + "," + split_data[5] + "," + split_data[6] + "," + split_data[7]);
+                    }else{
+                        cred.put("id", split_data[0]);
+                        cred.put("device_idx", split_data[1]);
+                        cred.put("time", split_data[2]);
+                        cred.put("sensor_margin", split_data[3]+ "," + split_data[4]);
+
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -1629,7 +1464,7 @@ public class Connect_Activity extends AppCompatActivity {
                 OutputStream os = con.getOutputStream();
                 os.write(array.toString().getBytes("UTF-8"));
                 os.close();
-//display what returns the POST request
+                //display what returns the POST request
 
                 StringBuilder sb = new StringBuilder();
                 int HttpResult = con.getResponseCode();
@@ -1643,6 +1478,7 @@ public class Connect_Activity extends AppCompatActivity {
                     br.close();
                     Log.e("dd-", "\n" + sb.toString());
                 } else {
+                    writeLog(post_data);
                     Log.e("dd-", "\n" + con.getResponseMessage());
                     //   System.out.println(con.getResponseMessage());
                 }
@@ -1651,17 +1487,64 @@ public class Connect_Activity extends AppCompatActivity {
             }
         }).start();
     }
+
+    private void writeLog(String data) {//csv파일 저장
+       // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
+        File file;// = new File(str_Path);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator);
+        } else {
+            file = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator );
+        }
+
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        String str_Path_Full;
+        //String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
+        //str_Path_Full += "/Nineone" + File.separator + "save.csv";
+        File file2 ;//= new File(str_Path_Full);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()  + File.separator+ "Nineone"+ File.separator + "save.csv";
+            file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
+
+        } else {
+            str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
+            file2 = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator , "save.csv");
+        }
+        if (!file2.exists()) {
+            try {
+                file2.createNewFile();
+            } catch (IOException ignored) {
+            }
+        }
+
+        try {
+            BufferedWriter bfw;
+
+            bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(str_Path_Full,true),  "EUC-KR"));
+            bfw.write(data + "\r\n");
+            //bfw.write(log_data);
+            bfw.flush();
+            bfw.close();
+            Log.e("TAGddd", "ddd");
+        } catch (IOException e) {
+            Log.e("TAGddd", e.toString());
+        }
+    }
+
+
+
     ArrayList<Tag_tiem> arrayList = new ArrayList<>();
     private void ReadTextFile() {//csv 파일 내용을 추출하기
         try {
             String str_Path_Full;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "test.csv";
-                // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"test.csv");
+                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "save.csv";
+                // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "test.csv";
-
-                // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "test.csv");
+                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
+                // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv");
             }
             FileInputStream is = new FileInputStream(str_Path_Full);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "EUC-KR"));
@@ -1672,9 +1555,14 @@ public class Connect_Activity extends AppCompatActivity {
             while ((line = reader.readLine()) != null) {//해당 파일을 한줄씩 읽기
                 String[] token = line.split("\\,", -1);
 
-                Log.e("aaa2", String.valueOf(row));
-                String sensor_margin=token[3]+","+token[4]+","+token[5]+","+token[6]+","+token[7];
-                arrayList.add(row,new Tag_tiem(token[0],token[1],token[2],sensor_margin));
+                Log.e("aaa2", String.valueOf(token.length));
+                String sensor_margin;
+                if(token.length>5) {
+                    sensor_margin = token[3] + "," + token[4] + "," + token[5] + "," + token[6] + "," + token[7];
+                }else{
+                    sensor_margin = token[3] + "," + token[4];
+                }
+                arrayList.add(row, new Tag_tiem(token[0], token[1], token[2], sensor_margin));
                 Log.e("aaa3", String.valueOf(row));
                 row++;
 
@@ -1698,7 +1586,7 @@ public class Connect_Activity extends AppCompatActivity {
                 String url="http://stag.nineone.com:8002/si/rece_Setting.asp";
                 URL object= null;
                 object = new URL(url);
-                HttpURLConnection con = null;
+                HttpURLConnection con;
 
                 con = (HttpURLConnection) object.openConnection();
                 con.setDoOutput(true);
@@ -1722,24 +1610,29 @@ public class Connect_Activity extends AppCompatActivity {
                     array.put(cred);
                 }
                 OutputStream os = con.getOutputStream();
-                os.write(array.toString().getBytes("UTF-8"));
+                os.write(array.toString().getBytes(StandardCharsets.UTF_8));
                 os.close();
 //display what returns the POST request
 
                 StringBuilder sb = new StringBuilder();
                 int HttpResult = con.getResponseCode();
                 if (HttpResult == HttpURLConnection.HTTP_OK) {
-                    BufferedReader br = new BufferedReader(
-                            new InputStreamReader(con.getInputStream(), "utf-8"));
+                    BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
                     String line = null;
                     while ((line = br.readLine()) != null) {
-                        sb.append(line + "\n");
+                        sb.append(line).append("\n");
                     }
                     br.close();
-                    Log.e("dd-","\n"+sb.toString());
-                    fileDelete();
+                    if(sb.toString().contains("done")) {
+                        Log.e("1dd-", "\n" + sb.toString());
+                        fileDelete();
+                    }else{
+
+                        Log.e("2dd-","\n"+sb.toString());
+                    }
+
                 } else {
-                    Log.e("dd-","\n"+con.getResponseMessage());
+                    Log.e("0dd-","\n"+con.getResponseMessage());
                     //   System.out.println(con.getResponseMessage());
                 }
             } catch (IOException e) {
@@ -1750,16 +1643,16 @@ public class Connect_Activity extends AppCompatActivity {
     }
     private static boolean fileDelete(){
         // String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
-        // str_Path_Full += "/Nineone" + File.separator + "test.csv";
+        // str_Path_Full += "/Nineone" + File.separator + "save.csv";
 
         try {
             File file;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "test.csv";
-                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"test.csv");
+                //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-                //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "test.csv";
-                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "test.csv");
+                //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "save.csv");
             }
             if(file.exists()){
                 file.delete();
@@ -1774,7 +1667,6 @@ public class Connect_Activity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
 
             Bundle extras = intent.getExtras();
             NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
@@ -1802,4 +1694,84 @@ public class Connect_Activity extends AppCompatActivity {
         toastView.setView(layout);
         toastView.show();
     }
+/*
+  // data Parcing Function
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+    private short ConvertToShortBig(byte[] txValue, int startidx) {
+        ByteBuffer bb = ByteBuffer.allocate(2);
+        bb.order(ByteOrder.BIG_ENDIAN);
+        bb.put(txValue[startidx]);
+        bb.put(txValue[startidx + 1]);
+        return bb.getShort(0);
+    }
+
+    private short ConvertToShortLittle(byte[] txValue, int startidx) {
+        ByteBuffer bb = ByteBuffer.allocate(2);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        bb.put(txValue[startidx]);
+        bb.put(txValue[startidx + 1]);
+        return bb.getShort(0);
+    }
+
+ public static float arr2float (byte[] arr, int start) {
+
+        int i = 0;
+        int len = 4;
+        int cnt = 0;
+        byte[] tmp = new byte[len];
+
+        for (i = start; i < (start + len); i++) {
+            tmp[cnt] = arr[i];
+            cnt++;
+        }
+
+        int accum = 0;
+        i = 0;
+        for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
+            accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
+            i++;
+        }
+        return Float.intBitsToFloat(accum);
+    }
+    private int ConvertToIntBig(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
+   */
+public String byteArrayToHex(byte[] a) {
+    StringBuilder sb = new StringBuilder();
+    for(final byte b: a)
+        sb.append(String.format("%02x ", b&0xff));
+    return sb.toString();
+}
 }

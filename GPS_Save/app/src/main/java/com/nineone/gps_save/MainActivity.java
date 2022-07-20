@@ -1,5 +1,6 @@
 package com.nineone.gps_save;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -10,6 +11,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -20,6 +22,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -31,6 +34,19 @@ import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -60,28 +76,32 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
     };
     private LocationManager locationManager;
     private EditText startedit;
     private Button startbutton;
-   // private GpsTracker gpsTracker;
-    private TextView textView1,textView2,textView3,msgettime,textView4,textView5;
+    // private GpsTracker gpsTracker;
+    private TextView textView1, textView2, textView3, msgettime, textView4, textView5;
     private boolean start_true = false;
-    private String mstart_name = null ;
-    private  LocationManager lm;
-    private long baseTime,pauseTime;
-    private long starttime,beforetime,nowtime;
+    private String mstart_name = null;
+    // private LocationManager lm;
+    private long baseTime, pauseTime;
+    private long starttime, beforetime, nowtime;
     private SimpleDateFormat timeformat;
+    private GPSListener gpsListener;
+    gpsLocationListener gpslocationListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissions=permissions2;// 안드로이드 6.0 이상일 경우 퍼미션 체크
+            permissions = permissions2;// 안드로이드 6.0 이상일 경우 퍼미션 체크
             checkPermissions(permissions2);
-        }else{
-            permissions=permissions1;
+        } else {
+            permissions = permissions1;
             checkPermissions(permissions);
         }
         GPSSetting();
@@ -95,16 +115,19 @@ public class MainActivity extends AppCompatActivity {
         textView4 = findViewById(R.id.textView4);
         textView5 = findViewById(R.id.textView5);
         startbutton = findViewById(R.id.startButton);
-        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-    //    gpsTracker = new GpsTracker(MainActivity.this);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        //    gpsListener = new GPSListener();
+
+        //    gpsTracker = new GpsTracker(MainActivity.this);
+        gpslocationListener = new gpsLocationListener();
         startbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(startedit.getText().toString().length()==0 || startedit.getText().toString().equals(" ") || startedit.getText().toString().equals("")){
-                    Toast.makeText(getApplicationContext(),"시작장소를 입력해 주세요",Toast.LENGTH_SHORT).show();
-                }else {
+                if (startedit.getText().toString().length() == 0 || startedit.getText().toString().equals(" ") || startedit.getText().toString().equals("")) {
+                    Toast.makeText(getApplicationContext(), "시작장소를 입력해 주세요", Toast.LENGTH_SHORT).show();
+                } else {
                     if (!start_true) {
-                        start_true=true;
+                        start_true = true;
                         startbutton.setText("멈춤");
                         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                         //저장을 하기위해 Editor를 불러온다.
@@ -114,95 +137,216 @@ public class MainActivity extends AppCompatActivity {
                         baseTime = SystemClock.elapsedRealtime();
                         startedit.setFocusable(false);//포커싱과
                         startedit.setClickable(false);
-
-                        if ( Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission( getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-                            ActivityCompat.requestPermissions( MainActivity.this, new String[] {
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                                    }, 0 );
-                        }
-                        else{
-                            startTimerTask();
-                            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, gpsLocationListener);
-                            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, gpsLocationListener);
-                        }
-                    }else{
+                        startTimerTask();
+                        google_gps();
+                        startLocationUpdates();
+                   /*     if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+                        } else {
+                            Log.e("start?","starts");
+                         //   startTimerTask();
+                            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, gpslocationListener);
+                            //   lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, gpsLocationListener);
+                        }*/
+                    } else {
+                        fusedLocationClient.removeLocationUpdates(locationCallback);
                         startedit.setFocusable(true);//포커싱과
                         startedit.setClickable(true);
                         startedit.setFocusableInTouchMode(true);
-                        start_true=false;
+                        start_true = false;
                         startbutton.setText("시작");
-                        lm.removeUpdates(gpsLocationListener);
+                        //   locationManager.removeUpdates(gpslocationListener);
                         stopTimerTask();
                     }
                 }
             }
         });
-
+        aftertime = new SimpleDateFormat("HH:mm:ss", Locale.KOREA);
         starttime = System.currentTimeMillis();
         timeformat = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.KOREA);
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        mstart_name= sp.getString("startname","");
-        startedit.setText(mstart_name+"");
+        mstart_name = sp.getString("startname", "");
+        startedit.setText(mstart_name + "");
 
     }
-    final LocationListener gpsLocationListener = new LocationListener() {
+
+    class gpsLocationListener implements LocationListener {
+        //final LocationListener gpsLocationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            String provider;
-            double longitude;
-            double latitude;
-            double altitude;
-            nowtime = System.currentTimeMillis();
-            String checktime =  timeformat.format(nowtime);
-            if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                nowtime = System.currentTimeMillis();
+                String checktime = timeformat.format(nowtime);
+                //     if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
                 provider = location.getProvider();
                 longitude = location.getLongitude();
                 latitude = location.getLatitude();
                 altitude = location.getAltitude();
+
+                accuracy = location.getAccuracy();
+                time = location.getTime();
+                time2 = timeformat.format(time);
+                location.getTime();
                 Log.e("gpsTracker21", "위치정보 : " + provider + ", " +
                         "위도 : " + longitude + ", " +
                         "경도 : " + latitude + ", " +
-                        "고도  : " + altitude);
+                        "고도  : " + altitude + " , 시간: " + getTime());
 
-                String mgpsTracker= latitude+","+ longitude+","+altitude+","+provider+","+checktime;
+                String mgpsTracker = latitude + "," + longitude + "," + altitude + "," + provider + "," + checktime;
                 writeLog(mgpsTracker);
-            } else {
+                //  }
+            /*else {
                 provider = location.getProvider();
                 longitude = location.getLongitude();
                 latitude = location.getLatitude();
                 altitude = location.getAltitude();
+
                 Log.e("gpsTracker22", "위치정보 : " + provider + ", " +
                         "위도 : " + longitude + ", " +
                         "경도 : " + latitude + ", " +
-                        "고도  : " + altitude);
+                        "고도  : " + altitude+" , 시간: "+getTime());
 
+            }*/
+                time = location.getTime();
+                textView4.setText("위치정보 : " + provider + "\n" +
+                        "위도 : " + latitude + "\n" +
+                        "경도 : " + longitude + "\n" +
+                        "고도  : " + altitude + "\n" +
+                        "정확성  : " + accuracy + "\n" +
+                        "현재시간  : " + time2 + "\n" +
+                        "경과시간: " + getTime());
+                //   msgettime.setText(getTime());
+
+                Log.e("gpsTracker1", "위도: " + latitude + ", 경도: " + longitude + ", 고도: " + altitude + ", 시간: " + checktime);
             }
-            textView4.setText("위치정보 : " + provider + "\n" +
-                    "위도 : " + latitude + "\n" +
-                    "경도 : " + longitude + "\n" +
-                    "고도  : " + altitude);
-         //   msgettime.setText(getTime());
-
-            Log.e("gpsTracker1","위도: "+latitude+", 경도: "+ longitude+", 고도: "+altitude+", 시간: "+checktime);
-
 
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.e("gpsTracker3",provider);
+            Log.e("gpsTracker3", provider);
         }
 
         public void onProviderEnabled(String provider) {
-            Log.e("gpsTracker4",provider);
+            Log.e("gpsTracker4", provider);
         }
 
         public void onProviderDisabled(String provider) {
-            Log.e("gpsTracker5",provider);
+            Log.e("gpsTracker5", provider);
+        }
+    }
+
+    ;
+
+    private LocationRequest locationRequest;
+    private FusedLocationProviderClient fusedLocationClient;
+
+    private void google_gps() {
+
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000);
+        locationRequest.setMaxWaitTime(1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        if (fusedLocationClient == null) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null /* Looper */);
+        }
+        //fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                    }
+                });*/
+
+    }
+
+
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+    SimpleDateFormat aftertime;
+    String provider = null;
+    double longitude = 0;
+    double latitude = 0;
+    double altitude = 0;
+    float accuracy = 0;
+    long time = 0;
+    String time2;
+
+    private LocationCallback locationCallback = new LocationCallback(){
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                return;
+            }
+            for (Location location : locationResult.getLocations()) {
+                nowtime = System.currentTimeMillis();
+                String checktime = timeformat.format(nowtime);
+                provider = location.getProvider();
+                longitude = location.getLongitude();
+                latitude = location.getLatitude();
+                altitude = location.getAltitude();
+
+                accuracy = location.getAccuracy();
+                time = location.getTime();
+                time2 = timeformat.format(time);
+                location.getTime();
+                Log.e("gpsTracker21", "위치정보 : " + provider + ", " +
+                        "위도 : " + longitude + ", " +
+                        "경도 : " + latitude + ", " +
+                        "고도  : " + altitude + " , 시간: " + getTime());
+
+                String mgpsTracker = latitude + "," + longitude + "," + altitude + "," + provider + "," + checktime;
+                writeLog(mgpsTracker);
+                time = location.getTime();
+                String Allloction = "위치정보 : " + provider + "\n" +
+                        "위도 : " + latitude + "\n" +
+                        "경도 : " + longitude + "\n" +
+                        "고도  : " + altitude + "\n" +
+                        "정확성  : " + accuracy + "\n" +
+                        "현재시간  : " + time2 + "\n" +
+                        "경과시간: " + getTime();
+                textView4.setText(Allloction);
+                // Update UI with location data
+                // ...
+            }
         }
     };
 
 
+
     private Timer timer;
-    private void startTimerTask () {
+
+    private void startTimerTask() {
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -210,11 +354,11 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     public void run() {
 
-                         //  nowtime = beforetime-starttime;
+                        //  nowtime = beforetime-starttime;
                         //mstartTime.setText(stecount(base));
                         msgettime.setText(getTime());
 
-                    /*     gpsTracker = new GpsTracker(MainActivity.this);*/
+                        /*     gpsTracker = new GpsTracker(MainActivity.this);*/
                     /*    gpsTracker.getLatitude();
                         gpsTracker.getLocation();
                         gpsTracker.getLongitude();
@@ -223,11 +367,11 @@ public class MainActivity extends AppCompatActivity {
                         textView2.setText(gpsTracker.getLongitude()+"");
                         textView3.setText(gpsTracker.getAltitude()+"");*/
                         //mstartTime.setText(timeformat.format(nowtime));
-                      //  nowtime = System.currentTimeMillis();
-                       // String checktime =  timeformat.format(nowtime);
-                      //  String mgpsTracker= gpsTracker.getLatitude()+","+ gpsTracker.getLongitude()+","+gpsTracker.getAltitude()+","+checktime;
-                      //  writeLog(mgpsTracker);
-                      //  Log.e("gpsTracker1","위도: "+gpsTracker.getLatitude()+", 경도: "+ gpsTracker.getLongitude()+", 고도: "+gpsTracker.getAltitude()+", 시간: "+checktime);
+                        //  nowtime = System.currentTimeMillis();
+                        // String checktime =  timeformat.format(nowtime);
+                        //  String mgpsTracker= gpsTracker.getLatitude()+","+ gpsTracker.getLongitude()+","+gpsTracker.getAltitude()+","+checktime;
+                        //  writeLog(mgpsTracker);
+                        //  Log.e("gpsTracker1","위도: "+gpsTracker.getLatitude()+", 경도: "+ gpsTracker.getLongitude()+", 고도: "+gpsTracker.getAltitude()+", 시간: "+checktime);
 
 
                      /*   LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -239,9 +383,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-        },0, 1000);
+        }, 0, 1000);
 
     }
+
     private void stopTimerTask() {//타이머 스톱 함수
         if (timer != null) {
             timer.cancel();
@@ -251,56 +396,58 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private String getTime(){
+    private String getTime() {
         //경과된 시간 체크
 
         long nowTime = SystemClock.elapsedRealtime();
         //시스템이 부팅된 이후의 시간?
         long overTime = nowTime - baseTime;
-       // long hour = (overTime/ 100) / 360;
-       // long min = overTime/1000/60;
-       // long sec = (overTime/1000)%60;
+        // long hour = (overTime/ 100) / 360;
+        // long min = overTime/1000/60;
+        // long sec = (overTime/1000)%60;
         Log.e("overtime", String.valueOf(overTime));
         long sec = (overTime / 1000) % 60;
-        long min = (overTime / 1000) / 60;
-        long hour = ((overTime/1000)/60)/60;
-      //  long ms = overTime % 1000;
+        long min = ((overTime / 1000) / 60)% 60;
+        long hour = ((overTime / 1000) / 60) / 60;
+        //  long ms = overTime % 1000;
 
-        @SuppressLint("DefaultLocale") String recTime =String.format("%02d:%02d:%02d", hour, min, sec);
+        @SuppressLint("DefaultLocale") String recTime = String.format("%02d:%02d:%02d", hour, min, sec);
 
         return recTime;
     }
- /*   private String stecount(long base){
-        Object obj;
-        Object obj2;
-        Object obj3;
-        int i = (int) ((base / 3600000) * -1);
-        long j = (long) (3600000 * i);
-        int i2 = (int) (((base - j) * -1) / 60000);
-        int i3 = (int) ((((base - j) - ((long) (60000 * i2))) * -1) / 1000);
-        StringBuilder sb = new StringBuilder();
-        if (i < 10) {
-            obj = "0" + i;
-        } else {
-            obj = Integer.valueOf(i);
-        }
-        sb.append(obj);
-        sb.append(":");
-        if (i2 < 10) {
-            obj2 = "0" + i2;
-        } else {
-            obj2 = Integer.valueOf(i2);
-        }
-        sb.append(obj2);
-        sb.append(":");
-        if (i3 < 10) {
-            obj3 = "0" + i3;
-        } else {
-            obj3 = Integer.valueOf(i3);
-        }
-        sb.append(obj3);
-        return sb.toString();
-    }*/
+
+    /*   private String stecount(long base){
+           Object obj;
+           Object obj2;
+           Object obj3;
+           int i = (int) ((base / 3600000) * -1);
+           long j = (long) (3600000 * i);
+           int i2 = (int) (((base - j) * -1) / 60000);
+           int i3 = (int) ((((base - j) - ((long) (60000 * i2))) * -1) / 1000);
+           StringBuilder sb = new StringBuilder();
+           if (i < 10) {
+               obj = "0" + i;
+           } else {
+               obj = Integer.valueOf(i);
+           }
+           sb.append(obj);
+           sb.append(":");
+           if (i2 < 10) {
+               obj2 = "0" + i2;
+           } else {
+               obj2 = Integer.valueOf(i2);
+           }
+           sb.append(obj2);
+           sb.append(":");
+           if (i3 < 10) {
+               obj3 = "0" + i3;
+           } else {
+               obj3 = Integer.valueOf(i3);
+           }
+           sb.append(obj3);
+           return sb.toString();
+       }*/
+  //  private LocationCallback locationCallback;
 
     private void writeLog(String data){//csv파일 저장
         File file;// = new File(str_Path);
