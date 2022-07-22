@@ -58,7 +58,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private final boolean mScanmode;
     private SoundPool soundPool;
     private int soundPlay;
-    public RecyclerViewAdapter(Activity activity, Context mContext,boolean mScanmode) {
+    public RecyclerViewAdapter(@NonNull RecyclerView recyclerView,Activity activity, Context mContext,boolean mScanmode) {
         //this.recyclerView = recyclerView;
         this.activity=activity;
         this.mContext = mContext;
@@ -138,7 +138,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         int H2S_errer2 = 0;
         int CO2_errer2 = 0;
         int CH4_errer2 = 0;
-        //String index_num = "";
         long index_num = 0;
         boolean mAlarm_on = false;
         String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
@@ -304,8 +303,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                  CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
               //  Log.e("CH4_errer2", String.valueOf(CH4_errer2));
                 if(DeviceNameArray.length>=3) {
-                    //index_num = DeviceNameArray[2];
-                    index_num = Long.parseLong(DeviceNameArray[2], 16);
+                    index_num = Integer.parseInt(DeviceNameArray[2], 16);
                 }
              //   Log.e("senser_type", String.valueOf(senser_type));
                 if(!mScanmode){
@@ -327,44 +325,60 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                // Log.e("ble_data0",item.getDisplayName());
               //  Log.e("ble_data1",(Arrays.toString(ble_data)));
               //  Log.e("ble_data2", byteArrayToHex(ble_data));
-                int senser_O2 = ConvertToIntLittle(ble_data, sensorStartIdx + 6);
-                Log.e("655535", String.valueOf(senser_O2));
-                if(senser_O2 == 0xFFFF) {
+                int senser_O2 = ConvertToShortLittle(ble_data, sensorStartIdx + 6);
+                String senser_londing_O2_1 = String.format("%02X", ble_data[sensorStartIdx + 6]&0xff);
+                String senser_londing_O2_2 = String.format("%02X", ble_data[sensorStartIdx + 7]&0xff);
+                boolean reset = false;
+                if(senser_londing_O2_1.equals("FF") && senser_londing_O2_2.equals("FF")) {
+                    reset=true;
                     string_O2 = "센서 측정 중";
-                    viewHolder.tagbutton.setEnabled(false);
-                    viewHolder.tagbutton.getBackground().setTint(ContextCompat.getColor(mContext, R.color.gray));
                 }else{
                     string_O2 = String.format(Locale.KOREA,"%.2f", senser_O2 * 0.01) + " %  ";
-
+                }
+                if(reset){
+                   viewHolder.tagbutton.setEnabled(false);
+                    viewHolder.tagbutton.getBackground().setTint(ContextCompat.getColor(mContext, R.color.gray));
+                  // viewHolder.tagbutton.setBackgroundTintList(ContextCompat.getColor(mContext, R.color.gray));
+                }else{
                     viewHolder.tagbutton.setEnabled(true);
                     viewHolder.tagbutton.getBackground().setTint(ContextCompat.getColor(mContext, R.color.black));
+                   // viewHolder.tagbutton.setBackgroundTintList(ContextCompat.getColor(mContext, R.color.black));
                 }
+                int senser_CO = ConvertToShortLittle(ble_data, sensorStartIdx + 8);
+                String senser_londing_CO_1 = String.format("%02X", ble_data[sensorStartIdx + 8]&0xff);
+                String senser_londing_CO_2 = String.format("%02X", ble_data[sensorStartIdx + 9]&0xff);
 
-                int senser_CO = ConvertToIntLittle(ble_data, sensorStartIdx + 8);
-                if(senser_CO==0xFFFF) {
+                if(senser_londing_CO_1.equals("FF") && senser_londing_CO_2.equals("FF")) {
                     string_CO = "센서 측정 중";
                 }else{
                     string_CO = senser_CO + " ppm  ";
                 }
 
-                int senser_H2S = ConvertToIntLittle(ble_data, sensorStartIdx + 10);
+                int senser_H2S = ConvertToShortLittle(ble_data, sensorStartIdx + 10);
+                String senser_londing_H2S_1 = String.format("%02X", ble_data[sensorStartIdx + 8]&0xff);
+                String senser_londing_H2S_2 = String.format("%02X", ble_data[sensorStartIdx + 9]&0xff);
 
-                if(senser_H2S==0xFFFF) {
+                if(senser_londing_H2S_1.equals("FF") && senser_londing_H2S_2.equals("FF")) {
                     string_H2S = "센서 측정 중";
                 }else{
                     string_H2S = senser_H2S + " ppm  ";
                 }
 
-                int senser_CO2 = ConvertToIntLittle(ble_data, sensorStartIdx + 12);
+                int senser_CO2 = ConvertToShortLittle(ble_data, sensorStartIdx + 12);
+                String senser_londing_CO2_1 = String.format("%02X", ble_data[sensorStartIdx + 8]&0xff);
+                String senser_londing_CO2_2 = String.format("%02X", ble_data[sensorStartIdx + 9]&0xff);
 
-                if(senser_CO2==0xFFFF) {
+                if(senser_londing_CO2_1.equals("FF") && senser_londing_CO2_2.equals("FF")) {
                     string_CO2 = "센서 측정 중";
                 }else{
                     string_CO2 = senser_CO2 + " ppm  ";
                 }
 
-                int senser_CH4 = ConvertToIntLittle(ble_data, sensorStartIdx + 14);
-                if(senser_CH4==0xFFFF) {
+                int senser_CH4 = ConvertToShortLittle(ble_data, sensorStartIdx + 14);
+                String senser_londing_CH4_1 = String.format("%02X", ble_data[sensorStartIdx + 8]&0xff);
+                String senser_londing_CH4_2 = String.format("%02X", ble_data[sensorStartIdx + 9]&0xff);
+
+                if(senser_londing_CH4_1.equals("FF") && senser_londing_CH4_2.equals("FF")) {
                     string_CH4 = "센서 측정 중";
                 }else{
                     string_CH4 = senser_CH4 + " ppm  ";
@@ -476,22 +490,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
 
             default:
-                long index_num2 = 0;
                 sensordata = item.getScanRecordHexString();
                 viewHolder.tagdata.setText(sensordata);
                 viewHolder.tagadress.setText(item.getDevice().getAddress());
                 viewHolder.tagdata_etc.setText("");
-
-                    //long  index_num2 = DeviceNameArray[2];
-                index_num2 = Long.parseLong(DeviceNameArray[2], 16);
-
-
-             //   Log.e("senser_type", String.valueOf(senser_type));
-                if(!mScanmode){
-                    String sneer_type_name = "";
-                    sneer_type_name = "BTS1"+"-"+index_num2;
-                    viewHolder.tagadress.setText(sneer_type_name);
-                }
                 if(getstopfalse){
                     //sensordata = "수신 중지 됨";
                     //viewHolder.tagdevicetime.setText("수신 중지 됨");
@@ -890,14 +892,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         short shortVal = bb.getShort(0);
         return shortVal;
     }
-    private long ConvertToLongLittle(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        long shortVal = bb.getShort(0);
-        return shortVal;
-    }
+
 
   /*  public static class RecyclerViewEmptySupport extends RecyclerView {
         private View emptyView;

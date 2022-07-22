@@ -2,7 +2,6 @@ package com.nineone.s_tag_tool;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseData;
@@ -149,13 +148,12 @@ public class MainFragment extends Fragment {
     private final String[] permissions2 = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.READ_PHONE_NUMBERS,
-            Manifest.permission.ACCESS_FINE_LOCATION
+
     };
     private LocationManager locationManager;
     @Nullable
@@ -171,8 +169,6 @@ public class MainFragment extends Fragment {
             permissions=permissions1;
             checkPermissions(permissions);
         }
-
-
         RescanBaseTime = SystemClock.elapsedRealtime();
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
           // bluetoothCheck();
@@ -222,68 +218,9 @@ public class MainFragment extends Fragment {
                 activity.onFragmentChange(1);
             }
         });*/
-       /* ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo  service  : manager.getRunningServices(Integer.MAX_VALUE)) {
-            //log.e("onResume", service.service.getClassName());
-            if (!"com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
-                //log.e("onResume", "onResume2");
-                startService();
-            }else{
-                startForeground=true;
-            }
-        }
-        startService();*/
         return rootView;
     }
-    private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
 
-    public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
-
-    public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
-
-    private boolean startForeground = false;
-    private void startService(){
-        if(!startForeground){
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                startForeground=true;
-                //log.e("startService", "startService");
-                mIsScanning=true;
-                activity.invalidateOptionsMenu();
-                Intent serviceIntent1 = new Intent(getContext(), Background_Service.class);
-                serviceIntent1.setAction(ACTION_START_FOREGROUND_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    activity.startForegroundService(serviceIntent1);
-                } else {
-                    activity.startService(serviceIntent1);
-                }
-            }
-        }
-    }
-    private void stopService() {
-        //if(startForeground) {
-        startForeground = false;
-        mIsScanning = false;
-        activity.invalidateOptionsMenu();
-        ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            Log.e("activityt_TAGstop", service.service.getClassName());
-            if ("com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
-                Log.e("activityt_TAGstop2", service.service.getClassName());
-                //log.e("stopService", "stopService");
-                Intent serviceIntent1 = new Intent(getContext(), Background_Service.class);
-                serviceIntent1.setAction(ACTION_STOP_FOREGROUND_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    activity.startForegroundService(serviceIntent1);
-                } else {
-                    activity.startService(serviceIntent1);
-                }
-            }
-        }
-
-
-        // }
-    }
     private void init(ViewGroup rootView) {
         // BLE check
 
@@ -295,7 +232,7 @@ public class MainFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         deviceListView.setLayoutManager(linearLayoutManager);
         deviceListView.setItemAnimator(null);
-        recyclerVierAdapter = new RecyclerViewAdapter(activity,getContext(),systemBoole);
+        recyclerVierAdapter = new RecyclerViewAdapter(deviceListView,activity,getContext(),systemBoole);
         recyclerVierAdapter.item_noti();
         deviceListView.setAdapter(recyclerVierAdapter);
 
@@ -305,8 +242,6 @@ public class MainFragment extends Fragment {
                 if(position != RecyclerView.NO_POSITION) {
                     Intent intent = new Intent(activity, Connect_Activity.class);
                     intent.putExtra("address", recyclerVierAdapter.ScannedDeviceList().get(position).getDevice().getAddress());
-
-                    background_service_start=true;
                     activity.startActivity(intent);
 
                    // activity.finish();
@@ -317,7 +252,6 @@ public class MainFragment extends Fragment {
         }) ;
         stopScan();
     }
-    private boolean background_service_start= false;
     private void bluetoothCheck(){
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -414,7 +348,7 @@ public class MainFragment extends Fragment {
                     //Log.e("123123",result.getDevice().getName());
                     recyclerVierAdapter.update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                     getEllapse();
-               }
+                }
             }
         }
 
@@ -605,16 +539,12 @@ public class MainFragment extends Fragment {
         //  if (mBluetoothLeScanner != null) {
 
         stopScan();
-        recyclerVierAdapter.item_noti();
-        recyclerVierAdapter.notifyDataSetChanged();
         recyclerVierAdapter.item_Clear();
         try {
             activity.unregisterReceiver(mBroadcastReceiver1);
         } catch (Exception ignored){
 
         }
-        background_service_start=false;
-    //   startService();
         // finish();
     }
     @Override
@@ -623,25 +553,6 @@ public class MainFragment extends Fragment {
         Log.e("activityt_TAG","onStop");
         //if (mBluetoothLeScanner != null) {
         // recyclerVierAdapter.item_Clear();
-        if(!background_service_start) {
-            ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-
-            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-                Log.e("activityt_TAG1", service.service.getClassName());
-                if (!"com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
-                    //log.e("onResume", "onResume2");
-                    startService();
-                } else {
-
-                    startForeground = true;
-                }
-            }
-            if(manager.getRunningServices(Integer.MAX_VALUE).size()==0){
-                startService();
-                rescan=true;
-                startForeground = true;
-            }
-        }
 
        // stopScan();
        // recyclerVierAdapter.item_Clear();
@@ -652,23 +563,19 @@ public class MainFragment extends Fragment {
     public void onStart() {
 
         super.onStart();
-        Network_Confirm();
-        stopScan();
-        recyclerVierAdapter.item_noti();
-        recyclerVierAdapter.notifyDataSetChanged();
-        background_service_start=true;
-        stopService();
      //   recyclerVierAdapter.item_noti();
      //   startScan();
         Log.e("activityt_TAG", "onStart()");
     }
-    private boolean rescan = false;
+
     @Override
     public void onResume() {
         super.onResume();
         Log.e("activityt_TAG", "onResume");
-
-
+        Network_Confirm();
+        stopScan();
+        recyclerVierAdapter.item_noti();
+        recyclerVierAdapter.notifyDataSetChanged();
         if(!mble_gps_false) {
 
             Runnable runnable10;//  startScan();
@@ -677,13 +584,10 @@ public class MainFragment extends Fragment {
                     @Override
                     public void run() {
                         //  startScan();
-                        if(!rescan) {
-                            startScan();
-                        }
-                        background_service_start=true;
+                        startScan();
                     }
                 };
-                start_handler.postDelayed(runnable10, 0);
+                start_handler.postDelayed(runnable10, 1000);
             }
 
         }
@@ -835,7 +739,7 @@ public class MainFragment extends Fragment {
                 con.setRequestMethod("POST");
                 JSONArray array=new JSONArray();
 
-                for(int i=0; i < array_List.size(); i++){
+                for(int i=0;i<array_List.size();i++){
                     JSONObject cred = new JSONObject();
                     try {
                         cred.put("id", array_List.get(i).getId());
