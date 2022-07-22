@@ -7,9 +7,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.media.SoundPool;
@@ -17,6 +20,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.ParcelUuid;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -28,6 +32,8 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,11 +70,13 @@ public class Background_Service extends Service {
     public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
 
     public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
-
+    private ScanSettings btLeScanSettings;
+    private ArrayList<ScanFilter> btLeScanFilters;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             String action = intent.getAction();
+            Log.e("activityt_TAGaction", action);
             if (ACTION_STOP_SERVICE.equals(intent.getAction())) {
                 isonoff = true;
                 onDestroy();
@@ -82,6 +90,13 @@ public class Background_Service extends Service {
                         onDestroy();
                         Log.e("activityt_TAG", "serviceddd");
                     }
+                    btLeScanFilters = new ArrayList<ScanFilter>();
+
+                    btLeScanSettings = new ScanSettings.Builder()
+                            .setScanMode(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                          //  .setReportDelay(0)
+                            .build();
+
                     Log.e("activityt_TAG2b", "activityt_TAG2");
 
                     RescanBaseTime = SystemClock.elapsedRealtime();
@@ -98,7 +113,7 @@ public class Background_Service extends Service {
                     builder.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
 
                     Intent notificationIntent = new Intent(this, MainActivity.class)
-                            .setAction(ACTION_STOP_FOREGROUND_SERVICE)
+                            .setAction(Intent.ACTION_MAIN)
                             .addCategory(Intent.CATEGORY_LAUNCHER)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
@@ -120,22 +135,37 @@ public class Background_Service extends Service {
 
                     soundPool = new SoundPool.Builder().setMaxStreams(8).build();
                     soundPlay = soundPool.load(getApplicationContext(), R.raw.arml, 1);
-
-                        Runnable runnable10 = new Runnable() {
-                            @Override
-                            public void run() {
-                                //  startScan();
-                                if (!isonoff) {
-                                    mBluetoothLeScanner.startScan(leScanCallback);
-                                }
+                    ScanFilter scanFilter = new ScanFilter.Builder()
+                            .setManufacturerData(37265, new byte[]{})
+                            // .setServiceUuid(new ParcelUuid("........ uuid reference ......"))
+                            .build();
+                    btLeScanFilters.add(scanFilter);
+                    mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
+                    Runnable runnable10 = new Runnable() {
+                        @Override
+                        public void run() {
+                            //  startScan();
+                            if (!isonoff) {
+                                mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
                             }
-                        };
-                        timechange_handler.postDelayed(runnable10, 1000);
-                        //   startTimerTask();
+                        }
+                    };
+                  /*  for (int i = 30000; i <= 40000; i++) {
+                        ScanFilter scanFilter = new ScanFilter.Builder()
+                                .setManufacturerData(i, new byte[]{})
+                               // .setServiceUuid(new ParcelUuid("........ uuid reference ......"))
+                                .build();
+                        btLeScanFilters.add(scanFilter);
+                        if (i == 40000) {
+                            timechange_handler.postDelayed(runnable10, 1000);
+                        }
+                    }*/
+                    // timechange_handler.postDelayed(runnable10, 1000);
+                    //   startTimerTask();
 
                     break;
                 case ACTION_STOP_FOREGROUND_SERVICE:
-                    isonoff=true;
+                    isonoff = true;
                     stopForegroundService();
                     onDestroy();
                     break;
@@ -161,8 +191,9 @@ public class Background_Service extends Service {
 
                 if (result.getDevice().getName() != null) {
                     //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
-                    if (result.getDevice().getName().startsWith("TJ-")) {
-                        Log.e("123123",result.getDevice().getName());
+                    if (result.getDevice().getName().startsWith("TJ-00CA")) {
+                        Log.e("1231234", result.getDevice().getName()+", "+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                        Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
                         update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                         getEllapse();
                     }
@@ -174,6 +205,14 @@ public class Background_Service extends Service {
         }
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
+            Log.e("1231236", String.valueOf(results.size()));
+            for(ScanResult scanResult : results){
+                Log.e("1231237", scanResult.getDevice().getName());
+                if (scanResult.getDevice().getName().startsWith("TJ-00CA")) {
+                    update(scanResult.getDevice(), scanResult.getRssi(), scanResult.getScanRecord().getBytes());
+                }
+            }
+            getEllapse();
 
         }
     };
@@ -187,27 +226,102 @@ public class Background_Service extends Service {
             if ((newDevice == null) || (newDevice.getAddress() == null) || newDevice.getName() == null) {
                 return "";
             }
-
             long now = System.currentTimeMillis();
+            int Sensor_Alarm = 0;
+            Sensor_Alarm = scanRecord[sensorStartIdx + 5];
+            int senser_type = 0;
+            int os2_errer = 0;
+            int CO_errer2 = 0;
+            int H2S_errer2 = 0;
+            int CO2_errer2 = 0;
+            int CH4_errer2 = 0;
+            //  int Sensor_Alarm = 250;
+            senser_type = ((Sensor_Alarm) & 0x07);
+            os2_errer = ((Sensor_Alarm >> 7) & 0x01);
+            CO_errer2 = ((Sensor_Alarm >> 6) & 0x01);
+            H2S_errer2 = ((Sensor_Alarm >> 5) & 0x01);
+            CO2_errer2 = ((Sensor_Alarm >> 4) & 0x01);
+            CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
+            StringBuilder alarmstring = new StringBuilder();
+            boolean mAlarm_on = false;
+            if(newDevice.getName().equals("TJ-00CA-00000010-0000")) {
+                int senser_O2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 6);
+                int senser_CO2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 12);
 
-            boolean contains = false;
-            for (ScannedDevice device : listData) {
-                if (newDevice.getAddress().equals(device.getDevice().getAddress())) {
+                Log.e("mAlarm_on1", senser_O2+", "+senser_CO2+", " + Arrays.toString(scanRecord));
 
-                    contains = true;
-                    // update
-                    device.setDisplayName(newDevice.getName());
-                    device.setRssi(rssi);
-                    device.setLastUpdatedMs(now);
-                    device.setScanRecord(scanRecord);
-                    Log.e("mAlarm_on3", Arrays.toString(scanRecord));
-                    break;
+                Log.e("mAlarm_on2", Integer.parseInt(String.valueOf(Sensor_Alarm),16)+", "+String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2));
+            }
+            if (os2_errer == 1 ) {
+                mAlarm_on = true;
+                alarmstring.append("O2 ");
+            }
+            if (CO_errer2 == 1 ) {
+                mAlarm_on = true;
+                alarmstring.append("CO ");
+            }
+            if (H2S_errer2 == 1 ) {
+                mAlarm_on = true;
+                alarmstring.append("H2S ");
+            }
+            if (CO2_errer2 == 1 ) {
+                mAlarm_on = true;
+                alarmstring.append("CO2 ");
+            }
+            if (CH4_errer2 == 1 ) {
+                mAlarm_on = true;
+                alarmstring.append("CH4 ");
+            }
+            if (mAlarm_on) {
+
+                if (!alarm_ON_OFF) {
+                    alarmstring.append("경고");
+                    Log.e("alarm_ON_OFF", " alarm_ON_OFF");
+                    alarm_ON_OFF = true;
+                    soundPool.play(soundPlay, 1f, 1f, 6, 0, 1f);
+                    Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        //  vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE));
+                        vibrator.vibrate(VibrationEffect.createOneShot(1000, 150));//0~255
+                    } else {
+                        vibrator.vibrate(750);
+
+                    }
+                    boolean tag_names_Confirm_ture = false;
+                    for(String tag_names_Confirm : mNotification_tag_names) {
+                        if(tag_names_Confirm.equals(newDevice.getName())) {
+                            tag_names_Confirm_ture=true;
+                        }
+                    }if(!tag_names_Confirm_ture){
+                        mNotification_tag_names.add(newDevice.getName());
+
+                        builder2 = new NotificationCompat.Builder(getApplicationContext(), "default")
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setContentTitle(newDevice.getName())
+                                .setContentText(alarmstring)
+                                //.setContentText("스캔 중")
+                                .setGroup(GROUP_KEY_WORK_EMAIL)
+                                .build();
+                        phonenumber_back2++;
+
+                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+                        notificationManager.notify(phonenumber_back2, builder2);
+                    }
+                    Runnable alarm_runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            //notifyDataSetChanged();
+                            alarm_ON_OFF = false;
+
+                        }
+                    };
+                    listcange_handler.postDelayed(alarm_runnable, 1000);
                 }
-                builder.setContentTitle("수신중인 기기 수: " + String.valueOf(listData.size()));
-                //builder.setContentText(tagAdapter.getItemTop5());
-                // Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
-                mNotificationManager.notify(1, builder.build());
-                byte[] ble_data = device.getScanRecord();
+            }
+            boolean contains = false;
+
+          for (ScannedDevice device : listData) {
+               /*   byte[] ble_data = device.getScanRecord();
                 boolean mAlarm_on = false;
                 //long now = System.currentTimeMillis();
                 Date dateNow = new Date(now);
@@ -235,7 +349,11 @@ public class Background_Service extends Service {
                 CO2_errer2 = ((Sensor_Alarm >> 4) & 0x01);
                 CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
                 StringBuilder alarmstring = new StringBuilder();
-                Log.e("mAlarm_on0", Arrays.toString(ble_data));
+                if(device.getDisplayName().equals("TJ-00CA-00000010-0000")) {
+                    Log.e("mAlarm_on1", Arrays.toString(ble_data));
+                    Log.e("mAlarm_on2", String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2)+", "+getstopfalse);
+                    Log.e("mAlarm_on3", String.valueOf(CO2_errer2));
+                }
                 if (os2_errer == 1 && !getstopfalse) {
                     mAlarm_on = true;
                     alarmstring.append("O2 ");
@@ -282,25 +400,49 @@ public class Background_Service extends Service {
                             vibrator.vibrate(750);
 
                         }
+                        boolean tag_names_Confirm_ture = false;
+                        for(String tag_names_Confirm : mNotification_tag_names) {
+                            if(tag_names_Confirm.equals(device.getDisplayName())) {
+                                tag_names_Confirm_ture=true;
+                            }
+                        }if(!tag_names_Confirm_ture){
+                            builder2 = new NotificationCompat.Builder(getApplicationContext(), "default")
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle(device.getDisplayName())
+                                    .setContentText(alarmstring)
+                                    //.setContentText("스캔 중")
+                                    .setGroup(GROUP_KEY_WORK_EMAIL)
+                                    .build();
+                            phonenumber_back2++;
+                            mNotification_tag_names.add(device.getDisplayName());
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+                            notificationManager.notify(phonenumber_back2, builder2);
+                        }
                         listcange_handler.postDelayed(alarm_runnable, 1000);
-                        builder2 = new NotificationCompat.Builder(getApplicationContext(), "default")
-                                .setSmallIcon(R.mipmap.ic_launcher)
-                                .setContentTitle(device.getDisplayName())
-                                .setContentText(alarmstring)
-                                //.setContentText("스캔 중")
-                                .setGroup(GROUP_KEY_WORK_EMAIL)
-                                .build();
-                        phonenumber_back2++;
-
-                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-                        notificationManager.notify(phonenumber_back2, builder2);
                     }
+                }*/
+                if (newDevice.getAddress().equals(device.getDevice().getAddress())) {
+
+                    contains = true;
+                    // update
+                    device.setDisplayName(newDevice.getName());
+                    device.setRssi(rssi);
+                    device.setLastUpdatedMs(now);
+                    device.setScanRecord(scanRecord);
+                    Log.e("mAlarm_on3", Arrays.toString(scanRecord));
+                    break;
                 }
+
+
             }
             if (!contains) {
                 String[] DeviceNameArray = newDevice.getName().trim().split("-");
                 if (DeviceNameArray.length >= 3) {
                     listData.add(new ScannedDevice(newDevice, rssi, scanRecord, now));
+                    builder.setContentTitle("수신중인 기기 수: " + String.valueOf(listData.size()));
+                    //builder.setContentText(tagAdapter.getItemTop5());
+                    // Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
+                    mNotificationManager.notify(1, builder.build());
                 }
 
             }
@@ -309,6 +451,23 @@ public class Background_Service extends Service {
         }
         return "";
     }
+    private int ConvertToIntLittle(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
+    private final ArrayList<String> mNotification_tag_names = new ArrayList<>();
     private boolean isonoff = false;
     @Override
     public void onDestroy() { //여기다가 종료할때 모든 코드 넣기 https://developer.android.com/guide/components/services?hl=ko
@@ -354,7 +513,7 @@ public class Background_Service extends Service {
                 @Override
                 public void run() {
                     //  startScan();
-                    mBluetoothLeScanner.startScan(leScanCallback);
+                    mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
                 }
             };
             timechange_handler.postDelayed(runnable10, 0);

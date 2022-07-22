@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">S Tag Tool 1.7</string>
+    <string name="app_name">S Tag Tool 1.8</string>
     <string name="action_clear">CLEAR LIST</string>
     <string name="action_scan">SCAN</string>
     <string name="action_stop">STOP</string>

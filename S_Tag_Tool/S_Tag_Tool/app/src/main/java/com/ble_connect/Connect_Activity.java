@@ -103,6 +103,7 @@ public class Connect_Activity extends AppCompatActivity {
     TextView gyo_cal;
     EditText  tag_no, tag_copy_no;
     EditText O2alarm,COalarm,H2Salarm,CO2alarm,CH4alarm;
+    String O2alarm_string,COalarm_string,H2Salarm_string,CO2alarm_string,CH4alarm_string;
     Button btn_sendtotag;
 
     String dataToServer;
@@ -136,6 +137,7 @@ public class Connect_Activity extends AppCompatActivity {
     private boolean D5_true_false = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
         ActionBar actionBar = getSupportActionBar();
@@ -314,25 +316,8 @@ public class Connect_Activity extends AppCompatActivity {
                     boolean send_ok_check = true;
                     String tag_type_val = senser_tag_type_Text.getText().toString();
                    // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
-                    int tagtype_val = 0;
-                    switch (tag_type_val) {
-                        case "00C8":
-                            tagtype_val = 0xC8;
-                            break;
-                        case "00C9":
-                            tagtype_val = 0xC9;
-                            break;
-                        case "00CA":
-                            tagtype_val = 0xCA;
-                            break;
-                        case "0007":
-                            tagtype_val = 0x07;
-                            break;
-                        case "00D5":
-                            tagtype_val = 0xD5;
-                            break;
+                    int tagtype_val = Integer.parseInt(tag_type_val, 16);
 
-                    }
                     if (tagtype_val > 0) {
                         tagsend_data[2] = (byte) tagtype_val ;
                         tagsend_data[3] = (byte) (tagtype_val >> 8);
@@ -345,7 +330,7 @@ public class Connect_Activity extends AppCompatActivity {
                     if (tag_no_var.length() > 0) {
                         boolean isNumeric = tag_no_var.matches("[+-]?\\d*(\\.\\d+)?");
                         if (isNumeric) {
-                            int tag_no_val = Integer.parseInt(tag_no_var);
+                            long tag_no_val = Long.parseLong(tag_no_var);
                             if (tag_no_val > 0) {
                                 tagsend_data[4] = (byte) (tag_no_val);
                                 tagsend_data[5] = (byte) (tag_no_val >> 8);
@@ -386,12 +371,6 @@ public class Connect_Activity extends AppCompatActivity {
                             case "2(5종)":
                                 sensor_type_var = 2;
                                 break;
-                            case "CO2":
-                                sensor_type_var = 4;
-                                break;
-                            case "CH4":
-                                sensor_type_var = 5;
-                                break;
                         }
                         tagsend_data[9] = (byte) sensor_type_var;
 
@@ -406,39 +385,43 @@ public class Connect_Activity extends AppCompatActivity {
 
                         int sensor_operation_cycle_val = Integer.parseInt(sensor_operation_cycle_Spinner.getSelectedItem().toString());
                         tagsend_data[11] = (byte) sensor_operation_cycle_val;
-
-                        if (O2alarm.getText().toString().length() != 0) {
-                            float tag_O2alarm = Float.parseFloat(O2alarm.getText().toString().trim());
+                        String O2alarm_string = O2alarm.getText().toString().trim().replace(" ","");
+                        if (O2alarm_string.length() != 0) {
+                            float tag_O2alarm = Float.parseFloat(O2alarm_string);
                             //   int tag_O2alarm2 = (int) Long.parseLong(O2alarm.getText().toString().trim(), 16);
                             tagsend_data[12] = (byte) (tag_O2alarm * 10);
                         } else {
                             tagsend_data[12] = 0;
                         }
-                        if (COalarm.getText().toString().length() != 0) {
-                            int tag_COalarm = Integer.parseInt(COalarm.getText().toString().trim());
+                        String COalarm_string = COalarm.getText().toString().trim().replace(" ","");
+                        if (COalarm_string.length() != 0) {
+                            int tag_COalarm = Integer.parseInt(COalarm_string);
                             int tag_COalarm_set = tag_COalarm / 10;
-                          //  int tag_COalarm2 = (int) Long.parseLong(String.valueOf(tag_COalarm_set), 16);
-
                             tagsend_data[13] = (byte) tag_COalarm_set;
                         } else {
                             tagsend_data[13] = 0;
                         }
-                        if (H2Salarm.getText().toString().length() != 0) {
+
+                        String H2Salarm_string = H2Salarm.getText().toString().trim().replace(" ","");
+                        if (H2Salarm_string.length() != 0) {
                             int tag_H2Salarm = Integer.parseInt(H2Salarm.getText().toString().trim());
                             tagsend_data[14] = (byte) tag_H2Salarm;
                         } else {
                             tagsend_data[14] = 0;
                         }
-                        if (CO2alarm.getText().toString().length() != 0) {
-                            int tag_CO2alarm = Integer.parseInt(CO2alarm.getText().toString().trim());
+
+                        String CO2alarm_string = CO2alarm.getText().toString().trim().replace(" ","");
+                        if (CO2alarm_string.length() != 0) {
+                            int tag_CO2alarm = Integer.parseInt(CO2alarm_string);
                             tagsend_data[15] = (byte) (tag_CO2alarm);
                             tagsend_data[16] = (byte) (tag_CO2alarm >> 8);
                         } else {
                             tagsend_data[15] = 0;
                             tagsend_data[16] = 0;
                         }
-                        if (CH4alarm.getText().toString().length() != 0) {
-                            int tag_CH4alarm = Integer.parseInt(CH4alarm.getText().toString().trim());
+                        String CH4alarm_string = CH4alarm.getText().toString().trim().replace(" ","");
+                        if (CH4alarm_string.length() != 0) {
+                            int tag_CH4alarm = Integer.parseInt(CH4alarm_string);
                             tagsend_data[17] = (byte) (tag_CH4alarm);
                             tagsend_data[18] = (byte) (tag_CH4alarm >> 8);
 
@@ -449,29 +432,8 @@ public class Connect_Activity extends AppCompatActivity {
                         }
                     }else{
                         String tag_type_copy_val = (senser_tag_copy_type_Spinner.getSelectedItem().toString());
-                        int tagtype_copy_val = 0;
-                        switch (tag_type_copy_val) {
-                            case "선택":
-                                customToastView("[단말기 타입] 을 선택해 주세요.");
-                                Toast.makeText(getApplication(), "[단말기 타입] 을 선택해 주세요.", Toast.LENGTH_LONG).show();
-                                tagtype_copy_val = 0;
-                                break;
-                            case "00C8":
-                                tagtype_copy_val = 0xC8;
-                                break;
-                            case "00C9":
-                                tagtype_copy_val = 0xC9;
-                                break;
-                            case "00CA":
-                                tagtype_copy_val = 0xCA;
-                                break;
-                            case "0007":
-                                tagtype_copy_val = 0x07;
-                                break;
-                            case "00D5":
-                                tagtype_copy_val = 0xD5;
-                                break;
-                        }
+                        int tagtype_copy_val = Integer.parseInt(tag_type_copy_val);
+
                         if (tagtype_copy_val > 0) {
                             tagsend_data[9] = (byte) (tagtype_copy_val );
                             tagsend_data[10] = (byte) (tagtype_copy_val >> 8);
@@ -484,7 +446,7 @@ public class Connect_Activity extends AppCompatActivity {
                         if (tag_copy_no_var.length() > 0) {
                             boolean isNumeric = tag_copy_no_var.matches("[+-]?\\d*(\\.\\d+)?");
                             if (isNumeric) {
-                                int tag_no_val = Integer.parseInt(tag_copy_no_var);
+                                long tag_no_val = Long.parseLong(tag_copy_no_var);
                                 if (tag_no_val > 0) {
                                     tagsend_data[11] = (byte) (tag_no_val);
                                     tagsend_data[12] = (byte) (tag_no_val >> 8);
@@ -524,7 +486,7 @@ public class Connect_Activity extends AppCompatActivity {
                       //  customToastView("전송 완료");
                         connect_fail = false;
                         if(!D5_true_false) {
-                            String senser_data = O2alarm.getText().toString() + ',' + COalarm.getText().toString() + ',' + H2Salarm.getText().toString() + ',' + CO2alarm.getText().toString() + ',' + CH4alarm.getText().toString();
+                            String senser_data = O2alarm_string + ',' + COalarm_string + ',' + H2Salarm_string + ',' + CO2alarm_string + ',' + CH4alarm_string;
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
                         }else{
@@ -762,28 +724,10 @@ public class Connect_Activity extends AppCompatActivity {
                                     if (rcount == 1) {
                                         String r_data_hex = asHex(txValue);
                                         int rece_tag_type = ConvertToIntLittle(txValue, 2);
-                                     //   Log.e("Tag_Rece3", txValue[1] + ", " + txValue[2]);
-                                        String tag_type_str = "";
-                                        switch (rece_tag_type) {
-                                            case 200:
-                                                tag_type_str = "00C8";
-                                                break;
-                                            case 201:
-                                                tag_type_str = "00C9";
-                                                break;
-                                            case 202:
-                                                tag_type_str = "00CA";
-                                                break;
-                                            case 7:
-                                                tag_type_str = "0007";
-                                                break;
-                                        }
-                                        // selectValue(senser_tag_type_Spinner, tag_type_str);
-                                        String v1 = String.format("%02X", rece_tag_type & 0xFF);
-                                        String v2 = String.format("%02X", rece_tag_type >> 16 & 0xFF);
-                                        String v3 = v2 + v1;
 
-                                        senser_tag_type_Text.setText(v3);
+                                        String tag_tag_type_str = String.format("%04X", rece_tag_type);
+
+                                        senser_tag_type_Text.setText(tag_tag_type_str);
 
                                         int rece_tag_no = ConvertToIntLittle2(txValue, 4);
                                         tag_no.setText(rece_tag_no + "");
@@ -802,12 +746,6 @@ public class Connect_Activity extends AppCompatActivity {
                                                     break;
                                                 case 2:
                                                     sensor_type_str = "2(5종)";
-                                                    break;
-                                                case 4:
-                                                    sensor_type_str = "CO2";
-                                                    break;
-                                                case 5:
-                                                    sensor_type_str = "CH4";
                                                     break;
                                             }
                                          //   Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
@@ -831,12 +769,13 @@ public class Connect_Activity extends AppCompatActivity {
                                             int rece_operation_cycle_on = txValue[11] & 0xff;
                                            // Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
                                             selectValue(sensor_operation_cycle_Spinner, rece_operation_cycle_on);
-                                            float rece_O2_no = txValue[12] & 0xff;
-                                            float rece_O2_no2 = (float) (rece_O2_no * 0.1);
+                                            int rece_O2_no = txValue[12] & 0xff;
+                                            double rece_O2_no2 = (rece_O2_no * 0.1);
                                             O2alarm.setText(String.valueOf(rece_O2_no2));
                                             //   if (rece_sensor_type == 2) {
                                             int rece_CO_no = txValue[13] & 0xff;
                                             int rece_CO_no_SET = rece_CO_no * 10;
+
                                             COalarm.setText(String.valueOf(rece_CO_no_SET));
                                             int rece_H2S_no = txValue[14] & 0xff;
                                             H2Salarm.setText(String.valueOf(rece_H2S_no));
@@ -848,34 +787,14 @@ public class Connect_Activity extends AppCompatActivity {
                                             CH4alarm.setText(String.valueOf(rece_CH4_no));
                                         }else{
                                             int rece_copy_type = ConvertToIntLittle(txValue, 9);
-                                            String C1 = String.format("%02X", rece_copy_type & 0xFF);
-                                            String C2 = String.format("%02X", rece_copy_type>>16 & 0xFF);
-                                            String C3 = C2 + C1;
-                                           // Log.e("C3c3",C3);
-                                            String tag_copy_type_str = "";
-                                            switch (rece_copy_type) {
-                                                case 200:
-                                                    tag_copy_type_str = "00C8";
-                                                    break;
-                                                case 201:
-                                                    tag_copy_type_str = "00C9";
-                                                    break;
-                                                case 202:
-                                                    tag_copy_type_str = "00CA";
-                                                    break;
-                                                case 7:
-                                                    tag_copy_type_str = "0007";
-                                                    break;
-                                                case 213:
-                                                    tag_copy_type_str = "00D5";
-                                                    break;
-                                            }
-                                            selectValue(senser_tag_copy_type_Spinner,tag_copy_type_str);
+                                            String rece_copy_type_str = String.format("%04X", rece_copy_type & 0xFF);
+
+                                            selectValue(senser_tag_copy_type_Spinner,rece_copy_type_str);
 
                                             int rece_copy_tag_no = ConvertToIntLittle2(txValue, 11);
                                             tag_copy_no.setText(rece_copy_tag_no + "");
                                         }
-                                        if (v3.equals("00D5")&&!D5_true_false) {
+                                        if (tag_tag_type_str.equals("00D5") && !D5_true_false) {
                                             D5_true_false=true;
                                             mCA_layout.setVisibility(View.GONE);
                                             mD5_layout.setVisibility(View.VISIBLE);

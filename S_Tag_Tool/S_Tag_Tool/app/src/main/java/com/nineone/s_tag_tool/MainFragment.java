@@ -2,6 +2,7 @@ package com.nineone.s_tag_tool;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseData;
@@ -42,6 +43,8 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -69,8 +72,10 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -146,15 +151,41 @@ public class MainFragment extends Fragment {
     };
 
     private final String[] permissions2 = {
+         //   Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.READ_PHONE_NUMBERS,
-
+            Manifest.permission.READ_PHONE_NUMBERS
     };
+    private void backgroundPermission(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ActivityCompat.requestPermissions(activity,new String[]{ Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 2);
+        }
+
+    }
+    private void permissionDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        Log.e("asd147","asd");
+        builder.setTitle("백그라운드 위치 권한을 위해 항상 허용으로 설정해주세요.");
+        builder.setMessage("GPS를 사용하시겠습니까?");
+        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                backgroundPermission();
+            }
+        });
+        builder.setNegativeButton("거절", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //finish();
+            }
+        });
+        builder.show();
+
+    }
     private LocationManager locationManager;
     @Nullable
     @Override
@@ -162,13 +193,17 @@ public class MainFragment extends Fragment {
         Log.e("activityt_TAG", "onCreat");
 //프래그먼트 메인을 인플레이트해주고 컨테이너에 붙여달라는 뜻임
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main , container, false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissions=permissions2;// 안드로이드 6.0 이상일 경우 퍼미션 체크
+        if (Build.VERSION.SDK_INT >= 30) {
+            Log.e("activityt_TAG", "onCreat");
+            permissions=permissions2;// 안드로이드 11.0 이상일 경우 퍼미션 체크
+
             checkPermissions(permissions2);
         }else{
             permissions=permissions1;
             checkPermissions(permissions);
         }
+
+
         RescanBaseTime = SystemClock.elapsedRealtime();
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
           // bluetoothCheck();
@@ -218,9 +253,68 @@ public class MainFragment extends Fragment {
                 activity.onFragmentChange(1);
             }
         });*/
+       /* ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo  service  : manager.getRunningServices(Integer.MAX_VALUE)) {
+            //log.e("onResume", service.service.getClassName());
+            if (!"com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
+                //log.e("onResume", "onResume2");
+                startService();
+            }else{
+                startForeground=true;
+            }
+        }
+        startService();*/
         return rootView;
     }
+    private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
 
+    public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
+
+    public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
+
+    private boolean startForeground = false;
+    private void startService(){
+        if(!startForeground){
+            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                startForeground=true;
+                //log.e("startService", "startService");
+                mIsScanning=true;
+                activity.invalidateOptionsMenu();
+                Intent serviceIntent1 = new Intent(getContext(), Background_Service.class);
+                serviceIntent1.setAction(ACTION_START_FOREGROUND_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    activity.startForegroundService(serviceIntent1);
+                } else {
+                    activity.startService(serviceIntent1);
+                }
+            }
+        }
+    }
+    private void stopService() {
+        //if(startForeground) {
+        startForeground = false;
+        mIsScanning = false;
+        activity.invalidateOptionsMenu();
+        ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
+
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            Log.e("activityt_TAGstop", service.service.getClassName());
+            if ("com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
+                Log.e("activityt_TAGstop2", service.service.getClassName());
+                //log.e("stopService", "stopService");
+                Intent serviceIntent1 = new Intent(getContext(), Background_Service.class);
+                serviceIntent1.setAction(ACTION_STOP_FOREGROUND_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    activity.startForegroundService(serviceIntent1);
+                } else {
+                    activity.startService(serviceIntent1);
+                }
+            }
+        }
+
+
+        // }
+    }
     private void init(ViewGroup rootView) {
         // BLE check
 
@@ -232,7 +326,7 @@ public class MainFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         deviceListView.setLayoutManager(linearLayoutManager);
         deviceListView.setItemAnimator(null);
-        recyclerVierAdapter = new RecyclerViewAdapter(deviceListView,activity,getContext(),systemBoole);
+        recyclerVierAdapter = new RecyclerViewAdapter(activity,getContext(),systemBoole);
         recyclerVierAdapter.item_noti();
         deviceListView.setAdapter(recyclerVierAdapter);
 
@@ -242,6 +336,8 @@ public class MainFragment extends Fragment {
                 if(position != RecyclerView.NO_POSITION) {
                     Intent intent = new Intent(activity, Connect_Activity.class);
                     intent.putExtra("address", recyclerVierAdapter.ScannedDeviceList().get(position).getDevice().getAddress());
+
+                    background_service_start=true;
                     activity.startActivity(intent);
 
                    // activity.finish();
@@ -252,6 +348,7 @@ public class MainFragment extends Fragment {
         }) ;
         stopScan();
     }
+    private boolean background_service_start= false;
     private void bluetoothCheck(){
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -345,10 +442,16 @@ public class MainFragment extends Fragment {
             if (result.getDevice().getName() != null) {
                //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
                 if (result.getDevice().getName().startsWith("TJ-")) {
-                    //Log.e("123123",result.getDevice().getName());
+                    Log.e("123123", String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                    Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
+                    if(result.getDevice().getName().equals("TJ-00CA-00000010-0000")) {
+                        int senser_O2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 6);
+                        int senser_CO2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 12);
+                        Log.e("mAlarm_on1", senser_O2+", "+senser_CO2+", " +  Arrays.toString(result.getScanRecord().getBytes()));
+                    }
                     recyclerVierAdapter.update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                     getEllapse();
-                }
+               }
             }
         }
 
@@ -357,7 +460,22 @@ public class MainFragment extends Fragment {
 
         }
     };
+    private int ConvertToIntLittle(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
 
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
     private boolean mIsScanning = false;
     RadioGroup.OnCheckedChangeListener radioGroupButtonChangeListener = new RadioGroup.OnCheckedChangeListener() {
         @Override
@@ -539,12 +657,16 @@ public class MainFragment extends Fragment {
         //  if (mBluetoothLeScanner != null) {
 
         stopScan();
-        recyclerVierAdapter.item_Clear();
+        recyclerVierAdapter.item_noti();
+      //  recyclerVierAdapter.notifyDataSetChanged();
+      //  recyclerVierAdapter.item_Clear();
         try {
             activity.unregisterReceiver(mBroadcastReceiver1);
         } catch (Exception ignored){
 
         }
+      //  background_service_start=false;
+    //   startService();
         // finish();
     }
     @Override
@@ -553,7 +675,27 @@ public class MainFragment extends Fragment {
         Log.e("activityt_TAG","onStop");
         //if (mBluetoothLeScanner != null) {
         // recyclerVierAdapter.item_Clear();
+        if(!background_service_start) {
+            ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
 
+            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+                Log.e("activityt_TAG1", service.service.getClassName());
+                if (!"com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
+                    //log.e("onResume", "onResume2");
+                    startService();
+                } else {
+
+                    startForeground = true;
+                }
+            }
+            if(manager.getRunningServices(Integer.MAX_VALUE).size()==0){
+                startService();
+                not_rescan=true;
+                startForeground = true;
+            }
+
+        }
+        background_service_start = false;
        // stopScan();
        // recyclerVierAdapter.item_Clear();
         //}
@@ -563,19 +705,19 @@ public class MainFragment extends Fragment {
     public void onStart() {
 
         super.onStart();
-     //   recyclerVierAdapter.item_noti();
-     //   startScan();
+        Network_Confirm();
+        stopScan();
+        recyclerVierAdapter.item_noti();
+        stopService();
         Log.e("activityt_TAG", "onStart()");
     }
-
+    private boolean not_rescan = false;
     @Override
     public void onResume() {
         super.onResume();
         Log.e("activityt_TAG", "onResume");
-        Network_Confirm();
-        stopScan();
-        recyclerVierAdapter.item_noti();
-        recyclerVierAdapter.notifyDataSetChanged();
+        Log.e("Log.e","673");
+        background_service_start = false;
         if(!mble_gps_false) {
 
             Runnable runnable10;//  startScan();
@@ -584,10 +726,13 @@ public class MainFragment extends Fragment {
                     @Override
                     public void run() {
                         //  startScan();
-                        startScan();
+                        if(!not_rescan) {
+                            startScan();
+                        }
+                        //background_service_start=true;
                     }
                 };
-                start_handler.postDelayed(runnable10, 1000);
+                start_handler.postDelayed(runnable10, 0);
             }
 
         }
@@ -739,7 +884,7 @@ public class MainFragment extends Fragment {
                 con.setRequestMethod("POST");
                 JSONArray array=new JSONArray();
 
-                for(int i=0;i<array_List.size();i++){
+                for(int i=0; i < array_List.size(); i++){
                     JSONObject cred = new JSONObject();
                     try {
                         cred.put("id", array_List.get(i).getId());
@@ -806,6 +951,27 @@ public class MainFragment extends Fragment {
         }
         return false;
     }
+   /* private void checkPermissions(){
+
+            // You can directly ask for the permission.
+            // The registered ActivityResultCallback gets the result of this request.
+            requestPermissionLauncher.launch(Manifest.permission.REQUESTED_PERMISSION);
+
+    }
+
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    // Permission is granted. Continue the action or workflow in your
+                    // app.
+                } else {
+                    // Explain to the user that the feature is unavailable because the
+                    // features requires a permission that the user has denied. At the
+                    // same time, respect the user's decision. Don't link to system
+                    // settings in an effort to convince the user to change their
+                    // decision.
+                }
+            });*/
     private static final int MULTIPLE_PERMISSIONS = 101;
     private boolean checkPermissions(String[] permissi) {
         int result;
