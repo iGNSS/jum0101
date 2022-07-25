@@ -40,7 +40,7 @@
         android:theme="@style/Theme.S_Tag_Tool">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:windowSoftInputMode="adjustNothing"
             android:theme="@style/Theme.S_Tag_Tool"
             android:screenOrientation="portrait"
@@ -51,6 +51,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustNothing"
+            android:theme="@style/Theme.S_Tag_Tool"
+            android:screenOrientation="portrait"
+            android:exported="true"/>
         <activity
             android:name="com.ble_connect.Connect_Activity"
             android:theme="@style/Theme.S_Tag_Tool"

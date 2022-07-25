@@ -140,52 +140,7 @@ public class MainFragment extends Fragment {
 //이제 더이상 엑티비티 참초가안됨
         activity = null;
     }
-    private String[] permissions;
-    private final String[] permissions1 = {
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.ACCESS_FINE_LOCATION
 
-    };
-
-    private final String[] permissions2 = {
-         //   Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.READ_PHONE_NUMBERS
-    };
-    private void backgroundPermission(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ActivityCompat.requestPermissions(activity,new String[]{ Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 2);
-        }
-
-    }
-    private void permissionDialog(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        Log.e("asd147","asd");
-        builder.setTitle("백그라운드 위치 권한을 위해 항상 허용으로 설정해주세요.");
-        builder.setMessage("GPS를 사용하시겠습니까?");
-        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                backgroundPermission();
-            }
-        });
-        builder.setNegativeButton("거절", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //finish();
-            }
-        });
-        builder.show();
-
-    }
     private LocationManager locationManager;
     @Nullable
     @Override
@@ -193,15 +148,7 @@ public class MainFragment extends Fragment {
         Log.e("activityt_TAG", "onCreat");
 //프래그먼트 메인을 인플레이트해주고 컨테이너에 붙여달라는 뜻임
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main , container, false);
-        if (Build.VERSION.SDK_INT >= 30) {
-            Log.e("activityt_TAG", "onCreat");
-            permissions=permissions2;// 안드로이드 11.0 이상일 경우 퍼미션 체크
 
-            checkPermissions(permissions2);
-        }else{
-            permissions=permissions1;
-            checkPermissions(permissions);
-        }
 
 
         RescanBaseTime = SystemClock.elapsedRealtime();
@@ -972,48 +919,8 @@ public class MainFragment extends Fragment {
                     // decision.
                 }
             });*/
-    private static final int MULTIPLE_PERMISSIONS = 101;
-    private boolean checkPermissions(String[] permissi) {
-        int result;
-        List<String> permissionList = new ArrayList<>();
-        for (String pm : permissi) {
-            result = ContextCompat.checkSelfPermission(activity, pm);
-            if (result != PackageManager.PERMISSION_GRANTED) {
-                permissionList.add(pm);
-            }
-        }
-        if (!permissionList.isEmpty()) {
-            ActivityCompat.requestPermissions(activity, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
-            return false;
-        } else {
 
-        }
-        return true;
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case MULTIPLE_PERMISSIONS: {
-                if (grantResults.length > 0) {
-                    for (int i = 0; i < permissions.length; i++) {
-                        if (permissions[i].equals(this.permissions[i])) {
-                            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                                showToast_PermissionDeny();
-                            }
-                        }
-                    }
-                } else {
-                    showToast_PermissionDeny();
-                }
-                break;
-            }
-        }
-    }
-    private void showToast_PermissionDeny() {
-        Toast.makeText(getActivity(), "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
-        activity.finish();
-    }
+
     private void Network_Confirm(){
         int status = NetworkStatus.getConnectivityStatus(activity.getApplicationContext());
         if(status == NetworkStatus.TYPE_MOBILE){
