@@ -1,0 +1,784 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="1dp"
+        android:paddingBottom="10dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/macaddrValue"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="10"
+                android:background="@color/blue"
+                android:gravity="center"
+                android:text="Stag Setting"
+                android:textColor="#ffffff"
+                android:textSize="13pt"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/macaddrValue2"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:layout_weight="7"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text="Stag Adress"
+                android:textColor="@color/black"
+                android:textSize="10pt"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/rcount"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text=" 단말기 타입"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <TextView
+                android:id="@+id/tag_type_text"
+                android:layout_width="100sp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:background="@color/gray3"
+                android:gravity="left|center"
+                android:paddingStart="5dp"
+                android:paddingEnd="0dp"
+                android:textColor="@color/gray"
+                android:textSize="10pt" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="5dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/accetitle"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text=" 단말기 번호"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <EditText
+                android:id="@+id/tag_no"
+                android:layout_width="100sp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:background="@drawable/textview_design"
+                android:gravity="left|center"
+                android:hint=""
+                android:inputType="number"
+                android:maxLength="8"
+                android:paddingStart="5dp"
+                android:paddingEnd="0dp"
+                android:text=""
+                android:textColor="@color/black"
+                android:textColorHint="@color/blue"
+                android:textSize="10pt" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="5dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/gyrotitle"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="1dp"
+                android:background="@color/white"
+                android:gravity="center"
+                android:text=" RF 파워"
+                android:textColor="@color/black"
+                android:textSize="10pt" />
+
+            <Spinner
+                android:id="@+id/rfPower"
+                android:layout_width="100sp"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="bottom"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="1dp"
+                android:background="@drawable/spinner_background"
+                android:popupBackground="@drawable/spinner_background"
+                android:spinnerMode="dropdown" />
+        </LinearLayout>
+
+        <LinearLayout
+
+            android:layout_width="match_parent"
+            android:layout_height="5dp" />
+
+        <LinearLayout
+            android:id="@+id/CA_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="vertical"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/sensortitle"
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text=" 센서 타입"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <Spinner
+                    android:id="@+id/sensor_type"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="bottom"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/spinner_background"
+                    android:popupBackground="@drawable/spinner_background"
+                    android:tooltipText="센서 종류 선택" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/gyo_cal_title"
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text=" 센서 보정 여부"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:id="@+id/gyo_cal"
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="left|center"
+                    android:paddingStart="5dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/caltitle"
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text=" 센서 보정 선택"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <Spinner
+                    android:id="@+id/cal_run"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="bottom"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/spinner_background"
+                    android:popupBackground="@drawable/spinner_background" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="동작 주기"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <Spinner
+                    android:id="@+id/operation_cycle_mode_Spinner"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true"
+                    android:layout_gravity="bottom"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/spinner_background"
+                    android:popupBackground="@drawable/spinner_background" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="분"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="O2 알람값 "
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_O2_edit"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint="0 ~ 25"
+                    android:inputType="numberDecimal"
+                    android:maxLength="4"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="%"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="CO 알람값"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_CO_edit"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint="0 ~ 2550"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="ppm"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="H2S 알람값"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_H2S_edit"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint="0 ~ 255"
+                    android:inputType="number"
+                    android:maxLength="3"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="ppm"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="CO2 알람값"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_CO2_edit"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint="0 ~ 60000"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="ppm"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="CH4 알람값"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_CH4_edit"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint="0 ~ 60000"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="10pt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:gravity="center"
+                    android:text="ppm"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/D5_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text=" 카피 타입"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <Spinner
+                    android:id="@+id/tag_copy_type_d5_spinner"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/spinner_background"
+                    android:popupBackground="@drawable/spinner_background"
+
+                    android:spinnerMode="dropdown" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="카피 단말기 번호"
+                    android:textColor="@color/black"
+                    android:textSize="10pt" />
+
+                <EditText
+                    android:id="@+id/tag_copy_no_d5"
+                    android:layout_width="100sp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="1dp"
+                    android:background="@drawable/textview_design"
+                    android:gravity="left|center"
+                    android:hint=""
+                    android:inputType="number"
+                    android:maxLength="8"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="0dp"
+                    android:text=""
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/blue"
+                    android:textSize="10pt" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="15dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="15dp" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/bottom2Layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_sendTotag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="2dp"
+                    android:background="@color/blue"
+                    android:backgroundTint="@color/blue"
+                    android:textColor="#ffffff"
+                    android:textSize="12pt"
+                    android:text="@string/str_sendtotag" />
+
+
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+</LinearLayout>
