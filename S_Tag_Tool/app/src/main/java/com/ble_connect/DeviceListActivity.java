@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 public class DeviceListActivity extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
     // private BluetoothAdapter mBtAdapter;
@@ -69,6 +70,7 @@ public class DeviceListActivity extends Activity {
     private static final long SCAN_PERIOD = 10000; //scanning for 10 seconds
     private Handler mHandler;
     private boolean mScanning;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -76,11 +78,11 @@ public class DeviceListActivity extends Activity {
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.title_bar);
         setContentView(R.layout.device_list);
         android.view.WindowManager.LayoutParams layoutParams = this.getWindow().getAttributes();
-        layoutParams.gravity=Gravity.TOP;
+        layoutParams.gravity = Gravity.TOP;
         layoutParams.y = 200;
         mHandler = new Handler();
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this,"BLE가 지원되지 않는 기기입니다", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "BLE가 지원되지 않는 기기입니다", Toast.LENGTH_LONG).show();
             finish();
         }
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -152,7 +154,7 @@ public class DeviceListActivity extends Activity {
                         public void run() {
                             String deviceName = device.getName();
 
-                            if(deviceName != null) {
+                            if (deviceName != null) {
                                 if (deviceName.startsWith("TJ-")) {
                                     addDevice(device, rssi);
                                 }
@@ -225,7 +227,6 @@ public class DeviceListActivity extends Activity {
     };
 
 
-
     protected void onPause() {
         super.onPause();
         scanLeDevice(false);
@@ -283,7 +284,7 @@ public class DeviceListActivity extends Activity {
             tvname.setText(device.getName());
             tvadd.setText(device.getAddress());
             if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                Log.i(TAG, "device::"+device.getName());
+                Log.i(TAG, "device::" + device.getName());
                 tvname.setTextColor(Color.WHITE);
                 tvadd.setTextColor(Color.WHITE);
                 tvrssi.setVisibility(View.VISIBLE);
@@ -298,6 +299,7 @@ public class DeviceListActivity extends Activity {
             return vg;
         }
     }
+
     private void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }

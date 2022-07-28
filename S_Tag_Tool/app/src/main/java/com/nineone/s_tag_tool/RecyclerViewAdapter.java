@@ -328,7 +328,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
               //  Log.e("ble_data1",(Arrays.toString(ble_data)));
               //  Log.e("ble_data2", byteArrayToHex(ble_data));
                 int senser_O2 = ConvertToIntLittle(ble_data, sensorStartIdx + 6);
-                Log.e("655535", String.valueOf(senser_O2));
+             //   Log.e("655535", String.valueOf(senser_O2));
                 if(senser_O2 == 0xFFFF) {
                     string_O2 = "센서 측정 중";
                     viewHolder.tagbutton.setEnabled(false);
@@ -369,14 +369,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 }else{
                     string_CH4 = senser_CH4 + " ppm  ";
                 }
-                if(item.getDisplayName().equals("TJ-00CA-0000000B-0000")) {
-                    int senser_O22 = ConvertToIntLittle(ble_data, 9 + 6);
-                    int senser_CO22 = ConvertToIntLittle(ble_data, 9 + 12);
 
-                    Log.e("mAlarm_on1", senser_O22+", "+senser_CO22);
-
-               //     Log.e("mAlarm_on2", Integer.parseInt(String.valueOf(Sensor_Alarm),16)+", "+String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2));
-                }
               //  Log.e("bledata",senser_O2+", "+senser_CO+", "+senser_H2S+", "+senser_CO2+", "+senser_CH4+", ");
                 String O2_alarm = "";
                 String CO_alarm = "";
@@ -403,6 +396,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     CH4_alarm = "- 알람 ON";
                     mAlarm_on = true;
                 }
+             /*     if(item.getDisplayName().equals("TJ-00CA-0000000B-0000")) {
+                    int senser_O22 = ConvertToIntLittle(ble_data, 9 + 6);
+                    int senser_CO22 = ConvertToIntLittle(ble_data, 9 + 12);
+
+                    Log.e("mAlarm_on1", senser_O22+", "+os2_errer);
+
+               //     Log.e("mAlarm_on2", Integer.parseInt(String.valueOf(Sensor_Alarm),16)+", "+String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2));
+                }*/
                 if(!mAlarm_on){
                     viewHolder.linearbackcolorlayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.white));
                 }else {

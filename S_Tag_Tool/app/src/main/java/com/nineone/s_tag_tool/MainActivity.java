@@ -38,10 +38,10 @@ public class MainActivity extends AppCompatActivity {
                 /*프래그먼트 매니저가 프래그먼트를 담당한다!*/
                 /*프래그먼트 매니저가 프래그먼트를 담당한다!*/
                 // getSupportFragmentManager().beginTransaction().attach(fragment1).commitNow();/*프래그먼트 매니저가 프래그먼트를 담당한다!*/
-                if(!systemBoole) {
-                    systemBoole=true;
+                if (!systemBoole) {
+                    systemBoole = true;
                     Bundle bundle = new Bundle();
-                    bundle.putBoolean("systemBoole",true);
+                    bundle.putBoolean("systemBoole", true);
                     fragment1.setArguments(bundle);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         getSupportFragmentManager().beginTransaction().detach(fragment1).commitNow();/*프래그먼트 매니저가 프래그먼트를 담당한다!*/
@@ -50,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         getSupportFragmentManager().beginTransaction().detach(fragment1).attach(fragment1).commit();
                     }
-                }else{
-                    systemBoole=false;
+                } else {
+                    systemBoole = false;
                     Bundle bundle = new Bundle();
-                    bundle.putBoolean("systemBoole",false);
+                    bundle.putBoolean("systemBoole", false);
                     fragment1.setArguments(bundle);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         getSupportFragmentManager().beginTransaction().detach(fragment1).commitNow();/*프래그먼트 매니저가 프래그먼트를 담당한다!*/

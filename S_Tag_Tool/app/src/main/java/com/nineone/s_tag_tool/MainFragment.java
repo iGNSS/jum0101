@@ -108,25 +108,30 @@ public class MainFragment extends Fragment {
 
     long RescanBaseTime;
 
-    Spinner scanMinorId_spinner;
-    LinearLayout bletypeLayout;
+    private Spinner scanMinorId_spinner;
+    
+    private LinearLayout bletypeLayout; //adress 보여주는 모드의 특정센서layout
     public static String BLE_type;
     static String sort_type = "name";
     private RadioGroup radioGroup;
     private RadioButton r_btn1, r_btn2;
     public static String file_name;
 
-    public static boolean fos_open_flag_ble=false;
+    public static boolean fos_open_flag_ble = false;
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanSettings btLeScanSettings;
+
+    private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
+
     private RecyclerViewAdapter recyclerVierAdapter;
-    private static final int REQUEST_ENABLE_BT = 2;
-    RecyclerView deviceListView;
-    private boolean systemBoole=false;
-    private LinearLayout empty_stop_view;
+    private RecyclerView deviceListView;
+    private LinearLayout empty_stop_view; //리스트가 비어있을 때 뷰
     private LinearLayout empty_scan_view;
+    private boolean systemBoolean = false;
+
+    private LocationManager locationManager;
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -141,78 +146,28 @@ public class MainFragment extends Fragment {
         activity = null;
     }
 
-    private LocationManager locationManager;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.e("activityt_TAG", "onCreat");
 //프래그먼트 메인을 인플레이트해주고 컨테이너에 붙여달라는 뜻임
-        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main , container, false);
-
-
-
+        
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.fragment_main, container, false);
+        setHasOptionsMenu(true);//플레그먼트에서 메뉴 사용가능
+        // bluetoothCheck();
         RescanBaseTime = SystemClock.elapsedRealtime();
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-          // bluetoothCheck();
-        scanMinorId_spinner = (Spinner) rootView.findViewById(R.id.minorid);
-        String[] tag_models = getResources().getStringArray(R.array.tag_type);
-        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<>(activity.getBaseContext(), R.layout.custom_spinner_list, tag_models);
-        tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
-        scanMinorId_spinner.setAdapter(tag_spinner_adapter);
 
-        scanMinorId_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
-            }
-        });
-        scanMinorId_spinner.setSelection(0);
-        bletypeLayout = (LinearLayout) rootView.findViewById(R.id.bletypeLayout);
-        if ( getArguments() != null ) {
 
-            systemBoole = getArguments().getBoolean("systemBoole");
-            Log.e("systemBoole3", String.valueOf(systemBoole));
-            if(systemBoole){
-                bletypeLayout.setVisibility(View.VISIBLE);
-            }else{
-                bletypeLayout.setVisibility(View.GONE);
-            }
-
-        }
-        r_btn1 = (RadioButton) rootView.findViewById(R.id.sort_btn1);
-        r_btn2 = (RadioButton) rootView.findViewById(R.id.sort_btn2);
-        empty_scan_view = rootView.findViewById(R.id.empty_scan_view);
-        empty_stop_view = rootView.findViewById(R.id.empty_stop_view);
-        //라디오 그룹 설정
-        radioGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup);
-        radioGroup.setOnCheckedChangeListener(radioGroupButtonChangeListener);
+        addressMode_UI_setting(rootView);
         GPSSetting();
-        init(rootView);
-        setHasOptionsMenu(true);
-        checkIfEmpty();
-      //  startScan();
-        /* Button button = rootView.findViewById(R.id.button1);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                activity.onFragmentChange(1);
-            }
-        });*/
-       /* ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo  service  : manager.getRunningServices(Integer.MAX_VALUE)) {
-            //log.e("onResume", service.service.getClassName());
-            if (!"com.nineone.s_tag_tool.Background_Service".equals(service.service.getClassName())) {
-                //log.e("onResume", "onResume2");
-                startService();
-            }else{
-                startForeground=true;
-            }
-        }
-        startService();*/
+        list_setting(rootView);
+ 
+        check_If_list_Empty();
+
         return rootView;
     }
+
     private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
 
     public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
@@ -220,12 +175,13 @@ public class MainFragment extends Fragment {
     public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
 
     private boolean startForeground = false;
-    private void startService(){
-        if(!startForeground){
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                startForeground=true;
+
+    private void startService() {
+        if (!startForeground) {
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                startForeground = true;
                 //log.e("startService", "startService");
-                mIsScanning=true;
+                mIsScanning = true;
                 activity.invalidateOptionsMenu();
                 Intent serviceIntent1 = new Intent(getContext(), Background_Service.class);
                 serviceIntent1.setAction(ACTION_START_FOREGROUND_SERVICE);
@@ -237,6 +193,7 @@ public class MainFragment extends Fragment {
             }
         }
     }
+
     private void stopService() {
         //if(startForeground) {
         startForeground = false;
@@ -262,52 +219,90 @@ public class MainFragment extends Fragment {
 
         // }
     }
-    private void init(ViewGroup rootView) {
+    private void addressMode_UI_setting(ViewGroup rootView){
+        scanMinorId_spinner = (Spinner) rootView.findViewById(R.id.minorid);
+        String[] tag_models = getResources().getStringArray(R.array.tag_type);
+        ArrayAdapter<String> tag_spinner_adapter = new ArrayAdapter<>(activity.getBaseContext(), R.layout.custom_spinner_list, tag_models);
+        tag_spinner_adapter.setDropDownViewResource(R.layout.customer_spinner);
+        scanMinorId_spinner.setAdapter(tag_spinner_adapter);
+        scanMinorId_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
+            }
+        });
+        scanMinorId_spinner.setSelection(0);
+        bletypeLayout = (LinearLayout) rootView.findViewById(R.id.bletypeLayout);
+        if (getArguments() != null) {
+
+            systemBoolean = getArguments().getBoolean("systemBoole");
+            Log.e("systemBoole3", String.valueOf(systemBoolean));
+            if (systemBoolean) {
+                bletypeLayout.setVisibility(View.VISIBLE);
+            } else {
+                bletypeLayout.setVisibility(View.GONE);
+            }
+
+        }
+        r_btn1 = (RadioButton) rootView.findViewById(R.id.sort_btn1);
+        r_btn2 = (RadioButton) rootView.findViewById(R.id.sort_btn2);
+        empty_scan_view = rootView.findViewById(R.id.empty_scan_view);
+        empty_stop_view = rootView.findViewById(R.id.empty_stop_view);
+        //라디오 그룹 설정
+        radioGroup = (RadioGroup) rootView.findViewById(R.id.radioGroup);
+        radioGroup.setOnCheckedChangeListener(radioGroupButtonChangeListener);
+    }
+    private void list_setting(ViewGroup rootView) {
         // BLE check
 
         bluetoothCheck();
         // init listview
         deviceListView = (RecyclerView) rootView.findViewById(R.id.main_RecyclerView);
         deviceListView.setNestedScrollingEnabled(false);
-       // deviceListView.setItemViewCacheSize(8);
+        // deviceListView.setItemViewCacheSize(8);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         deviceListView.setLayoutManager(linearLayoutManager);
         deviceListView.setItemAnimator(null);
-        recyclerVierAdapter = new RecyclerViewAdapter(activity,getContext(),systemBoole);
+        recyclerVierAdapter = new RecyclerViewAdapter(activity, getContext(), systemBoolean);
         recyclerVierAdapter.item_noti();
         deviceListView.setAdapter(recyclerVierAdapter);
 
         recyclerVierAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {//리스트를 클릭했을때 이벤트
-                if(position != RecyclerView.NO_POSITION) {
+                if (position != RecyclerView.NO_POSITION) {
                     Intent intent = new Intent(activity, Connect_Activity.class);
                     intent.putExtra("address", recyclerVierAdapter.ScannedDeviceList().get(position).getDevice().getAddress());
 
-                    background_service_start=true;
+                    background_service_start = true;
                     activity.startActivity(intent);
 
-                   // activity.finish();
+                    // activity.finish();
                     //String mydatalist = myAdapter.getWordAtPosition(position);
                 }
                 // TODO : 아이템 클릭 이벤트를 MainActivity에서 처리.
             }
-        }) ;
+        });
         stopScan();
     }
-    private boolean background_service_start= false;
-    private void bluetoothCheck(){
+
+    private boolean background_service_start = false;
+
+    private void bluetoothCheck() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        btLeScanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build ();
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        btLeScanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+       // mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         // 지원하지 않는다면 어플을 종료시킨다.
-        if(mBluetoothAdapter == null){
+        if (mBluetoothAdapter == null) {
             Toast.makeText(getActivity(), "이 기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
             activity.finish();
             return;
         }
-        if(!mBluetoothAdapter.isEnabled()){
+        if (!mBluetoothAdapter.isEnabled()) {
             //log.e("BLE1245", "124");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
@@ -315,13 +310,14 @@ public class MainFragment extends Fragment {
 
         //log.e("BLE1245", "130");
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
                 //       mblecheck=false;
 
-            }else{
+            } else {
                 Toast.makeText(getActivity(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
                 activity.finish();
             }
@@ -329,18 +325,19 @@ public class MainFragment extends Fragment {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
     private void GPSSetting() {
         //  ContentResolver res = getContentResolver();
-        locationManager = (LocationManager)activity.getSystemService(activity.LOCATION_SERVICE);
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        locationManager = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            Log.e("asd147","asd");
             builder.setTitle("GPS 설정");
             builder.setMessage("GPS를 사용하시겠습니까?");
+            builder.setCancelable(false);
             builder.setPositiveButton("사용", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    Log.e("asd153","asd");
+                    Log.e("asd153", "asd");
                     Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                     intent.addCategory(Intent.CATEGORY_DEFAULT);
                     startActivity(intent);
@@ -357,23 +354,24 @@ public class MainFragment extends Fragment {
         }
 
     }
-    private void checkIfEmpty() {
-        if ( deviceListView.getAdapter() != null && mIsScanning) {
+
+    private void check_If_list_Empty() {
+        if (deviceListView.getAdapter() != null && mIsScanning) {
             boolean emptyViewVisible = deviceListView.getAdapter().getItemCount() == 0;
             empty_scan_view.setVisibility(emptyViewVisible ? View.VISIBLE : View.GONE);
             deviceListView.setVisibility(emptyViewVisible ? View.GONE : View.VISIBLE);
             empty_stop_view.setVisibility(View.GONE);
-        }else if (deviceListView.getAdapter() != null && !mIsScanning){
+        } else if (deviceListView.getAdapter() != null && !mIsScanning) {
             boolean emptyViewVisible = deviceListView.getAdapter().getItemCount() == 0;
             empty_stop_view.setVisibility(emptyViewVisible ? View.VISIBLE : View.GONE);
             deviceListView.setVisibility(emptyViewVisible ? View.GONE : View.VISIBLE);
             empty_scan_view.setVisibility(View.GONE);
-        }else if (deviceListView.getAdapter() != null && !mIsScanning){
+        } else if (deviceListView.getAdapter() != null && !mIsScanning) {
             boolean emptyViewVisible = deviceListView.getAdapter().getItemCount() == 0;
             empty_stop_view.setVisibility(emptyViewVisible ? View.VISIBLE : View.GONE);
             deviceListView.setVisibility(emptyViewVisible ? View.GONE : View.VISIBLE);
             empty_scan_view.setVisibility(View.GONE);
-        }else if (deviceListView.getAdapter() != null && !mIsScanning){
+        } else if (deviceListView.getAdapter() != null && !mIsScanning) {
             boolean emptyViewVisible = deviceListView.getAdapter().getItemCount() == 0;
             empty_stop_view.setVisibility(emptyViewVisible ? View.VISIBLE : View.GONE);
             deviceListView.setVisibility(emptyViewVisible ? View.GONE : View.VISIBLE);
@@ -383,22 +381,27 @@ public class MainFragment extends Fragment {
 
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
-        public void onScanResult(int callbackType, final ScanResult result){
-            checkIfEmpty();
+        public void onScanResult(int callbackType, final ScanResult result) {
+            check_If_list_Empty();
             // Log.e("BLE", "Discovery onScanResult00: 작동1 ");
             if (result.getDevice().getName() != null) {
-               //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
+                //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
                 if (result.getDevice().getName().startsWith("TJ-")) {
-                    Log.e("123123", String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                  /*  Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
                     Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
                     if(result.getDevice().getName().equals("TJ-00CA-00000010-0000")) {
                         int senser_O2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 6);
                         int senser_CO2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 12);
                         Log.e("mAlarm_on1", senser_O2+", "+senser_CO2+", " +  Arrays.toString(result.getScanRecord().getBytes()));
-                    }
+                    }*/
+                    byte[] byte_ScanRocord = result.getScanRecord().getBytes();
+                    int isLeft = byte_ScanRocord[9];
+                    String byte_ScanRocord_str = Arrays.toString(byte_ScanRocord);
+                    Log.e("1231235", isLeft+","+byte_ScanRocord_str);
+                    Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
                     recyclerVierAdapter.update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                     getEllapse();
-               }
+                }
             }
         }
 
@@ -407,32 +410,18 @@ public class MainFragment extends Fragment {
 
         }
     };
-    private int ConvertToIntLittle(byte[] txValue, int startidx) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
-        // by choosing big endian, high order bytes must be put
-        // to the buffer before low order bytes
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
-        // for the high order bytes
-        byteBuffer.put(txValue[startidx]);
-        byteBuffer.put(txValue[startidx + 1]);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
 
-        byteBuffer.flip();
-        int result = byteBuffer.getInt();
-        return result;
-    }
+
+
     private boolean mIsScanning = false;
     RadioGroup.OnCheckedChangeListener radioGroupButtonChangeListener = new RadioGroup.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(RadioGroup radioGroup, @IdRes int i) {
-            if(i == R.id.sort_btn1){
-             //   Toast.makeText(.this, "분류 타입이 이름으로 변경되었습니다.", Toast.LENGTH_SHORT).show();
+            if (i == R.id.sort_btn1) {
+                //   Toast.makeText(.this, "분류 타입이 이름으로 변경되었습니다.", Toast.LENGTH_SHORT).show();
                 sort_type = "name";
-            }
-            else if(i == R.id.sort_btn2){
-              //  Toast.makeText(MainFragment.this, "분류 타입이 RSSI 값으로 변경되었습니다.", Toast.LENGTH_SHORT).show();
+            } else if (i == R.id.sort_btn2) {
+                //  Toast.makeText(MainFragment.this, "분류 타입이 RSSI 값으로 변경되었습니다.", Toast.LENGTH_SHORT).show();
                 sort_type = "rssi";
             }
         }
@@ -449,7 +438,7 @@ public class MainFragment extends Fragment {
             menu.findItem(R.id.action_scan).setVisible(true);
             menu.findItem(R.id.action_stop).setVisible(false);
         }
-        if ((mBluetoothAdapter == null) || (!mBluetoothAdapter.isEnabled())||(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))) {
+        if ((mBluetoothAdapter == null) || (!mBluetoothAdapter.isEnabled()) || (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))) {
             menu.findItem(R.id.action_scan).setEnabled(false);
         }
     }
@@ -460,7 +449,7 @@ public class MainFragment extends Fragment {
         if (itemId == android.R.id.home) {
             // ignore
             return true;
-        }else if (itemId == R.id.action_scan) {
+        } else if (itemId == R.id.action_scan) {
             RescanBaseTime = SystemClock.elapsedRealtime();
 
             recyclerVierAdapter.item_Clear();
@@ -472,10 +461,10 @@ public class MainFragment extends Fragment {
             stopScan();
 
             return true;
-        }else if (itemId == R.id.action_change) {
+        } else if (itemId == R.id.action_change) {
             recyclerVierAdapter.item_Clear();
             recyclerVierAdapter.notifyDataSetChanged();
-            checkIfEmpty();
+            check_If_list_Empty();
             return true;
         }/*else if(itemId == R.id.action_clear){
             recyclerVierAdapter.item_Clear();
@@ -485,7 +474,7 @@ public class MainFragment extends Fragment {
     }
 
     private void startScan() {
-        if(!fos_open_flag_ble) {
+        if (!fos_open_flag_ble) {
             if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
                 mBluetoothLeScanner.startScan(leScanCallback);
                 RescanBaseTime = SystemClock.elapsedRealtime();
@@ -494,9 +483,9 @@ public class MainFragment extends Fragment {
                 Log.e("startscan", "287");
                 activity.invalidateOptionsMenu();
             }
-            if(!systemBoole) {
+            if (!systemBoolean) {
                 BLE_type = "";
-            }else{
+            } else {
                 BLE_type = scanMinorId_spinner.getSelectedItem().toString();
                 if (BLE_type.equals("선택")) {
                     BLE_type = "";
@@ -522,7 +511,7 @@ public class MainFragment extends Fragment {
 
 
     private void stopScan() {
-        if(fos_open_flag_ble) {
+        if (fos_open_flag_ble) {
             if (mBluetoothLeScanner != null) {
                 mBluetoothLeScanner.stopScan(leScanCallback);
                 mIsScanning = false;
@@ -532,19 +521,20 @@ public class MainFragment extends Fragment {
 
             // bletypeLayout.setVisibility(View.VISIBLE);
 
-            checkIfEmpty();
+            check_If_list_Empty();
             activity.invalidateOptionsMenu();
 
         }
     }
+
     private void reScan() {
         if (mBluetoothLeScanner != null) {
-           // stopScan();
+            // stopScan();
             mBluetoothLeScanner.stopScan(leScanCallback);
             Runnable runnable10 = new Runnable() {
                 @Override
                 public void run() {
-                  //  startScan();
+                    //  startScan();
                     mBluetoothLeScanner.startScan(leScanCallback);
                 }
             };
@@ -554,21 +544,24 @@ public class MainFragment extends Fragment {
         }
 
     }
+
     private void getEllapse() {
 
         long now = SystemClock.elapsedRealtime();
         long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
 
         long min = (ell / 1000) / 60;
-        if(20<min){
-            Log.e("SystemClock2", min+","+RescanBaseTime+","+ell);
+        if (20 < min) {
+            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
             Log.e("BLE Scan:", " ReStart");
             RescanBaseTime = SystemClock.elapsedRealtime();
             reScan();
         }
     }
+
     private final MyHandler timechange_handler = new MyHandler(this);
     private final MyHandler start_handler = new MyHandler(this);
+
     private static class MyHandler extends Handler {
         private final WeakReference<MainFragment> mActivity;
 
@@ -589,14 +582,15 @@ public class MainFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.e("activityt_TAG","onDestroy");
-      //  if (mBluetoothLeScanner != null) {
-      //  recyclerVierAdapter.item_Clear();
-      //      stopScan();
-       // }
+        Log.e("activityt_TAG", "onDestroy");
+        //  if (mBluetoothLeScanner != null) {
+        //  recyclerVierAdapter.item_Clear();
+        //      stopScan();
+        // }
 
 
     }
+
     @Override
     public void onPause() {
         Log.e("activityt_TAG", "onPause");
@@ -605,24 +599,25 @@ public class MainFragment extends Fragment {
 
         stopScan();
         recyclerVierAdapter.item_noti();
-      //  recyclerVierAdapter.notifyDataSetChanged();
-      //  recyclerVierAdapter.item_Clear();
+        //  recyclerVierAdapter.notifyDataSetChanged();
+        //  recyclerVierAdapter.item_Clear();
         try {
             activity.unregisterReceiver(mBroadcastReceiver1);
-        } catch (Exception ignored){
+        } catch (Exception ignored) {
 
         }
-      //  background_service_start=false;
-    //   startService();
+        //  background_service_start=false;
+        //   startService();
         // finish();
     }
+
     @Override
     public void onStop() {
         super.onStop();
-        Log.e("activityt_TAG","onStop");
+        Log.e("activityt_TAG", "onStop");
         //if (mBluetoothLeScanner != null) {
         // recyclerVierAdapter.item_Clear();
-        if(!background_service_start) {
+        if (!background_service_start) {
             ActivityManager manager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
 
             for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -635,19 +630,20 @@ public class MainFragment extends Fragment {
                     startForeground = true;
                 }
             }
-            if(manager.getRunningServices(Integer.MAX_VALUE).size()==0){
+            if (manager.getRunningServices(Integer.MAX_VALUE).size() == 0) {
                 startService();
-                not_rescan=true;
+                not_rescan = true;
                 startForeground = true;
             }
 
         }
         background_service_start = false;
-       // stopScan();
-       // recyclerVierAdapter.item_Clear();
+        // stopScan();
+        // recyclerVierAdapter.item_Clear();
         //}
 
     }
+
     @Override
     public void onStart() {
 
@@ -658,33 +654,38 @@ public class MainFragment extends Fragment {
         stopService();
         Log.e("activityt_TAG", "onStart()");
     }
+
     private boolean not_rescan = false;
+
     @Override
     public void onResume() {
         super.onResume();
         Log.e("activityt_TAG", "onResume");
-        Log.e("Log.e","673");
+        Log.e("Log.e", "673");
         background_service_start = false;
-        if(!mble_gps_false) {
+        if (!mble_gps_false) {
+            if (mBluetoothAdapter.isEnabled()) {
+                Runnable runnable10;//  startScan();
 
-            Runnable runnable10;//  startScan();
-            if(!systemBoole) {
-                runnable10 = new Runnable() {
-                    @Override
-                    public void run() {
-                        //  startScan();
-                      //  if(!not_rescan) {
+                if (!systemBoolean) {
+
+                    runnable10 = new Runnable() {
+                        @Override
+                        public void run() {
+                            //  startScan();
+                            //  if(!not_rescan) {
                             startScan();
-                     //   }
-                        //background_service_start=true;
-                    }
-                };
-                start_handler.postDelayed(runnable10, 0);
+                            //   }
+                            //background_service_start=true;
+                        }
+                    };
+                    start_handler.postDelayed(runnable10, 0);
+                }
             }
 
         }
-        checkIfEmpty();
-        mble_gps_false=false;
+        check_If_list_Empty();
+        mble_gps_false = false;
         IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);//ble 상태 감지 필터
         activity.registerReceiver(mBroadcastReceiver1, filter1);
         IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
@@ -694,6 +695,7 @@ public class MainFragment extends Fragment {
 
         // checkSDK();
     }
+
     private boolean mble_gps_false = false;
     private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
 
@@ -710,7 +712,7 @@ public class MainFragment extends Fragment {
                         activity.invalidateOptionsMenu();
                         Toast.makeText(activity.getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
                         //log.e("off1", "off1");
-                        mble_gps_false=true;
+                        mble_gps_false = true;
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
                         //log.e("off2", "off2");
@@ -719,7 +721,7 @@ public class MainFragment extends Fragment {
                         activity.invalidateOptionsMenu();
 
                         //log.e("off3", "off3");
-                       // startService();
+                        // startService();
                         // mblecheck = true;
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
@@ -752,7 +754,7 @@ public class MainFragment extends Fragment {
                     //log.e("off8", String.valueOf(isGpsEnabled));
                 }
             }
-            if(action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
+            if (action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
                 Log.e("NetworkInfo", action);
                 Bundle extras = intent.getExtras();
                 NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
@@ -770,14 +772,15 @@ public class MainFragment extends Fragment {
         }
     };
     ArrayList<Tag_tiem> arrayList = new ArrayList<>();
+
     public void ReadTextFile() {//csv 파일 내용을 추출하기
         try {
             String str_Path_Full;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "save.csv";
-               // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
+                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator + "Nineone" + File.separator + "save.csv";
+                // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
+                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator + "save.csv";
 
                 // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv");
             }
@@ -785,16 +788,16 @@ public class MainFragment extends Fragment {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "EUC-KR"));
             // BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line = "";
-            int row=0;
+            int row = 0;
             Log.e("aaa", "line");
             while ((line = reader.readLine()) != null) {//해당 파일을 한줄씩 읽기
                 String[] token = line.split("\\,", -1);
 
                 Log.e("aaa2", String.valueOf(row));
                 String sensor_margin = null;
-                if(token.length>5) {
+                if (token.length > 5) {
                     sensor_margin = token[3] + "," + token[4] + "," + token[5] + "," + token[6] + "," + token[7];
-                }else{
+                } else {
                     sensor_margin = token[3] + "," + token[4];
                 }
                 arrayList.add(row, new Tag_tiem(token[0], token[1], token[2], sensor_margin));
@@ -812,13 +815,14 @@ public class MainFragment extends Fragment {
         }
         //return strBuffer.toString();
     }
-    public void Http_Array_post(ArrayList<Tag_tiem> array_List){
+
+    public void Http_Array_post(ArrayList<Tag_tiem> array_List) {
 
         new Thread(() -> {
             try {
 
-                String url="http://stag.nineone.com:8002/si/rece_Setting.asp";
-                URL object= null;
+                String url = "http://stag.nineone.com:8002/si/rece_Setting.asp";
+                URL object = null;
                 object = new URL(url);
                 HttpURLConnection con = null;
 
@@ -829,13 +833,13 @@ public class MainFragment extends Fragment {
                 con.setRequestProperty("Authorization", "Bearer Key");
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestMethod("POST");
-                JSONArray array=new JSONArray();
+                JSONArray array = new JSONArray();
 
-                for(int i=0; i < array_List.size(); i++){
+                for (int i = 0; i < array_List.size(); i++) {
                     JSONObject cred = new JSONObject();
                     try {
                         cred.put("id", array_List.get(i).getId());
-                        cred.put("device_idx",array_List.get(i).getDevice_idx());
+                        cred.put("device_idx", array_List.get(i).getDevice_idx());
                         cred.put("time", array_List.get(i).getTime());
                         cred.put("sensor_margin", array_List.get(i).getSensor_margin());
                     } catch (JSONException e) {
@@ -858,16 +862,16 @@ public class MainFragment extends Fragment {
                         sb.append(line + "\n");
                     }
                     br.close();
-                    Log.e("dd-","\n"+sb.toString());
-                    if(sb.toString().contains("done")) {
+                    Log.e("dd-", "\n" + sb.toString());
+                    if (sb.toString().contains("done")) {
                         Log.e("1dd-", "\n" + sb.toString());
                         fileDelete();
-                    }else{
-                        Log.e("2dd-","\n"+sb.toString());
+                    } else {
+                        Log.e("2dd-", "\n" + sb.toString());
                     }
 
                 } else {
-                    Log.e("dd-","\n"+con.getResponseMessage());
+                    Log.e("dd-", "\n" + con.getResponseMessage());
                     //   System.out.println(con.getResponseMessage());
                 }
             } catch (IOException e) {
@@ -876,59 +880,55 @@ public class MainFragment extends Fragment {
         }).start();
 
     }
-    private static boolean fileDelete(){
-       // String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
-       // str_Path_Full += "/Nineone" + File.separator + "save.csv";
+
+    private static boolean fileDelete() {
+        // String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
+        // str_Path_Full += "/Nineone" + File.separator + "save.csv";
 
         try {
             File file;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-           //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "save.csv";
-                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"save.csv");
+                //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator + "Nineone" + File.separator, "save.csv");
             } else {
-           //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv";
-                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "save.csv");
+                //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv";
+                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator + "save.csv");
             }
-            if(file.exists()){
+            if (file.exists()) {
                 file.delete();
                 return true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
-   /* private void checkPermissions(){
-
-            // You can directly ask for the permission.
-            // The registered ActivityResultCallback gets the result of this request.
-            requestPermissionLauncher.launch(Manifest.permission.REQUESTED_PERMISSION);
-
-    }
-
-    private ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    // Permission is granted. Continue the action or workflow in your
-                    // app.
-                } else {
-                    // Explain to the user that the feature is unavailable because the
-                    // features requires a permission that the user has denied. At the
-                    // same time, respect the user's decision. Don't link to system
-                    // settings in an effort to convince the user to change their
-                    // decision.
-                }
-            });*/
 
 
-    private void Network_Confirm(){
+    private void Network_Confirm() {
         int status = NetworkStatus.getConnectivityStatus(activity.getApplicationContext());
-        if(status == NetworkStatus.TYPE_MOBILE){
-            Log.e("모바일로 연결됨","650");
-        }else if (status == NetworkStatus.TYPE_WIFI){
-            Log.e("무선랜으로 연결됨","652");
-        }else {
-            Log.e("연결 안됨.","654");
+        if (status == NetworkStatus.TYPE_MOBILE) {
+            Log.e("모바일로 연결됨", "650");
+        } else if (status == NetworkStatus.TYPE_WIFI) {
+            Log.e("무선랜으로 연결됨", "652");
+        } else {
+            Log.e("연결 안됨.", "654");
         }
+    }
+    private int ConvertToIntLittle(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
     }
 }

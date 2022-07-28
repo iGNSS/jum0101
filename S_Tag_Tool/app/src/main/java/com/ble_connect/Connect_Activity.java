@@ -101,9 +101,9 @@ public class Connect_Activity extends AppCompatActivity {
     TextView vw_txtmacaddrValue;
     TextView vw_txt_tag_adress;
     TextView gyo_cal;
-    EditText  tag_no, tag_copy_no;
-    EditText O2alarm,COalarm,H2Salarm,CO2alarm,CH4alarm;
-    String O2alarm_string,COalarm_string,H2Salarm_string,CO2alarm_string,CH4alarm_string;
+    EditText tag_no, tag_copy_no;
+    EditText O2alarm, COalarm, H2Salarm, CO2alarm, CH4alarm;
+    String O2alarm_string, COalarm_string, H2Salarm_string, CO2alarm_string, CH4alarm_string;
     Button btn_sendtotag;
 
     String dataToServer;
@@ -130,11 +130,13 @@ public class Connect_Activity extends AppCompatActivity {
     private Spinner calSpinner = null;
     private Spinner sensor_operation_cycle_Spinner = null;
     private Spinner senser_tag_copy_type_Spinner = null;
-    private boolean connect_fail=false;
+    private boolean connect_fail = false;
     private String phonenumber;
     private RequestQueue requestQueue;
     private LinearLayout mCA_layout, mD5_layout;
     private boolean D5_true_false = false;
+    private String O2alarm_HTTP_string;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -147,7 +149,7 @@ public class Connect_Activity extends AppCompatActivity {
         mCA_layout.setVisibility(View.VISIBLE);
         mD5_layout = findViewById(R.id.D5_layout);
         mD5_layout.setVisibility(View.GONE);
-        D5_true_false=false;
+        D5_true_false = false;
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBtAdapter == null) {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
@@ -166,10 +168,10 @@ public class Connect_Activity extends AppCompatActivity {
         }
         try {
             phonenumber = phonData.getLine1Number();
-            if(phonenumber==null){
+            if (phonenumber == null) {
                 phonenumber = "01000000000";
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
@@ -197,6 +199,7 @@ public class Connect_Activity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
             }
@@ -215,15 +218,16 @@ public class Connect_Activity extends AppCompatActivity {
         sensorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
-                Log.e("onItemSelected", (position)+", "+sensorSpinner.getSelectedItem().toString());
+                Log.e("onItemSelected", (position) + ", " + sensorSpinner.getSelectedItem().toString());
                 ui_ture_false(position);
-               // sensorType =position;
+                // sensorType =position;
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
             }
         });
-       // sensorSpinner.setSelection(0);
+        // sensorSpinner.setSelection(0);
         //자이로 칼 여부
         String[] calItems;
         calSpinner = findViewById(R.id.cal_run);
@@ -242,6 +246,7 @@ public class Connect_Activity extends AppCompatActivity {
                     new AlertDialog.Builder(Connect_Activity.this)
                             .setTitle("센서 보정")
                             .setMessage("다시 한번 센서 보정을 하시겠습니까 ?")
+                             .setCancelable(false)
                             .setIcon(R.drawable.nrfuart_hdpi_icon)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -278,6 +283,7 @@ public class Connect_Activity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
             }
@@ -294,12 +300,12 @@ public class Connect_Activity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {// textView.setText(items[position]);
             }
+
             @Override
             public void onNothingSelected(AdapterView<?> parent) {//textView.setText("선택하세요");
             }
         });
         senser_tag_copy_type_Spinner.setSelection(0);
-
 
 
         btn_sendtotag.setOnClickListener(new View.OnClickListener() {
@@ -315,11 +321,11 @@ public class Connect_Activity extends AppCompatActivity {
 
                     boolean send_ok_check = true;
                     String tag_type_val = senser_tag_type_Text.getText().toString();
-                   // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
+                    // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
                     int tagtype_val = Integer.parseInt(tag_type_val, 16);
 
                     if (tagtype_val > 0) {
-                        tagsend_data[2] = (byte) tagtype_val ;
+                        tagsend_data[2] = (byte) tagtype_val;
                         tagsend_data[3] = (byte) (tagtype_val >> 8);
                     } else {
                         send_ok_check = false;
@@ -339,25 +345,25 @@ public class Connect_Activity extends AppCompatActivity {
 
                             } else {
                                 send_ok_check = false;
-                               // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
+                                // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.", Toast.LENGTH_LONG).show();
                                 customToastView("[단말기 번호] 입력한 데이터가 너무 크거나 적습니다.");
                             }
                         } else {
                             send_ok_check = false;
-                           // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
+                            // Toast.makeText(getApplication(), "[단말기 번호] 입력한 데이터 타입이 안 맞습니다", Toast.LENGTH_LONG).show();
 
                             customToastView("[단말기 번호] 입력한 데이터 타입이 안 맞습니다");
                         }
                     } else {
                         send_ok_check = false;
-                       // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
+                        // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
                         customToastView("[단말기 번호] 정보를 입력해 주세요");
 
                     }
 
                     int rfPower_val = Integer.parseInt(rfPowerSpinner.getSelectedItem().toString());
                     tagsend_data[8] = (byte) rfPower_val;
-                    if(!D5_true_false) {
+                    if (!D5_true_false) {
                         //Sensor Type 가져오기
                         String sensortype_val = (sensorSpinner.getSelectedItem().toString());
                         int sensor_type_var = 0;
@@ -385,41 +391,46 @@ public class Connect_Activity extends AppCompatActivity {
 
                         int sensor_operation_cycle_val = Integer.parseInt(sensor_operation_cycle_Spinner.getSelectedItem().toString());
                         tagsend_data[11] = (byte) sensor_operation_cycle_val;
-                        String O2alarm_string = O2alarm.getText().toString().trim().replace(" ","");
+                        O2alarm_string = O2alarm.getText().toString().trim().replace(" ", "");
+
                         if (O2alarm_string.length() != 0) {
                             float tag_O2alarm = Float.parseFloat(O2alarm_string);
                             //   int tag_O2alarm2 = (int) Long.parseLong(O2alarm.getText().toString().trim(), 16);
                             tagsend_data[12] = (byte) (tag_O2alarm * 10);
                         } else {
+                            O2alarm_string = "0";
                             tagsend_data[12] = 0;
                         }
-                        String COalarm_string = COalarm.getText().toString().trim().replace(" ","");
+                        COalarm_string = COalarm.getText().toString().trim().replace(" ", "");
                         if (COalarm_string.length() != 0) {
                             int tag_COalarm = Integer.parseInt(COalarm_string);
                             int tag_COalarm_set = tag_COalarm / 10;
                             tagsend_data[13] = (byte) tag_COalarm_set;
                         } else {
+                            COalarm_string = "0";
                             tagsend_data[13] = 0;
                         }
 
-                        String H2Salarm_string = H2Salarm.getText().toString().trim().replace(" ","");
+                        H2Salarm_string = H2Salarm.getText().toString().trim().replace(" ", "");
                         if (H2Salarm_string.length() != 0) {
                             int tag_H2Salarm = Integer.parseInt(H2Salarm.getText().toString().trim());
                             tagsend_data[14] = (byte) tag_H2Salarm;
                         } else {
+                            H2Salarm_string = "0";
                             tagsend_data[14] = 0;
                         }
 
-                        String CO2alarm_string = CO2alarm.getText().toString().trim().replace(" ","");
+                        CO2alarm_string = CO2alarm.getText().toString().trim().replace(" ", "");
                         if (CO2alarm_string.length() != 0) {
                             int tag_CO2alarm = Integer.parseInt(CO2alarm_string);
                             tagsend_data[15] = (byte) (tag_CO2alarm);
                             tagsend_data[16] = (byte) (tag_CO2alarm >> 8);
                         } else {
+                            CO2alarm_string = "0";
                             tagsend_data[15] = 0;
                             tagsend_data[16] = 0;
                         }
-                        String CH4alarm_string = CH4alarm.getText().toString().trim().replace(" ","");
+                        CH4alarm_string = CH4alarm.getText().toString().trim().replace(" ", "");
                         if (CH4alarm_string.length() != 0) {
                             int tag_CH4alarm = Integer.parseInt(CH4alarm_string);
                             tagsend_data[17] = (byte) (tag_CH4alarm);
@@ -427,15 +438,16 @@ public class Connect_Activity extends AppCompatActivity {
 
                             Log.e("ashex", asHex(tagsend_data));
                         } else {
+                            CH4alarm_string = "0";
                             tagsend_data[17] = 0;
                             tagsend_data[18] = 0;
                         }
-                    }else{
+                    } else {
                         String tag_type_copy_val = (senser_tag_copy_type_Spinner.getSelectedItem().toString());
                         int tagtype_copy_val = Integer.parseInt(tag_type_copy_val);
 
                         if (tagtype_copy_val > 0) {
-                            tagsend_data[9] = (byte) (tagtype_copy_val );
+                            tagsend_data[9] = (byte) (tagtype_copy_val);
                             tagsend_data[10] = (byte) (tagtype_copy_val >> 8);
                         } else {
                             send_ok_check = false;
@@ -479,33 +491,35 @@ public class Connect_Activity extends AppCompatActivity {
                         long countnow = System.currentTimeMillis();
                         SimpleDateFormat aftertime = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.KOREA);
                         String nowtime = aftertime.format(countnow);
-                     //   String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
-                         String send_hex_data = asHex(tagsend_data);
+                        //   String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
+                        String send_hex_data = asHex(tagsend_data);
                         Log.e("전송 데이터", send_hex_data);
                         mService.writeRXCharacteristic(tagsend_data);
-                      //  customToastView("전송 완료");
+                        //  customToastView("전송 완료");
                         connect_fail = false;
-                        if(!D5_true_false) {
+                        if (!D5_true_false) {
                             String senser_data = O2alarm_string + ',' + COalarm_string + ',' + H2Salarm_string + ',' + CO2alarm_string + ',' + CH4alarm_string;
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
-                        }else{
-                            String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + ","+ tag_copy_no.getText().toString();
+                        } else {
+                            String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + "," + tag_copy_no.getText().toString();
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
                         }
                         runOnUiThread(new Runnable() {//약간의 딜레이
-                            @Override public void run() {
-                                ProgressDialog mProgressDialog = ProgressDialog.show(Connect_Activity.this,"", "전송 중 입니다.",true);
+                            @Override
+                            public void run() {
+                                ProgressDialog mProgressDialog = ProgressDialog.show(Connect_Activity.this, "", "전송 중 입니다.", true);
                                 data_send_handler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         try {
-                                            if (mProgressDialog!=null&&mProgressDialog.isShowing()){
+                                            if (mProgressDialog != null && mProgressDialog.isShowing()) {
                                                 mProgressDialog.dismiss();
                                                 AlertDialog.Builder builder = new AlertDialog.Builder(Connect_Activity.this);
                                                 builder.setTitle("전송 완료");
                                                 builder.setMessage("리스트로 돌아갑니다.");
+                                                builder.setCancelable(false);
                                                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
@@ -514,13 +528,13 @@ public class Connect_Activity extends AppCompatActivity {
                                                 });
                                                 builder.show();
                                             }
-                                        } catch ( Exception e ) {
+                                        } catch (Exception e) {
                                             e.printStackTrace();
                                         }
                                     }
                                 }, 2000);
                             }
-                        } );
+                        });
                     }
                 } else {
                     customToastView("태그를 연결해 주세요");
@@ -538,8 +552,9 @@ public class Connect_Activity extends AppCompatActivity {
             }
         };
         connect_handler.postDelayed(runnable10, 2000);
-       // Initialize();
+        // Initialize();
     }
+
     private boolean mConnecting_true = false;
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
@@ -547,12 +562,13 @@ public class Connect_Activity extends AppCompatActivity {
             Log.d(TAG, "onServiceConnected mService= " + mService);
             if (!mService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
-              //  Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-              //  startActivity(intent);
+                //  Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
+                //  startActivity(intent);
                 finish();
             }
 
         }
+
         public void onServiceDisconnected(ComponentName classname) {
             mService = null;
         }
@@ -560,6 +576,7 @@ public class Connect_Activity extends AppCompatActivity {
     private final MyHandler data_send_handler = new MyHandler(this);
     private final MyHandler connect_handler = new MyHandler(this);
     private final MyHandler D5_connect_handler = new MyHandler(this);
+
     private static class MyHandler extends Handler {
         private final WeakReference<Connect_Activity> mActivity;
 
@@ -573,17 +590,17 @@ public class Connect_Activity extends AppCompatActivity {
         }
     }
 
-    private void senser_adress_connect(){
+    private void senser_adress_connect() {
         Intent intent = getIntent();
         String sneser_adress_save = intent.getStringExtra("address");
         Log.e("STag", "351");
-        connect_fail=true;
+        connect_fail = true;
         if (mBtAdapter.isEnabled() && sneser_adress_save != null) {
             if (mService != null) {
                 mbluetootDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(sneser_adress_save);
-               // mConnecting_true = true;
+                // mConnecting_true = true;
                 mService.connect(sneser_adress_save);
-            //    connect_check_flag = true;
+                //    connect_check_flag = true;
             }
         }
     }
@@ -601,6 +618,7 @@ public class Connect_Activity extends AppCompatActivity {
         intentFilter.addAction(UartService.DEVICE_DOES_NOT_SUPPORT_UART);
         return intentFilter;
     }
+
     private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
 
         public void onReceive(Context context, Intent intent) {
@@ -613,8 +631,8 @@ public class Connect_Activity extends AppCompatActivity {
                     public void run() {
                         btn_sendtotag.setBackgroundTintList(ContextCompat.getColorStateList(getApplication(), R.color.blue));
 
-                      //  btn_sendtotag.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.blue));
-                        btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                        //  btn_sendtotag.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.blue));
+                        btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_CONNECT_MSG");
 
@@ -634,7 +652,7 @@ public class Connect_Activity extends AppCompatActivity {
                         result = "";
                         //
 
-                      //  mConnecting_true = false;
+                        //  mConnecting_true = false;
                         connect_check_flag = true;
                         Saving_File_name = TagName + "_" + mbluetootDevice.toString().replace(":", "") + "_" + StartTime;
 
@@ -653,12 +671,12 @@ public class Connect_Activity extends AppCompatActivity {
                         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                         Log.d(TAG, "UART_DISCONNECT_MSG");
                         // btnConnectDisconnect.setText(R.string.str_connect);
-                        btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.gray));
-                      //  btn_sendtotag.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.gray3));
+                        btn_sendtotag.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.gray));
+                        //  btn_sendtotag.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.gray3));
                         btn_sendtotag.setBackgroundTintList(ContextCompat.getColorStateList(getApplication(), R.color.gray3));
                         connect_check_flag = false;
                         cetting_boolean = false;
-                       // mConnecting_true = false;
+                        // mConnecting_true = false;
                         cetting_count = 0;
                         UI_reset();
 
@@ -668,10 +686,10 @@ public class Connect_Activity extends AppCompatActivity {
                         //setUiState();
 
 
-                      //  Toast.makeText(getApplication(), mbluetootDevice.getName() + " 연결해제", Toast.LENGTH_SHORT).show();
-                        if(connect_fail && !D5_connect_true) {
+                        //  Toast.makeText(getApplication(), mbluetootDevice.getName() + " 연결해제", Toast.LENGTH_SHORT).show();
+                        if (connect_fail && !D5_connect_true) {
                             customToastView(mbluetootDevice.getName() + " 연결실패");
-                        }else if(!connect_fail && !D5_connect_true){
+                        } else if (!connect_fail && !D5_connect_true) {
                             customToastView(mbluetootDevice.getName() + " 연결해제");
                         }/*else if(D5_connect_true){
                           //  customToastView("D5 확인. 연결 중");
@@ -692,7 +710,7 @@ public class Connect_Activity extends AppCompatActivity {
             //*********************//
             if (action.equals(UartService.ACTION_GATT_SERVICES_DISCOVERED)) {
                 mService.enableTXNotification();
-               // Log.e("730", String.valueOf(mService.getSupportedGattServices()));
+                // Log.e("730", String.valueOf(mService.getSupportedGattServices()));
             }
             //*********************//
             if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
@@ -703,14 +721,14 @@ public class Connect_Activity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         try {
-                           // Log.e("ble_datae2",byteArrayToHex(txValue)+",");
+                            // Log.e("ble_datae2",byteArrayToHex(txValue)+",");
 
                             int receDataLength = txValue.length;
-                        //    Log.e("Tag_Rece12", String.valueOf(receDataLength));
+                            //    Log.e("Tag_Rece12", String.valueOf(receDataLength));
                             if (receDataLength == 20) {
-                              //  Log.e("Tag_Rece1", txValue[0]+", "+txValue[19]);
+                                //  Log.e("Tag_Rece1", txValue[0]+", "+txValue[19]);
 
-                                if(cetting_count>30&&!cetting_boolean){
+                                if (cetting_count > 30 && !cetting_boolean) {
                                     cetting_boolean = true;
                                     customToastView("초기세팅이 되어있지 않습니다.\n초기 세팅을 해주세요.");
 
@@ -720,7 +738,7 @@ public class Connect_Activity extends AppCompatActivity {
                                     rcount++;
                                     cetting_count = 0;
                                     cetting_boolean = true;
-                                  //  Log.e("Tag_number753", "753");
+                                    //  Log.e("Tag_number753", "753");
                                     if (rcount == 1) {
                                         String r_data_hex = asHex(txValue);
                                         int rece_tag_type = ConvertToIntLittle(txValue, 2);
@@ -734,7 +752,7 @@ public class Connect_Activity extends AppCompatActivity {
 
                                         int rece_rf_power = txValue[8];
                                         selectValue(rfPowerSpinner, rece_rf_power);
-                                        if(!D5_true_false) {
+                                        if (!D5_true_false) {
                                             int rece_sensor_type = txValue[9] & 0xff;
                                             String sensor_type_str = "";
                                             switch (rece_sensor_type) {
@@ -748,7 +766,7 @@ public class Connect_Activity extends AppCompatActivity {
                                                     sensor_type_str = "2(5종)";
                                                     break;
                                             }
-                                         //   Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
+                                            //   Log.e("Tag Rece Sensor Type: ", rece_sensor_type + "/" + sensor_type_str);
                                             selectValue(sensorSpinner, sensor_type_str);
 
                                             int rece_cal_status = txValue[10] & 0xff;
@@ -758,7 +776,7 @@ public class Connect_Activity extends AppCompatActivity {
                                                 gro_cal_status = "보정 완료";
                                                 //   calSpinnertext = "On";
                                             }
-                                         //   Log.e("Tag Rece cal Type: ", rece_cal_status + "/" + gro_cal_status);
+                                            //   Log.e("Tag Rece cal Type: ", rece_cal_status + "/" + gro_cal_status);
                                             gyo_cal.setText(gro_cal_status + "");
                                             //selectValue(calSpinner, calSpinnertext);
 
@@ -767,7 +785,7 @@ public class Connect_Activity extends AppCompatActivity {
                                         selectValue(sensor_power_on_Spinner, rece_sensor_power_on);*/
 
                                             int rece_operation_cycle_on = txValue[11] & 0xff;
-                                           // Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
+                                            // Log.e("Tag Operation Cycle On: ", rece_operation_cycle_on + "");
                                             selectValue(sensor_operation_cycle_Spinner, rece_operation_cycle_on);
                                             int rece_O2_no = txValue[12] & 0xff;
                                             double rece_O2_no2 = (rece_O2_no * 0.1);
@@ -785,25 +803,25 @@ public class Connect_Activity extends AppCompatActivity {
 
                                             int rece_CH4_no = ConvertToIntLittle(txValue, 17);
                                             CH4alarm.setText(String.valueOf(rece_CH4_no));
-                                        }else{
+                                        } else {
                                             int rece_copy_type = ConvertToIntLittle(txValue, 9);
                                             String rece_copy_type_str = String.format("%04X", rece_copy_type & 0xFF);
 
-                                            selectValue(senser_tag_copy_type_Spinner,rece_copy_type_str);
+                                            selectValue(senser_tag_copy_type_Spinner, rece_copy_type_str);
 
                                             int rece_copy_tag_no = ConvertToIntLittle2(txValue, 11);
                                             tag_copy_no.setText(rece_copy_tag_no + "");
                                         }
                                         if (tag_tag_type_str.equals("00D5") && !D5_true_false) {
-                                            D5_true_false=true;
+                                            D5_true_false = true;
                                             mCA_layout.setVisibility(View.GONE);
                                             mD5_layout.setVisibility(View.VISIBLE);
-                                          //  customToastView("D5화면으로 변경");
+                                            //  customToastView("D5화면으로 변경");
                                             Runnable runnable10 = new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     //  startScan();
-                                                    rcount=0;
+                                                    rcount = 0;
 
                                                        /* Intent intent = getIntent();
                                                         String sneser_adress_save = intent.getStringExtra("address");
@@ -817,12 +835,12 @@ public class Connect_Activity extends AppCompatActivity {
                                         }
                                     } else {
                                         int rece_cal_status = txValue[7] & 0xff;
-                                       // Log.e("Cal 상태 체크", rece_cal_status + "");
+                                        // Log.e("Cal 상태 체크", rece_cal_status + "");
                                     }
                                 }
                                 // Log.e("STag", "End...." + accelerometerX);
                             } else {
-                              //  Log.e(TAG, "BLE DATA Length is " + receDataLength);
+                                //  Log.e(TAG, "BLE DATA Length is " + receDataLength);
                             }
 
                         } catch (Exception e) {
@@ -839,8 +857,9 @@ public class Connect_Activity extends AppCompatActivity {
             }
         }
     };
-    private boolean D5_connect_true=false;
-    private void UI_reset(){
+    private boolean D5_connect_true = false;
+
+    private void UI_reset() {
         vw_txtmacaddrValue.setText("");
         vw_txt_tag_adress.setText("");
         //tag_type.setText("");
@@ -859,8 +878,10 @@ public class Connect_Activity extends AppCompatActivity {
         COalarm.setText("");
         H2Salarm.setText("");
         CO2alarm.setText("");
-        CH4alarm.setText("");;
+        CH4alarm.setText("");
+        ;
     }
+
     private void selectValue(Spinner spinner, Object value) {
         for (int i = 0; i < spinner.getCount(); i++) {
             //Log.e("RF 값은...",spinner.getItemAtPosition(i).toString());
@@ -884,6 +905,7 @@ public class Connect_Activity extends AppCompatActivity {
         super.onStart();
         Log.e("connect_TAG", "onStart()");
     }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -915,6 +937,7 @@ public class Connect_Activity extends AppCompatActivity {
         super.onPause();
 
     }
+
     @Override
     protected void onStop() {
         Log.e("connect_TAG", "onStop");
@@ -924,6 +947,7 @@ public class Connect_Activity extends AppCompatActivity {
 
         super.onStop();
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -941,17 +965,17 @@ public class Connect_Activity extends AppCompatActivity {
         }
         try {
             unbindService(mServiceConnection);
-        } catch (java.lang.IllegalArgumentException e)
-        {
+        } catch (java.lang.IllegalArgumentException e) {
             //Print to log or make toast that it failed
         }
 
-        if(mService!=null) {
+        if (mService != null) {
             mService.stopSelf();
             mService = null;
         }
 
     }
+
     @Override
     protected void onRestart() {
         super.onRestart();
@@ -972,7 +996,7 @@ public class Connect_Activity extends AppCompatActivity {
             case REQUEST_SELECT_DEVICE:
                 //When the DeviceListActivity return, with the selected device address
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    connect_fail=true;
+                    connect_fail = true;
                     String deviceAddress = data.getStringExtra(BluetoothDevice.EXTRA_DEVICE);
                     mbluetootDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
 
@@ -992,8 +1016,8 @@ public class Connect_Activity extends AppCompatActivity {
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
                     Toast.makeText(this, "Problem in BT Turning ON ", Toast.LENGTH_SHORT).show();
-                 //   Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-                  //  startActivity(intent);
+                    //   Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
+                    //  startActivity(intent);
                     finish();
                 }
                 break;
@@ -1007,6 +1031,7 @@ public class Connect_Activity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
     }
+
     @Override
     public void onBackPressed() {
         if (mbluetootDevice != null) {
@@ -1029,41 +1054,44 @@ public class Connect_Activity extends AppCompatActivity {
         inflater.inflate(R.menu.connect_menu, menu);
         return true;
     }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
        /* if (mConnecting_true) {
             menu.findItem(R.id.action_request).setVisible(true);
             menu.findItem(R.id.action_connect).setVisible(false);
             menu.findItem(R.id.action_disconnect).setVisible(false);
-        }else*/ if (connect_check_flag) {
+        }else*/
+        if (connect_check_flag) {
             menu.findItem(R.id.action_request).setVisible(false);
             menu.findItem(R.id.action_connect).setVisible(false);
             menu.findItem(R.id.action_disconnect).setVisible(true);
-        }else if(!connect_check_flag){
+        } else if (!connect_check_flag) {
             menu.findItem(R.id.action_request).setVisible(false);
             menu.findItem(R.id.action_connect).setVisible(true);
             menu.findItem(R.id.action_disconnect).setVisible(false);
         }
         return super.onPrepareOptionsMenu(menu);
     }
+
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
         final int itemId = item.getItemId();
         if (itemId == android.R.id.home) {
             //Intent intent = new Intent(Connect_Activity.this, MainActivity.class);
-           // startActivity(intent);
+            // startActivity(intent);
             connect_fail = false;
             onBackPressed();
-           // finish();
+            // finish();
             return true;
-        }else if (itemId == R.id.action_connect) {
-            connect_fail=true;
+        } else if (itemId == R.id.action_connect) {
+            connect_fail = true;
             rcount = 0;
             senser_adress_connect();
 
             return true;
         } else if (itemId == R.id.action_disconnect) {
-            connect_fail=false;
+            connect_fail = false;
             if (mbluetootDevice != null) {
                 mService.disconnect();
             }
@@ -1078,20 +1106,23 @@ public class Connect_Activity extends AppCompatActivity {
         vw_txtmacaddrValue = (TextView) findViewById(R.id.macaddrValue);
         vw_txt_tag_adress = (TextView) findViewById(R.id.macaddrValue2);
         // intervalTime = (EditText) findViewById(R.id.interval);
-       //tag_type = (EditText) findViewById(R.id.tag_type);
+        //tag_type = (EditText) findViewById(R.id.tag_type);
         tag_no = (EditText) findViewById(R.id.tag_no);
         tag_no.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.e("onTextChanged",i+", "+i1+", "+i2); }
+                Log.e("onTextChanged", i + ", " + i1 + ", " + i2);
+            }
+
             @Override
             public void afterTextChanged(Editable editable) {
-                Log.e("afterTextChanged",editable.toString());
-                if(tag_no.length()==0){
+                Log.e("afterTextChanged", editable.toString());
+                if (tag_no.length() == 0) {
                     tag_no.setText("0");
                 }
             }
@@ -1099,15 +1130,15 @@ public class Connect_Activity extends AppCompatActivity {
 
         gyo_cal = (TextView) findViewById(R.id.gyo_cal);
         O2alarm = (EditText) findViewById(R.id.tag_O2_edit);
-        O2alarm.setFilters(new InputFilter[]{new InputDoubleFilterMinMax(0, 25.5, 1,(Connect_Activity) Connect_Activity.this)});
+        O2alarm.setFilters(new InputFilter[]{new InputDoubleFilterMinMax(0, 25.5, 1, (Connect_Activity) Connect_Activity.this)});
         COalarm = (EditText) findViewById(R.id.tag_CO_edit);
-        COalarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "2550",(Connect_Activity) Connect_Activity.this)});
+        COalarm.setFilters(new InputFilter[]{new InputFilterMinMax("0", "2550", (Connect_Activity) Connect_Activity.this)});
         H2Salarm = (EditText) findViewById(R.id.tag_H2S_edit);
-        H2Salarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "255",(Connect_Activity) Connect_Activity.this)});
+        H2Salarm.setFilters(new InputFilter[]{new InputFilterMinMax("0", "255", (Connect_Activity) Connect_Activity.this)});
         CO2alarm = (EditText) findViewById(R.id.tag_CO2_edit);
-        CO2alarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "60000",(Connect_Activity) Connect_Activity.this)});
+        CO2alarm.setFilters(new InputFilter[]{new InputFilterMinMax("0", "60000", (Connect_Activity) Connect_Activity.this)});
         CH4alarm = (EditText) findViewById(R.id.tag_CH4_edit);
-        CH4alarm.setFilters(new InputFilter[]{ new InputFilterMinMax("0", "60000",(Connect_Activity) Connect_Activity.this)});
+        CH4alarm.setFilters(new InputFilter[]{new InputFilterMinMax("0", "60000", (Connect_Activity) Connect_Activity.this)});
         //tag_ver = (TextView) findViewById(R.id.tag_ver);
         btn_sendtotag = (Button) findViewById(R.id.btn_sendTotag);
 
@@ -1117,61 +1148,66 @@ public class Connect_Activity extends AppCompatActivity {
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.e("onTextChanged",i+", "+i1+", "+i2); }
+                Log.e("onTextChanged", i + ", " + i1 + ", " + i2);
+            }
+
             @Override
             public void afterTextChanged(Editable editable) {
-                Log.e("afterTextChanged",editable.toString());
-                if(tag_copy_no.length()==0){
+                Log.e("afterTextChanged", editable.toString());
+                if (tag_copy_no.length() == 0) {
                     tag_copy_no.setText("0");
                 }
             }
         });
     }
-    private int ui_T_F=0;
+
+    private int ui_T_F = 0;
+
     private void ui_ture_false(int mposition) {
-        Log.e("Tag_number71248","1248");
-        if(mposition==0){
-            ui_T_F=0;
-           // rcount=0;
-           // UI_reset();
-            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+        Log.e("Tag_number71248", "1248");
+        if (mposition == 0) {
+            ui_T_F = 0;
+            // rcount=0;
+            // UI_reset();
+            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             O2alarm.setFocusable(false);//포커싱과
             O2alarm.setClickable(false);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             COalarm.setFocusable(false);//포커싱과
             COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             H2Salarm.setFocusable(false);//포커싱과
             H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CO2alarm.setFocusable(false);//포커싱과
             CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CH4alarm.setFocusable(false);//포커싱과
             CH4alarm.setClickable(false);
-        }else if(mposition == 1){
-            ui_T_F=1;
+        } else if (mposition == 1) {
+            ui_T_F = 1;
 
             O2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
             O2alarm.setFocusable(true);//포커싱과
             O2alarm.setClickable(true);
             O2alarm.setFocusableInTouchMode(true);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             COalarm.setFocusable(false);//포커싱과
             COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             H2Salarm.setFocusable(false);//포커싱과
             H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CO2alarm.setFocusable(false);//포커싱과
             CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CH4alarm.setFocusable(false);//포커싱과
             CH4alarm.setClickable(false);
-        }else if(mposition == 2){
-            ui_T_F=2;
+        } else if (mposition == 2) {
+            ui_T_F = 2;
 
             O2alarm.setBackgroundResource(R.drawable.textview_design);//배경색 설정
             O2alarm.setFocusable(true);//포커싱과
@@ -1193,47 +1229,31 @@ public class Connect_Activity extends AppCompatActivity {
             CH4alarm.setFocusable(true);//포커싱과
             CH4alarm.setClickable(true);
             CH4alarm.setFocusableInTouchMode(true);
-        } else{
-            ui_T_F=3;
+        } else {
+            ui_T_F = 3;
 
-            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            O2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             O2alarm.setFocusable(false);//포커싱과
             O2alarm.setClickable(false);
-            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            COalarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             COalarm.setFocusable(false);//포커싱과
             COalarm.setClickable(false);
-            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            H2Salarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             H2Salarm.setFocusable(false);//포커싱과
             H2Salarm.setClickable(false);
-            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CO2alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CO2alarm.setFocusable(false);//포커싱과
             CO2alarm.setClickable(false);
-            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.gray3));//배경색 설정
+            CH4alarm.setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.gray3));//배경색 설정
             CH4alarm.setFocusable(false);//포커싱과
             CH4alarm.setClickable(false);
         }
-        if(D5_true_false){
+        if (D5_true_false) {
 
         }
-        Log.e("Tag_number71329","1329");
+        Log.e("Tag_number71329", "1329");
     }
-    private boolean checkPermissions() {
-        int result;
-        List<String> permissionList = new ArrayList<>();
-        for (String pm : permissions) {
-            result = ContextCompat.checkSelfPermission(this, pm);
-            if (result != PackageManager.PERMISSION_GRANTED) {
-                permissionList.add(pm);
-            }
-        }
-        if (!permissionList.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
-            return false;
-        }else{
 
-        }
-        return true;
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -1253,12 +1273,11 @@ public class Connect_Activity extends AppCompatActivity {
             }
         }
     }
+
     private void showToast_PermissionDeny() {
         Toast.makeText(this, "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
         finish();
     }
-
-
 
 
     private int ConvertToIntLittle2(byte[] txValue, int startidx) {
@@ -1281,6 +1300,7 @@ public class Connect_Activity extends AppCompatActivity {
         int result = byteBuffer.getInt();
         return result;
     }
+
     private int ConvertToIntLittle(byte[] txValue, int startidx) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
         // by choosing big endian, high order bytes must be put
@@ -1297,6 +1317,7 @@ public class Connect_Activity extends AppCompatActivity {
         int result = byteBuffer.getInt();
         return result;
     }
+
     public static String asHex(byte bytes[]) {
         if ((bytes == null) || (bytes.length == 0)) {
             return "";
@@ -1317,10 +1338,10 @@ public class Connect_Activity extends AppCompatActivity {
             }
 
             // バイト値を16進数の文字列に変換して、文字列バッファに追加。
-            if(bytes.length == index + 1){
+            if (bytes.length == index + 1) {
                 sb.append(Integer.toHexString(bt).toUpperCase());
-            }else{
-                sb.append(Integer.toHexString(bt).toUpperCase()+"-");
+            } else {
+                sb.append(Integer.toHexString(bt).toUpperCase() + "-");
             }
 
         }
@@ -1330,19 +1351,20 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
 
-    private void Network_Confirm(String Network_data){
+    private void Network_Confirm(String Network_data) {
         int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
-        if(status == NetworkStatus.TYPE_MOBILE){
+        if (status == NetworkStatus.TYPE_MOBILE) {
             Http_post(Network_data);
-            Log.e("모바일로 연결됨","650");
-        }else if (status == NetworkStatus.TYPE_WIFI){
+            Log.e("모바일로 연결됨", "650");
+        } else if (status == NetworkStatus.TYPE_WIFI) {
             Http_post(Network_data);
-            Log.e("무선랜으로 연결됨","652");
-        }else {
+            Log.e("무선랜으로 연결됨", "652");
+        } else {
             writeLog(Network_data);
-            Log.e("연결 안됨.","654");
+            Log.e("연결 안됨.", "654");
         }
     }
+
     public void Http_post(String post_data) {
         String[] split_data = post_data.trim().split(",");
         new Thread(() -> {
@@ -1364,16 +1386,16 @@ public class Connect_Activity extends AppCompatActivity {
 
                 JSONObject cred = new JSONObject();
                 try {
-                    if(!D5_true_false) {
+                    if (!D5_true_false) {
                         cred.put("id", split_data[0]);
                         cred.put("device_idx", split_data[1]);
                         cred.put("time", split_data[2]);
                         cred.put("sensor_margin", split_data[3] + "," + split_data[4] + "," + split_data[5] + "," + split_data[6] + "," + split_data[7]);
-                    }else{
+                    } else {
                         cred.put("id", split_data[0]);
                         cred.put("device_idx", split_data[1]);
                         cred.put("time", split_data[2]);
-                        cred.put("sensor_margin", split_data[3]+ "," + split_data[4]);
+                        cred.put("sensor_margin", split_data[3] + "," + split_data[4]);
 
                     }
                 } catch (JSONException e) {
@@ -1408,12 +1430,12 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
     private void writeLog(String data) {//csv파일 저장
-       // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
+        // String str_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+ "Nineone"+ File.separator;
         File file;// = new File(str_Path);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator);
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator + "Nineone" + File.separator);
         } else {
-            file = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator );
+            file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator);
         }
 
         if (!file.exists()) {
@@ -1422,14 +1444,14 @@ public class Connect_Activity extends AppCompatActivity {
         String str_Path_Full;
         //String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
         //str_Path_Full += "/Nineone" + File.separator + "save.csv";
-        File file2 ;//= new File(str_Path_Full);
+        File file2;//= new File(str_Path_Full);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()  + File.separator+ "Nineone"+ File.separator + "save.csv";
-            file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
+            str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator + "Nineone" + File.separator + "save.csv";
+            file2 = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator + "Nineone" + File.separator, "save.csv");
 
         } else {
-            str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
-            file2 = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator , "save.csv");
+            str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator + "save.csv";
+            file2 = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator, "save.csv");
         }
         if (!file2.exists()) {
             try {
@@ -1441,7 +1463,7 @@ public class Connect_Activity extends AppCompatActivity {
         try {
             BufferedWriter bfw;
 
-            bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(str_Path_Full,true),  "EUC-KR"));
+            bfw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(str_Path_Full, true), "EUC-KR"));
             bfw.write(data + "\r\n");
             //bfw.write(log_data);
             bfw.flush();
@@ -1453,32 +1475,32 @@ public class Connect_Activity extends AppCompatActivity {
     }
 
 
-
     ArrayList<Tag_tiem> arrayList = new ArrayList<>();
+
     private void ReadTextFile() {//csv 파일 내용을 추출하기
         try {
             String str_Path_Full;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+ File.separator+ "Nineone"+ File.separator + "save.csv";
+                str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator + "Nineone" + File.separator + "save.csv";
                 // file2 = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator,"save.csv");
             } else {
-                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents"+ File.separator+ "Nineone"+ File.separator + "save.csv";
+                str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator + "save.csv";
                 // file2 = new File(Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv");
             }
             FileInputStream is = new FileInputStream(str_Path_Full);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "EUC-KR"));
             // BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String line = "";
-            int row=0;
+            int row = 0;
             Log.e("aaa", "line");
             while ((line = reader.readLine()) != null) {//해당 파일을 한줄씩 읽기
                 String[] token = line.split("\\,", -1);
 
                 Log.e("aaa2", String.valueOf(token.length));
                 String sensor_margin;
-                if(token.length>5) {
+                if (token.length > 5) {
                     sensor_margin = token[3] + "," + token[4] + "," + token[5] + "," + token[6] + "," + token[7];
-                }else{
+                } else {
                     sensor_margin = token[3] + "," + token[4];
                 }
                 arrayList.add(row, new Tag_tiem(token[0], token[1], token[2], sensor_margin));
@@ -1497,13 +1519,14 @@ public class Connect_Activity extends AppCompatActivity {
         }
         //return strBuffer.toString();
     }
-    public void Http_Array_post(ArrayList<Tag_tiem> array_List){
+
+    public void Http_Array_post(ArrayList<Tag_tiem> array_List) {
 
         new Thread(() -> {
             try {
 
-                String url="http://stag.nineone.com:8002/si/rece_Setting.asp";
-                URL object= null;
+                String url = "http://stag.nineone.com:8002/si/rece_Setting.asp";
+                URL object = null;
                 object = new URL(url);
                 HttpURLConnection con;
 
@@ -1514,13 +1537,13 @@ public class Connect_Activity extends AppCompatActivity {
                 con.setRequestProperty("Authorization", "Bearer Key");
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestMethod("POST");
-                JSONArray array=new JSONArray();
+                JSONArray array = new JSONArray();
 
-                for(int i=0;i<array_List.size();i++){
+                for (int i = 0; i < array_List.size(); i++) {
                     JSONObject cred = new JSONObject();
                     try {
                         cred.put("id", array_List.get(i).getId());
-                        cred.put("device_idx",array_List.get(i).getDevice_idx());
+                        cred.put("device_idx", array_List.get(i).getDevice_idx());
                         cred.put("time", array_List.get(i).getTime());
                         cred.put("sensor_margin", array_List.get(i).getSensor_margin());
                     } catch (JSONException e) {
@@ -1542,16 +1565,16 @@ public class Connect_Activity extends AppCompatActivity {
                         sb.append(line).append("\n");
                     }
                     br.close();
-                    if(sb.toString().contains("done")) {
+                    if (sb.toString().contains("done")) {
                         Log.e("1dd-", "\n" + sb.toString());
                         fileDelete();
-                    }else{
+                    } else {
 
-                        Log.e("2dd-","\n"+sb.toString());
+                        Log.e("2dd-", "\n" + sb.toString());
                     }
 
                 } else {
-                    Log.e("0dd-","\n"+con.getResponseMessage());
+                    Log.e("0dd-", "\n" + con.getResponseMessage());
                     //   System.out.println(con.getResponseMessage());
                 }
             } catch (IOException e) {
@@ -1560,7 +1583,8 @@ public class Connect_Activity extends AppCompatActivity {
         }).start();
 
     }
-    private static boolean fileDelete(){
+
+    private static boolean fileDelete() {
         // String str_Path_Full = Environment.getExternalStorageDirectory().getAbsolutePath();
         // str_Path_Full += "/Nineone" + File.separator + "save.csv";
 
@@ -1568,20 +1592,21 @@ public class Connect_Activity extends AppCompatActivity {
             File file;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 //     str_Path_Full = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + File.separator+ "Nineone"+ File.separator + "save.csv";
-                file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator+ "Nineone"+ File.separator,"save.csv");
+                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + File.separator + "Nineone" + File.separator, "save.csv");
             } else {
                 //     str_Path_Full = Environment.DIRECTORY_DOCUMENTS + File.separator+ "Nineone"+ File.separator + "save.csv";
-                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator+ "Documents" +File.separator+"Nineone"+ File.separator + "save.csv");
+                file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "Documents" + File.separator + "Nineone" + File.separator + "save.csv");
             }
-            if(file.exists()){
+            if (file.exists()) {
                 file.delete();
                 return true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
+
     private final BroadcastReceiver mBroadcastReceiver2 = new BroadcastReceiver() {
 
         @Override
@@ -1592,105 +1617,28 @@ public class Connect_Activity extends AppCompatActivity {
             NetworkInfo.State networkstate = info.getState();
             Log.d("TEST Internet", info.toString() + " " + networkstate.toString());
             if (networkstate == NetworkInfo.State.CONNECTED) {
-                Log.e("인터넷으로 연결됨","652");
+                Log.e("인터넷으로 연결됨", "652");
                 //  Toast.makeText(activity.getApplication(), "Internet connection is on", Toast.LENGTH_LONG).show();
                 ReadTextFile();
             } else {
-                Log.e("인터넷으로 해제됨","652");
+                Log.e("인터넷으로 해제됨", "652");
                 //   Toast.makeText(activity.getApplication(), "Internet connection is Off", Toast.LENGTH_LONG).show();
             }
         }
     };
-    public void customToastView(String text){
+
+    public void customToastView(String text) {
 
         LayoutInflater inflater = getLayoutInflater();
         View layout = inflater.inflate(R.layout.connect_success_toast, (ViewGroup) findViewById(R.id.Send_toast));
         TextView textView = layout.findViewById(R.id.toast);
         textView.setText(text);
 
-        Toast toastView = Toast.makeText(getApplicationContext(),text, Toast.LENGTH_SHORT);
-        toastView.setGravity(Gravity.CENTER,0,50);
+        Toast toastView = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+        toastView.setGravity(Gravity.CENTER, 0, 50);
         toastView.setView(layout);
         toastView.show();
     }
-/*
-  // data Parcing Function
-    public static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
-        }
-        return data;
-    }
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
-    private short ConvertToShortBig(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.BIG_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        return bb.getShort(0);
-    }
 
-    private short ConvertToShortLittle(byte[] txValue, int startidx) {
-        ByteBuffer bb = ByteBuffer.allocate(2);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-        bb.put(txValue[startidx]);
-        bb.put(txValue[startidx + 1]);
-        return bb.getShort(0);
-    }
-
- public static float arr2float (byte[] arr, int start) {
-
-        int i = 0;
-        int len = 4;
-        int cnt = 0;
-        byte[] tmp = new byte[len];
-
-        for (i = start; i < (start + len); i++) {
-            tmp[cnt] = arr[i];
-            cnt++;
-        }
-
-        int accum = 0;
-        i = 0;
-        for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
-            accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
-            i++;
-        }
-        return Float.intBitsToFloat(accum);
-    }
-    private int ConvertToIntBig(byte[] txValue, int startidx) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
-        // by choosing big endian, high order bytes must be put
-        // to the buffer before low order bytes
-        byteBuffer.order(ByteOrder.BIG_ENDIAN);
-        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
-        // for the high order bytes
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put((byte) 0x00);
-        byteBuffer.put(txValue[startidx]);
-        byteBuffer.put(txValue[startidx + 1]);
-        byteBuffer.flip();
-        int result = byteBuffer.getInt();
-        return result;
-    }
-   */
-public String byteArrayToHex(byte[] a) {
-    StringBuilder sb = new StringBuilder();
-    for(final byte b: a)
-        sb.append(String.format("%02x ", b&0xff));
-    return sb.toString();
-}
 }

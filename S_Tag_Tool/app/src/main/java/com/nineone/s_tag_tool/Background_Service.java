@@ -1,5 +1,6 @@
 package com.nineone.s_tag_tool;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -27,6 +28,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -54,27 +56,26 @@ public class Background_Service extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
     public Background_Service() {
     }
 
     private BluetoothLeScanner mBluetoothLeScanner;
     private String ACTION_STOP_SERVICE = "STOP";
-    private NotificationCompat.Builder builder;// 알림만들기
-    private Notification builder2;// 알림만들기
+    private NotificationCompat.Builder main_Notification;// 알림만들기
+    private Notification senser_warning_Notification;// 알림만들기
     private NotificationManager mNotificationManager;
-    private boolean mService_Advertiserstart = false;
-    private String phonenumber;
-    private String phonenumber_back;
-    private RecyclerViewAdapter recyclerVierAdapter;
     private long RescanBaseTime;
+
     private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
-
     public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
-
     public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
     public static final String ACTION_NOTIF_CENCEL = "ACTION_NOTIF_CENCEL";
+
+    String GROUP_KEY_WORK_EMAIL = "com.android.example.WORK_EMAIL";
     private ScanSettings btLeScanSettings;
     private ArrayList<ScanFilter> btLeScanFilters;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
@@ -97,7 +98,7 @@ public class Background_Service extends Service {
 
                     btLeScanSettings = new ScanSettings.Builder()
                             .setScanMode(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                          //  .setReportDelay(0)
+                            //  .setReportDelay(0)
                             .build();
 
                     Log.e("activityt_TAG2b", "activityt_TAG2");
@@ -107,13 +108,13 @@ public class Background_Service extends Service {
                     stopSelf.setAction(ACTION_STOP_SERVICE);
                     PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_IMMUTABLE);
 
-                    builder = new NotificationCompat.Builder(this, "default");
-                    builder.setSmallIcon(R.mipmap.ic_launcher);
-                    builder.setContentTitle("S Tag Tool");
+                    main_Notification = new NotificationCompat.Builder(this, "default");
+                    main_Notification.setSmallIcon(R.mipmap.ic_launcher);
+                    main_Notification.setContentTitle("수신중인 기기 수: 0");
                     //   builder.setContentText(fasf[0]+", "+fasf[2]);
-                    builder.setContentText("스캔 중");
+                    main_Notification.setContentText("스캔 중");
 
-                    builder.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
+                    main_Notification.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
 
                     Intent notificationIntent = new Intent(this, MainActivity.class)
                             .setAction(Intent.ACTION_MAIN)
@@ -122,7 +123,7 @@ public class Background_Service extends Service {
 
                     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
-                    builder.setContentIntent(pendingIntent);
+                    main_Notification.setContentIntent(pendingIntent);
 
                     // 오레오 버전 이상 노티피케이션 알림 설정
                     mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -130,21 +131,40 @@ public class Background_Service extends Service {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         mNotificationManager.createNotificationChannel(new NotificationChannel("default", "undead_service", NotificationManager.IMPORTANCE_NONE));
                     }
-                    mNotificationManager.notify(1, builder.build());
-                    Notification notification = builder.build();
+                    mNotificationManager.notify(1, main_Notification.build());
+                    Notification notification = main_Notification.build();
                     startForeground(1, notification);
                     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                     mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
                     soundPool = new SoundPool.Builder().setMaxStreams(8).build();
                     soundPlay = soundPool.load(getApplicationContext(), R.raw.arml, 1);
-                    ScanFilter scanFilter = new ScanFilter.Builder()
+                    ScanFilter scanFilter1 = new ScanFilter.Builder()
                             .setManufacturerData(37265, new byte[]{})
+
                             // .setServiceUuid(new ParcelUuid("........ uuid reference ......"))
                             .build();
-                    btLeScanFilters.add(scanFilter);
-                    mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
-                    Runnable runnable10 = new Runnable() {
+                 /*   ScanFilter scanFilter2 = new ScanFilter.Builder()
+                            .setManufacturerData(8, new byte[]{})
+                            .build();
+                    ScanFilter scanFilter3 = new ScanFilter.Builder()
+                            .setDeviceName("TJ-00CB-FFFFFF5D-0000")
+                            .build();
+                    btLeScanFilters.add(scanFilter2);
+                    btLeScanFilters.add(scanFilter3);*/
+                    btLeScanFilters.add(scanFilter1);
+                    Log.e("off1", String.valueOf(mBluetoothAdapter.isEnabled()));
+                    if (mBluetoothAdapter.isEnabled()) {
+                        mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
+                        startTimerTask();
+                    }else{
+                        isonoff = true;
+                        stopForegroundService();
+                        onDestroy();
+                        Toast.makeText(getApplication(), "블루투스가 꺼져있어\n백그라운드모드가 실행되지 않았습니다.", Toast.LENGTH_SHORT).show();
+
+                    }
+                /*    Runnable runnable10 = new Runnable() {
                         @Override
                         public void run() {
                             //  startScan();
@@ -152,7 +172,9 @@ public class Background_Service extends Service {
                                 mBluetoothLeScanner.startScan(btLeScanFilters, btLeScanSettings, leScanCallback);
                             }
                         }
-                    };
+                    };*/
+                    baseTime = SystemClock.elapsedRealtime();
+
                   /*  for (int i = 30000; i <= 40000; i++) {
                         ScanFilter scanFilter = new ScanFilter.Builder()
                                 .setManufacturerData(i, new byte[]{})
@@ -173,49 +195,54 @@ public class Background_Service extends Service {
                     onDestroy();
                     break;
                 case ACTION_NOTIF_CENCEL:
-                    Log.e("ACTION_NOTIF_CENCEL","ACTION_NOTIF_CENCEL");
+                    Log.e("ACTION_NOTIF_CENCEL", "ACTION_NOTIF_CENCEL");
 
                     break;
             }
         }
 
 
-
         return START_NOT_STICKY;
     }
+    private long baseTime;
     private void stopForegroundService() {
 
         // Stop foreground service and remove the notification.
         stopForeground(true);
-
         // Stop the foreground service.
         stopSelf();
+        stopTimerTask();
     }
+
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, final ScanResult result) {
+
             if (!isonoff) {
 
                 if (result.getDevice().getName() != null) {
                     //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
-                    if (result.getDevice().getName().startsWith("TJ-00CA")) {
-                     //   Log.e("1231234", result.getDevice().getName()+", "+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
-                     //   Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
+                    if (result.getDevice().getName().startsWith("TJ-")) {
+                        //   Log.e("1231234", result.getDevice().getName()+", "+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                        //   Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
                         update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
+                       // Log.e("Min10", String.valueOf(Min10())+" , "+getTime());
+                        baseTime = SystemClock.elapsedRealtime();
                         getEllapse();
                     }
                 }
-            }else {
-                isonoff=true;
+            } else {
+                isonoff = true;
                 onDestroy();
             }
         }
+
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
-          //  Log.e("1231236", String.valueOf(results.size()));
-            for(ScanResult scanResult : results){
-            //    Log.e("1231237", scanResult.getDevice().getName());
-                if (scanResult.getDevice().getName().startsWith("TJ-00CA")) {
+            //  Log.e("1231236", String.valueOf(results.size()));
+            for (ScanResult scanResult : results) {
+                //    Log.e("1231237", scanResult.getDevice().getName());
+                if (scanResult.getDevice().getName().startsWith("TJ-")) {
                     update(scanResult.getDevice(), scanResult.getRssi(), scanResult.getScanRecord().getBytes());
                 }
             }
@@ -254,31 +281,31 @@ public class Background_Service extends Service {
             CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
             StringBuilder alarmstring = new StringBuilder();
             boolean mAlarm_on = false;
-            if(newDevice.getName().equals("TJ-00CA-0000000B-0000")) {
+           /* if (newDevice.getName().equals("TJ-00CA-0000000B-0000")) {
                 int senser_O2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 6);
                 int senser_CO2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 12);
 
-              //  Log.e("mAlarm_on1", senser_O2+", "+senser_CO2+", " + Arrays.toString(scanRecord));
+                Log.e("mAlarm_on1", senser_O2 + ", " + senser_CO2 + ", " + Arrays.toString(scanRecord));
 
-              //  Log.e("mAlarm_on2", Integer.parseInt(String.valueOf(Sensor_Alarm),16)+", "+String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2));
-            }
-            if (os2_errer == 1 ) {
+                //  Log.e("mAlarm_on2", Integer.parseInt(String.valueOf(Sensor_Alarm),16)+", "+String.valueOf(os2_errer)+", "+String.valueOf(CO2_errer2));
+            }*/
+            if (os2_errer == 1) {
                 mAlarm_on = true;
                 alarmstring.append("O2 ");
             }
-            if (CO_errer2 == 1 ) {
+            if (CO_errer2 == 1) {
                 mAlarm_on = true;
                 alarmstring.append("CO ");
             }
-            if (H2S_errer2 == 1 ) {
+            if (H2S_errer2 == 1) {
                 mAlarm_on = true;
                 alarmstring.append("H2S ");
             }
-            if (CO2_errer2 == 1 ) {
+            if (CO2_errer2 == 1) {
                 mAlarm_on = true;
                 alarmstring.append("CO2 ");
             }
-            if (CH4_errer2 == 1 ) {
+            if (CH4_errer2 == 1) {
                 mAlarm_on = true;
                 alarmstring.append("CH4 ");
             }
@@ -287,7 +314,7 @@ public class Background_Service extends Service {
 
                 if (!alarm_ON_OFF) {
                     alarmstring.append("경고");
-                     alarm_ON_OFF = true;
+                    alarm_ON_OFF = true;
                     soundPool.play(soundPlay, 1f, 1f, 6, 0, 1f);
                     Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -303,51 +330,50 @@ public class Background_Service extends Service {
                             tag_names_Confirm_ture=true;
                         }
                     }if(!tag_names_Confirm_ture){*/
-                        long index_num = 0;
-                        String[] DeviceNameArray = newDevice.getName().trim().split("-");
-                        index_num = Long.parseLong(DeviceNameArray[2], 16);
+                    long index_num = 0;
+                    String[] DeviceNameArray = newDevice.getName().trim().split("-");
+                    index_num = Long.parseLong(DeviceNameArray[2], 16);
 
-                        String sneer_type_name = "";
-                        if(senser_type==1){
-                            sneer_type_name = "BTS1"+"-"+index_num;
-                        }else if(senser_type==2){
-                            sneer_type_name = "BTS5"+"-"+index_num;
-                        }else if(senser_type==3){
-                            sneer_type_name = "BTS0"+"-"+index_num;
-                        }
-                        mNotification_tag_names.add(newDevice.getName());
+                    String sneer_type_name = "";
+                    if (senser_type == 1) {
+                        sneer_type_name = "BTS1" + "-" + index_num;
+                    } else if (senser_type == 2) {
+                        sneer_type_name = "BTS5" + "-" + index_num;
+                    } else if (senser_type == 3) {
+                        sneer_type_name = "BTS0" + "-" + index_num;
+                    }
+                    mNotification_tag_names.add(newDevice.getName());
                        /* Intent notificationIntent = new Intent()
                                 .setAction(ACTION_NOTIF_CENCEL).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                          PendingIntent mPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
                        */
-                        Intent stopSelf = new Intent(this, Background_Service.class);
+                    /*    Intent stopSelf = new Intent(this, Background_Service.class);
                         stopSelf.setAction(ACTION_NOTIF_CENCEL);
-                        PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf,PendingIntent.FLAG_IMMUTABLE );
+                        PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf,PendingIntent.FLAG_IMMUTABLE );*/
 
-                        builder2 = new NotificationCompat.Builder(getApplicationContext(), "default")
-                                .setSmallIcon(R.mipmap.ic_launcher)
-                                .setContentTitle(sneer_type_name)
-                                .setContentText(alarmstring)
-                                .setAutoCancel(true)
-                                //.setContentText("스캔 중")
-                                .setGroup(GROUP_KEY_WORK_EMAIL)
-                                .setContentIntent(pStopSelf)
-                                .build();
+                    senser_warning_Notification = new NotificationCompat.Builder(getApplicationContext(), "default")
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContentTitle(sneer_type_name)
+                            .setContentText(alarmstring)
+                            .setAutoCancel(true)
+                            //.setContentText("스캔 중")
+                            .setGroup(GROUP_KEY_WORK_EMAIL)
+                            // .setContentIntent(pStopSelf)
+                            .build();
 
-                        //builder2.flags |= Notification.FLAG_AUTO_CANCEL;
-                        phonenumber_back2++;
+                    //senser_warning_Notification.flags |= Notification.FLAG_AUTO_CANCEL;
 
-                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
                     PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK  |
+                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK |
                             PowerManager.ACQUIRE_CAUSES_WAKEUP |
                             PowerManager.ON_AFTER_RELEASE, "My:Tag");
-                    wakeLock.acquire(5000);
-                    if(index_num<2147483647) {
-                        int int_index_num = (int) index_num;
-                        notificationManager.notify(int_index_num, builder2);
-                        // }
-                    }
+                    wakeLock.acquire(2000);
+                    //if(index_num<2147483647) {
+                    int int_index_num = (int) index_num;
+                    notificationManager.notify(int_index_num, senser_warning_Notification);
+                    // }
+                    //  }
                     Runnable alarm_runnable = new Runnable() {
                         @Override
                         public void run() {
@@ -360,8 +386,8 @@ public class Background_Service extends Service {
                 }
             }
             boolean contains = false;
-
-          for (ScannedDevice device : listData) {
+            //    Log.e("newDevicegetName",newDevice.getName());
+            for (ScannedDevice device : listData) {
 
                 if (newDevice.getAddress().equals(device.getDevice().getAddress())) {
 
@@ -371,7 +397,7 @@ public class Background_Service extends Service {
                     device.setRssi(rssi);
                     device.setLastUpdatedMs(now);
                     device.setScanRecord(scanRecord);
-                   // Log.e("mAlarm_on3", Arrays.toString(scanRecord));
+                    // Log.e("mAlarm_on3", Arrays.toString(scanRecord));
                     break;
                 }
 
@@ -381,10 +407,10 @@ public class Background_Service extends Service {
                 String[] DeviceNameArray = newDevice.getName().trim().split("-");
                 if (DeviceNameArray.length >= 3) {
                     listData.add(new ScannedDevice(newDevice, rssi, scanRecord, now));
-                    builder.setContentTitle("수신중인 기기 수: " + String.valueOf(listData.size()));
+                    main_Notification.setContentTitle("수신중인 기기 수: " + String.valueOf(listData.size()));
                     //builder.setContentText(tagAdapter.getItemTop5());
                     // Log.e("tagAdapter1rssi", tagAdapter.getItemTop5());
-                    mNotificationManager.notify(1, builder.build());
+                    mNotificationManager.notify(1, main_Notification.build());
                 }
 
             }
@@ -393,6 +419,7 @@ public class Background_Service extends Service {
         }
         return "";
     }
+
     private int ConvertToIntLittle(byte[] txValue, int startidx) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
         // by choosing big endian, high order bytes must be put
@@ -409,12 +436,14 @@ public class Background_Service extends Service {
         int result = byteBuffer.getInt();
         return result;
     }
+
     private final ArrayList<String> mNotification_tag_names = new ArrayList<>();
     private boolean isonoff = false;
+
     @Override
     public void onDestroy() { //여기다가 종료할때 모든 코드 넣기 https://developer.android.com/guide/components/services?hl=ko
         super.onDestroy();
-        isonoff=true;
+        isonoff = true;
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(leScanCallback);
         }
@@ -426,6 +455,7 @@ public class Background_Service extends Service {
 
         // Log.e("serviceddd","serviceddd");
     }
+
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
@@ -433,20 +463,23 @@ public class Background_Service extends Service {
         //stop service
         this.stopSelf();
     }
+
     private ArrayList<String> mtag_name_arrary = new ArrayList();
+
     private void getEllapse() {
 
         long now = SystemClock.elapsedRealtime();
         long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
 
         long min = (ell / 1000) / 60;
-        if(20<min){
-            Log.e("SystemClock2", min+","+RescanBaseTime+","+ell);
+        if (20 < min) {
+            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
             Log.e("BLE Scan:", " ReStart");
             RescanBaseTime = SystemClock.elapsedRealtime();
             reScan();
         }
     }
+
     private void reScan() {
         if (mBluetoothLeScanner != null) {
             // stopScan();
@@ -462,8 +495,10 @@ public class Background_Service extends Service {
         }
 
     }
+
     private final MyHandler timechange_handler = new MyHandler(this);
     private final MyHandler listcange_handler = new MyHandler(this);
+
     private static class MyHandler extends Handler {
         private final WeakReference<Background_Service> mActivity;
 
@@ -479,31 +514,52 @@ public class Background_Service extends Service {
             }
         }
     }
+    private long Min10(){
+        long nowTime = SystemClock.elapsedRealtime();
+        long overTime = nowTime - baseTime;
+        Log.e("overtime", String.valueOf(((overTime / 1000) / 60)% 60));
+        return ((overTime / 1000) / 60)% 60;
+    }
+  /*  private String getTime() {
+        //경과된 시간 체크
+
+        long nowTime = SystemClock.elapsedRealtime();
+        //시스템이 부팅된 이후의 시간?
+        long overTime = nowTime - baseTime;
+        // long hour = (overTime/ 100) / 360;
+        // long min = overTime/1000/60;
+        // long sec = (overTime/1000)%60;
+        Log.e("overtime", String.valueOf(overTime));
+        long sec = (overTime / 1000) % 60;
+        long min = ((overTime / 1000) / 60)% 60;
+        long hour = ((overTime / 1000) / 60) / 60;
+        //  long ms = overTime % 1000;
+
+        @SuppressLint("DefaultLocale") String recTime = String.format("%02d:%02d:%02d", hour, min, sec);
+
+        return recTime;
+    }*/
 
     private Timer timer = new Timer();
-    int phonenumber_back2=2;
-    String GROUP_KEY_WORK_EMAIL = "com.android.example.WORK_EMAIL";
-
-    private void startTimerTask () {
+    private void startTimerTask() {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                builder2 = new NotificationCompat.Builder(getApplicationContext(), "default")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("MO-"+phonenumber_back2)
-              //  builder2.setContentText(fasf[0]+", "+fasf[2]);
-                .setContentText("스캔 중")
-                .setGroup(GROUP_KEY_WORK_EMAIL)
-                .build();
-                phonenumber_back2++;
-
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-                notificationManager.notify(phonenumber_back2, builder2);
-
-
+                if(Min10()==10){
+                    isonoff = true;
+                    stopForegroundService();
+                    onDestroy();
+                }
+               // Log.e("Min10", String.valueOf(Min10())+" , "+getTime());
             }
-        },1000, 1500);
+        },0, 10000);
 
     }
+    public void stopTimerTask() {//타이머 스톱 함수
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
 
+    }
 }
