@@ -244,7 +244,6 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
             });
             builder.show();
         } else {
-            
 
             Log.e("asd167", "asd");
             Handler handler = new Handler();

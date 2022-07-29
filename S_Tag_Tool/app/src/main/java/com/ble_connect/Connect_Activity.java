@@ -81,6 +81,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -108,7 +109,7 @@ public class Connect_Activity extends AppCompatActivity {
 
     String dataToServer;
     // int delayTime;
-    private int rcount = 0;
+    private int rcount = 0,mName_count = 0;
     private int cetting_count = 0;
     private boolean cetting_boolean = false;
     String Saving_File_name;
@@ -321,6 +322,9 @@ public class Connect_Activity extends AppCompatActivity {
 
                     boolean send_ok_check = true;
                     String tag_type_val = senser_tag_type_Text.getText().toString();
+                    if(tag_type_val==null||tag_type_val.length()==0){
+                        tag_type_val="00CA";
+                    }
                     // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
                     int tagtype_val = Integer.parseInt(tag_type_val, 16);
 
@@ -443,8 +447,28 @@ public class Connect_Activity extends AppCompatActivity {
                             tagsend_data[18] = 0;
                         }
                     } else {
-                        String tag_type_copy_val = (senser_tag_copy_type_Spinner.getSelectedItem().toString());
-                        int tagtype_copy_val = Integer.parseInt(tag_type_copy_val);
+                        //   String tag_type_val = senser_tag_type_Text.getText().toString();
+                        //   if(tag_type_val==null||tag_type_val.length()==0){
+                        //      tag_type_val="00CA";
+                        //  }
+                     /*
+                     if(tag_type_val==null||tag_type_val.length()==0){
+                        tag_type_val="00CA";
+                    }
+                    // String tag_type_val = (senser_tag_type_Spinner.getSelectedItem().toString());
+                    int tagtype_val = Integer.parseInt(tag_type_val, 16);
+
+                    if (tagtype_val > 0) {
+                        tagsend_data[2] = (byte) tagtype_val;
+                        tagsend_data[3] = (byte) (tagtype_val >> 8);
+                    } else {
+                        send_ok_check = false;
+                        customToastView("[단말기 타입] 선택해 주세요.");
+                    }
+
+                       */
+                        String tag_type_copy_val = senser_tag_copy_type_Spinner.getSelectedItem().toString();
+                        int tagtype_copy_val = Integer.parseInt(tag_type_copy_val,16);
 
                         if (tagtype_copy_val > 0) {
                             tagsend_data[9] = (byte) (tagtype_copy_val);
@@ -491,22 +515,24 @@ public class Connect_Activity extends AppCompatActivity {
                         long countnow = System.currentTimeMillis();
                         SimpleDateFormat aftertime = new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.KOREA);
                         String nowtime = aftertime.format(countnow);
-                        //   String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
+                        String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
                         String send_hex_data = asHex(tagsend_data);
                         Log.e("전송 데이터", send_hex_data);
                         mService.writeRXCharacteristic(tagsend_data);
-                        //  customToastView("전송 완료");
+                        customToastView("전송 완료");
+                        send_success_true = true;
                         connect_fail = false;
-                        if (!D5_true_false) {
-                            String senser_data = O2alarm_string + ',' + COalarm_string + ',' + H2Salarm_string + ',' + CO2alarm_string + ',' + CH4alarm_string;
+                        if(!D5_true_false) {
+                            String senser_data = O2alarm.getText().toString() + ',' + COalarm.getText().toString() + ',' + H2Salarm.getText().toString() + ',' + CO2alarm.getText().toString() + ',' + CH4alarm.getText().toString();
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
-                        } else {
+                        }else{
                             String senser_data = senser_tag_copy_type_Spinner.getSelectedItem().toString() + "," + tag_copy_no.getText().toString();
                             String send_data = phonenumber + "," + tag_no.getText().toString().trim() + "," + nowtime + "," + senser_data;
                             Network_Confirm(send_data);
+                          //  Log.e("ashex2", asHex(tagsend_data));
                         }
-                        runOnUiThread(new Runnable() {//약간의 딜레이
+                      /*  runOnUiThread(new Runnable() {//약간의 딜레이
                             @Override
                             public void run() {
                                 ProgressDialog mProgressDialog = ProgressDialog.show(Connect_Activity.this, "", "전송 중 입니다.", true);
@@ -523,7 +549,7 @@ public class Connect_Activity extends AppCompatActivity {
                                                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        onBackPressed();
+                                                     //   onBackPressed();
                                                     }
                                                 });
                                                 builder.show();
@@ -534,7 +560,7 @@ public class Connect_Activity extends AppCompatActivity {
                                     }
                                 }, 2000);
                             }
-                        });
+                        });*/
                     }
                 } else {
                     customToastView("태그를 연결해 주세요");
@@ -554,7 +580,7 @@ public class Connect_Activity extends AppCompatActivity {
         connect_handler.postDelayed(runnable10, 2000);
         // Initialize();
     }
-
+    private boolean send_success_true = false;
     private boolean mConnecting_true = false;
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
@@ -701,7 +727,37 @@ public class Connect_Activity extends AppCompatActivity {
 
                         }
                         invalidateOptionsMenu();
-
+                        if(send_success_true) {
+                            runOnUiThread(new Runnable() {//약간의 딜레이
+                                @Override
+                                public void run() {
+                                    ProgressDialog mProgressDialog = ProgressDialog.show(Connect_Activity.this, "", "전송 중 입니다.", true);
+                                    data_send_handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                                                    mProgressDialog.dismiss();
+                                                    AlertDialog.Builder builder = new AlertDialog.Builder(Connect_Activity.this);
+                                                    builder.setTitle("전송 완료");
+                                                    builder.setMessage("리스트로 돌아갑니다.");
+                                                    builder.setCancelable(false);
+                                                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                               onBackPressed();
+                                                        }
+                                                    });
+                                                    builder.show();
+                                                }
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }, 2000);
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -730,10 +786,17 @@ public class Connect_Activity extends AppCompatActivity {
 
                                 if (cetting_count > 30 && !cetting_boolean) {
                                     cetting_boolean = true;
-                                    customToastView("초기세팅이 되어있지 않습니다.\n초기 세팅을 해주세요.");
+                                    customToastView("초기세팅이 되어있지 않습니다.\n초기 세팅을 진행해 해주세요.");
 
                                 }
                                 cetting_count++;
+                                String[] DeviceNameArray = mbluetootDevice.getName().trim().split("-");
+                                if (rcount == 0 && mName_count == 0){
+                                    if (DeviceNameArray.length >= 2 ) {
+                                        senser_tag_type_Text.setText(DeviceNameArray[1]);
+                                        mName_count++;
+                                    }
+                                 }
                                 if (txValue[0] == 0x02 && txValue[19] == 0x03) {
                                     rcount++;
                                     cetting_count = 0;

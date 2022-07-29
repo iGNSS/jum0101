@@ -41,6 +41,7 @@ import static com.nineone.s_tag_tool.MainFragment.STAG_0007;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00C8;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00C9;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00CA;
+import static com.nineone.s_tag_tool.MainFragment.STAG_00D5;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final ArrayList<ScannedDevice> listData = new ArrayList<>();
@@ -77,6 +78,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
     SimpleDateFormat aftertime;
     private boolean alarm_ON_OFF = false;
+    private String BGW_adress_add = "";
+
+    public void BGW_adress_add_reset() {
+        BGW_adress_add = "";
+    }
+
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         final ScannedDevice item = listData.get(position);
@@ -141,6 +148,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         //String index_num = "";
         long index_num = 0;
         boolean mAlarm_on = false;
+        int BGW_code = 0;
         String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
         switch (DeviceNameArray[1]) {
 
@@ -285,6 +293,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 viewHolder.tagdata_etc.setText(sensordata_etc);
                 break;
             case STAG_0007:*/
+            case STAG_00D5:
+
+                break;
             case STAG_00CA:
 
                 barometerVal = ConvertToIntLittle(ble_data, sensorStartIdx + 1);
@@ -308,23 +319,54 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     index_num = Long.parseLong(DeviceNameArray[2], 16);
                 }
              //   Log.e("senser_type", String.valueOf(senser_type));
+                String sneer_type_name = "";
                 if(!mScanmode){
-                    String sneer_type_name = "";
+
                     if(senser_type==1){
                          sneer_type_name = "BTS1"+"-"+index_num;
-                    }else if(senser_type==2){
-                         sneer_type_name = "BTS5"+"-"+index_num;
-                    }else if(senser_type==3){
-                        sneer_type_name = "BTS0"+"-"+index_num;
-                    }else if(senser_type==5){
-                        sneer_type_name = "BTS1"+"-"+index_num;
-                    }else if(senser_type==6){
-                        sneer_type_name = "BTS5"+"-"+index_num;
+                    }else if(senser_type==2) {
+                        sneer_type_name = "BTS5" + "-" + index_num;
+                    }
+                    if (BGW_adress_add.indexOf(item.getDevice().getAddress()) >= 0)
+                    {
+                        // . 이라는 값이 있다면
+                    } else {
+                        viewHolder.tagadress.setText(sneer_type_name);
                     }
 
-                    viewHolder.tagadress.setText(sneer_type_name);
                 }
-               // Log.e("ble_data0",item.getDisplayName());
+                BGW_code = ble_data[sensorStartIdx + 3];
+
+                if((BGW_code & 0x80) == 0x80 && !mScanmode) {
+                    int bgw_type = ((ble_data[sensorStartIdx + 5] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx +4] & 0xFF);
+
+                    int bgw_number = ((ble_data[sensorStartIdx + 9] & 0xFF) << 24)
+                            +((ble_data[sensorStartIdx + 8] & 0xFF) << 16)
+                            +((ble_data[sensorStartIdx + 7] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx +6] & 0xFF);
+
+                    int copy_type = ((ble_data[sensorStartIdx + 11] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx + 10] & 0xFF);
+
+                    int copy_number = ((ble_data[sensorStartIdx + 15] & 0xFF) << 24)
+                            + ((ble_data[sensorStartIdx + 14] & 0xFF) << 16)
+                            + ((ble_data[sensorStartIdx + 13] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx + 12] & 0xFF);
+
+                    sneer_type_name = "BGW-" + bgw_number + " (BTS-" + copy_number + ")";
+                    viewHolder.tagadress.setText(sneer_type_name);
+                    if (BGW_adress_add.indexOf(item.getDevice().getAddress()) >= 0)
+                    {
+                        // . 이라는 값이 있다면
+                    } else {
+                        BGW_adress_add += item.getDevice().getAddress()+";";
+                    }
+
+
+                }
+
+                // Log.e("ble_data0",item.getDisplayName());
               //  Log.e("ble_data1",(Arrays.toString(ble_data)));
               //  Log.e("ble_data2", byteArrayToHex(ble_data));
                 int senser_O2 = ConvertToIntLittle(ble_data, sensorStartIdx + 6);
@@ -451,13 +493,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     viewHolder.tagdata.setText(sensordata);
                     viewHolder.tagdata_etc.setText(sensordata_etc);
 
-                }else if(senser_type==3) {
+                }/*else if(senser_type==3) {
                     sensordata = "BATT: " + String.format(Locale.KOREA,"%.2f", BATTDisplayVal) + " V\r\n"
                             + "Sensor Type: " + Sensor_Alarm + "\r\n"
                             + "BM     : " + String.format(Locale.KOREA,"%.2f", BAROMETER_10) + " hPa\r\n";
                     viewHolder.tagdata.setText(sensordata);
                     viewHolder.tagdata_etc.setText(sensordata_etc);
-                }else if(senser_type==0) {
+                }*/else if(senser_type==0) {
                     sensordata = "BATT: " + String.format(Locale.KOREA,"%.2f", BATTDisplayVal) + " V\r\n"
                             + "BM : " + String.format(Locale.KOREA,"%.2f", BAROMETER_10) + " hPa\r\n"
                             //+ "Move: " + Move_check + " \r\n"
@@ -467,6 +509,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     sensordata = "데이터 없음";
                     Log.e("ble_data1",(Arrays.toString(ble_data)));
                     viewHolder.tagdata.setText(sensordata);
+                }
+                if((BGW_code & 0x80) == 0x80) {
+
+                    int copy_type = ((ble_data[sensorStartIdx + 11] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx + 10] & 0xFF);
+
+                    int copy_number = ((ble_data[sensorStartIdx + 15] & 0xFF) << 24)
+                            + ((ble_data[sensorStartIdx + 14] & 0xFF) << 16)
+                            + ((ble_data[sensorStartIdx + 13] & 0xFF) << 8)
+                            + (ble_data[sensorStartIdx + 12] & 0xFF);
+
+                    sensordata = "Copy Type: BTS"  + "-" + copy_number;
+                    viewHolder.tagdata.setText(sensordata);
+                    viewHolder.tagdata_etc.setText(sensordata_etc);
+                    // sneer_type_name = "BGW" + bgw_type+"-"+bgw_number;
                 }
                 if(getstopfalse){
                     //sensordata = "수신 중지 됨";
@@ -496,9 +553,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
              //   Log.e("senser_type", String.valueOf(senser_type));
                 if(!mScanmode){
-                    String sneer_type_name = "";
-                    sneer_type_name = "BTS1"+"-"+index_num2;
-                    viewHolder.tagadress.setText(sneer_type_name);
+                    String sneer_type_name2 = "";
+                    sneer_type_name2 = "BTS1"+"-"+index_num2;
+                    viewHolder.tagadress.setText(sneer_type_name2);
                 }
                 if(getstopfalse){
                     //sensordata = "수신 중지 됨";
@@ -586,7 +643,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return listData;
     }
 
-
+    private ArrayList<String> mD5BGW = new ArrayList<>();
 
     public String update(BluetoothDevice newDevice, int rssi, byte[] scanRecord) {
         if ((newDevice == null) || (newDevice.getAddress() == null) || newDevice.getName() == null) {
@@ -599,11 +656,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             if (newDevice.getAddress().equals(device.getDevice().getAddress())) {
                 contains = true;
                 // update
+
                 device.setDisplayName(newDevice.getName());
                 device.setRssi(rssi);
                 device.setLastUpdatedMs(now);
                 device.setScanRecord(scanRecord);
-
                 break;
             }
 

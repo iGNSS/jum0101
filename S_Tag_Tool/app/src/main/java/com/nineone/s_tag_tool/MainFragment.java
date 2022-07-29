@@ -87,6 +87,7 @@ public class MainFragment extends Fragment {
     final public static String STAG_00C8 = "00C8";
     final public static String STAG_00C9 = "00C9";
     final public static String STAG_00CA = "00CA";
+    final public static String STAG_00D5 = "00D5";
     final public static String STAG_001 = "001";
     final public static String STAG_002 = "002";
     final public static String STAG_005 = "005";
@@ -397,8 +398,8 @@ public class MainFragment extends Fragment {
                     byte[] byte_ScanRocord = result.getScanRecord().getBytes();
                     int isLeft = byte_ScanRocord[9];
                     String byte_ScanRocord_str = Arrays.toString(byte_ScanRocord);
-                    Log.e("1231235", isLeft+","+byte_ScanRocord_str);
-                    Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                 //   Log.e("1231235", isLeft+","+byte_ScanRocord_str);
+                  //  Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
                     recyclerVierAdapter.update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                     getEllapse();
                 }
@@ -455,15 +456,15 @@ public class MainFragment extends Fragment {
             recyclerVierAdapter.item_Clear();
             recyclerVierAdapter.notifyDataSetChanged();
             startScan();
-
+            recyclerVierAdapter.BGW_adress_add_reset();
             return true;
         } else if (itemId == R.id.action_stop) {
             stopScan();
-
             return true;
         } else if (itemId == R.id.action_change) {
             recyclerVierAdapter.item_Clear();
             recyclerVierAdapter.notifyDataSetChanged();
+            recyclerVierAdapter.BGW_adress_add_reset();
             check_If_list_Empty();
             return true;
         }/*else if(itemId == R.id.action_clear){
