@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string-array name="my_cal">
-        <item>Off</item>
-        <item>On</item>
-    </string-array>
-</resources>
