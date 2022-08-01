@@ -6,12 +6,26 @@
     android:gravity="center"
     android:background="@color/white"
     android:orientation="vertical">
+    <TextView
+        android:id="@+id/Location_TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:text="현재 위치" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="99dp"
+        android:gravity="center" />
+    <Button
+        android:layout_width="200sp"
+        android:layout_height="200sp" />
 
     <TextView
         android:id="@+id/TextView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Hello World!" />
+        android:layout_width="98dp"
+        android:layout_height="164dp"
+        android:gravity="center" />
 
 </LinearLayout>

@@ -8,6 +8,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
@@ -16,7 +20,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.os.ParcelUuid;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.TextView;
@@ -41,9 +48,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,19 +68,26 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
-    private TextView textView;
+    private TextView location_textView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         RescanBaseTime = SystemClock.elapsedRealtime();
-        textView = findViewById(R.id.TextView);
+        location_textView = findViewById(R.id.Location_TextView);
         bluetoothCheck();
         google_gps();
         startTimerTask();
+        long now2 = System.currentTimeMillis();
+
+
+        Log.e("now2", now2+"");
+
     }
     private ArrayList<Ble_item> listData = new ArrayList<>();
-    private Map<String,Integer> BLA_HASHMAP;
+    private Map<String,Integer> BLE_HASHMAP;
+    private Map<String,Object> SEND_HASHMAP;
+    private boolean ble_sned_Boolean = false;
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, final ScanResult result) {
@@ -97,6 +114,19 @@ public class MainActivity extends AppCompatActivity {
                             listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi()));
                         }
                     }
+                    Runnable runnable_ble_sned;
+                    if (!ble_sned_Boolean) {
+                        ble_sned_Boolean = true;
+                        runnable_ble_sned = new Runnable() {
+                            @Override
+                            public void run() {
+                               // startScan();
+
+                                Network_Confirm();
+                            }
+                        };
+                        start_handler.postDelayed(runnable_ble_sned, 1000);
+                    }
                     getEllapse();
                 }
             }
@@ -113,12 +143,13 @@ public class MainActivity extends AppCompatActivity {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Network_Confirm();
+               // Network_Confirm();
                 // Log.e("Min10", String.valueOf(Min10())+" , "+getTime());
             }
         },0, 1000);
 
     }
+
     public void stopTimerTask() {//타이머 스톱 함수
         if (timer != null) {
             timer.cancel();
@@ -143,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ble_hashmap_add(){
-        BLA_HASHMAP = new HashMap<>();
+        BLE_HASHMAP = new HashMap<>();
         for (Ble_item device : listData) {
             int sum = 0;
             int avg = 0;
@@ -151,11 +182,17 @@ public class MainActivity extends AppCompatActivity {
                 sum += device.getTag_Rssi_arrary().get(i);
             }
             avg = sum / device.getTag_Rssi_arrary().size();
-            BLA_HASHMAP.put(device.getTag_Name(),avg);
+            BLE_HASHMAP.put(device.getTag_Name(),avg);
         }
-        Log.e("dd-", String.valueOf(BLA_HASHMAP));
-        listData = new ArrayList<>();
-        Http_post();
+        SEND_HASHMAP = new HashMap<>();
+        SEND_HASHMAP.put("ble",BLE_HASHMAP);
+        Log.e("dd-", String.valueOf(listData));
+        Log.e("dd-", String.valueOf(BLE_HASHMAP));
+
+        if(listData.size()!=0) {
+            listData = new ArrayList<>();
+          //  Http_post();
+        }
     }
 
     public void Http_post() {
@@ -177,20 +214,22 @@ public class MainActivity extends AppCompatActivity {
                 con.setRequestMethod("POST");
                 JSONArray array = new JSONArray();
 
-                JSONObject cred = new JSONObject();
+                JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
-                    cred.put("user_id", "minu");
+                    cred.put("user_id", "minu@nave");
                     cred.put("pressure", "996.2099");
                     cred.put("lat", String.valueOf(latitude));
                     cred.put("lng", String.valueOf(longitude));
-                    cred.put("ble", String.valueOf(BLA_HASHMAP));
-                    cred.put("mobile_time", String.valueOf(SystemClock.elapsedRealtime()));
-                    Log.e("dd-", "187");
+                    //cred.put("ble", SEND_HASHMAP);
+                    cred.put("mobile_time", String.valueOf(System.currentTimeMillis()));
+                    Log.e("dd-187", "187");
                 } catch (JSONException e) {
                     Log.e("dd-189", "\n" + e.getMessage());
                     e.printStackTrace();
                 }
                 array.put(cred);
+            //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
+              //  array.put(cred2);
                 OutputStream os = con.getOutputStream();
                 Log.e("dd-195", array.toString());
                 os.write(array.toString().getBytes("UTF-8"));
@@ -208,6 +247,21 @@ public class MainActivity extends AppCompatActivity {
                     }
                     br.close();
                     Log.e("dd-209", "\n" + sb.toString());
+                    try {
+                        JSONObject job = new JSONObject(sb.toString());
+                        String build_name = job.getString("build_name");
+                        String level_name = job.getString("level_name");
+                        String buildlevel_name = build_name+" "+level_name;
+                        Runnable runnable_location_textView = new Runnable() {
+                            @Override
+                            public void run() {
+                                location_textView.setText(buildlevel_name);
+                            }
+                        };
+                        textchange_handler.postDelayed(runnable_location_textView, 0);
+                    } catch (JSONException e) {
+                        // Handle error
+                    }
                 } else {
                     //writeLog(post_data);
                     Log.e("dd-211", "\n" + con.getResponseMessage());
@@ -218,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
+    //    ble_sned_Boolean = false;
     }
 
 
@@ -315,6 +370,24 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    private AdvertiseData mService_AdvData;
+    private AdvertiseSettings mService_AdvSettings;
+    private BluetoothLeAdvertiser mServiceAdvertiser;
+    private void main_ble() {
+
+        BluetoothAdapter.getDefaultAdapter().setName("MO-"+"0000");
+        mService_AdvSettings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setConnectable(false)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                // .setTimeout(0)
+                .build();
+        if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
+            mServiceAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
+            //   mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+        }
+    }
+
     private void bluetoothCheck() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -349,6 +422,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private final Handler mhandler1_startAdvertising = new Handler();
+    private final Handler mhandler2_stopAdvertising = new Handler();
+    private final MyHandler textchange_handler = new MyHandler(this);
+    private final MyHandler start_handler = new MyHandler(this);
+    private static class MyHandler extends Handler {
+        private final WeakReference<MainActivity> mActivity;
+
+        public MyHandler(MainActivity activity) {
+            mActivity = new WeakReference<MainActivity>(activity);
+        }
+        @Override
+        public void handleMessage(Message msg) {
+            MainActivity activity = mActivity.get();
+        }
+    }
     @Override
     public void onBackPressed() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -365,6 +453,50 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton("취소", null);
         builder.show();
     }
+    private boolean isonoff = false;
+    private boolean mService_Advertiserstart = false;
+    private void not_network_ble_send() {
+        if(!isonoff)  {
+            // // Log.e("asd","asdasd");
+            mhandler1_startAdvertising.postDelayed(new Runnable() {
+                public void run() {
+                    mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+                    Log.e("delay_check","mServiceAdvertiser");
+                    // Log.e("BLE", "Discovery onScanResult011: " + mService_AdvCallback.toString());
+                }
+            }, 0);
+            mhandler2_stopAdvertising.postDelayed(new Runnable() {
+                public void run() {
+                    mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
+                    mService_Advertiserstart = false;
+                    // Log.e("BLE", "Discovery onScanResult012: " +  mService_AdvCallback.toString());
+                }
+            }, 250);
+        }
+    }
+
+    private void not_network_ble_UUID_set() {
+        if (!mService_Advertiserstart) {
+            Runnable runnable10;//.addServiceUuid(pUuid)
+            runnable10 = new Runnable() {
+                @Override
+                public void run() {
+                    ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
+                    mService_AdvData = new AdvertiseData.Builder()
+                            .setIncludeDeviceName(true)
+                            .setIncludeTxPowerLevel(false)
+                            //.addServiceUuid(pUuid)
+                            .addServiceData(pUuid, arrayBytes4)
+                            .build();
+                    not_network_ble_send();
+                    // Log.e("UUID_service2", "asdasd2");
+                }
+            };
+
+            //
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -383,10 +515,13 @@ public class MainActivity extends AppCompatActivity {
         Log.e("connect_TAG", "onPause");
         super.onPause();
         stopScan();
+        isonoff=true;
         if (fusedLocationClient != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
-
+        if (mServiceAdvertiser != null) {
+            mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
+        }
         stopTimerTask();
 
     }
@@ -402,4 +537,40 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.e("connect_TAG", "onDestroy()");
     }
+
+
+    private final AdvertiseCallback mService_AdvCallback = new AdvertiseCallback() {
+        @Override
+        public void onStartFailure(int errorCode) {
+            super.onStartFailure(errorCode);
+            int statusText;
+            switch (errorCode) {
+                case ADVERTISE_FAILED_ALREADY_STARTED:
+                    //statusText = R.string.status_advertising;
+                    break;
+                case ADVERTISE_FAILED_DATA_TOO_LARGE:
+                    // statusText = R.string.status_advDataTooLarge;
+                    break;
+                case ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+                    // statusText = R.string.status_advFeatureUnsupported;
+                    break;
+                case ADVERTISE_FAILED_INTERNAL_ERROR:
+                    //statusText = R.string.status_advInternalError;
+                    break;
+                case ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+                    //statusText = R.string.status_advTooManyAdvertisers;
+                    break;
+                default:
+                    // statusText = R.string.status_notAdvertising;
+            }
+            location_textView.setText("전송오류");
+            // mAdvStatus.setText(statusText);
+        }
+
+        @Override
+        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+            super.onStartSuccess(settingsInEffect);
+            //mAdvStatus.setText(R.string.status_advertising);
+        }
+    };
 }
