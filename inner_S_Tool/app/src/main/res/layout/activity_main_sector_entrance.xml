@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:gravity="center"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/Location_TextView"
+        android:layout_width="168sp"
+        android:layout_height="131sp"
+        android:gravity="center"
+        android:text="현재 위치"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/Data_TextView"
+        android:layout_width="170dp"
+        android:layout_height="242dp"
+        android:gravity="center"
+        android:text="환경 정보"
+        android:textColor="@color/black" />
+    <TextView
+        android:id="@+id/User_TextView"
+        android:layout_width="170dp"
+        android:layout_height="242dp"
+        android:gravity="center"
+        android:text="유저"
+        android:textColor="@color/black" />
+
+
+
+</LinearLayout>

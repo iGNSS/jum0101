@@ -92,8 +92,8 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
         super.onCreate(savedInstanceStare);
         Log.e("spetc", "onCreate");
         setContentView(R.layout.activity_splash);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.hide();
+     //   ActionBar actionBar = getSupportActionBar();
+     //   actionBar.hide();
 
         android_ver_check();
     }

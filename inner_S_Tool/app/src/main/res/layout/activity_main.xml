@@ -18,9 +18,44 @@
         android:layout_width="wrap_content"
         android:layout_height="99dp"
         android:gravity="center" />
-    <Button
-        android:layout_width="200sp"
-        android:layout_height="200sp" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/Start_Button"
+        android:layout_width="195sp"
+        android:layout_height="428sp"
+
+        android:layout_gravity="center">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:elevation="10dp"
+            android:background="@drawable/card_design"
+            android:padding="20sp">
+
+            <ImageView
+                android:layout_width="147sp"
+                android:layout_height="232sp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16sp"
+                android:background="@drawable/image_design"
+                android:src="@drawable/ss_image" />
+
+            <TextView
+                android:layout_width="147sp"
+                android:layout_height="57sp"
+                android:layout_gravity="left"
+                android:layout_marginBottom="8sp"
+                android:text="삼성중공업" />
+
+            <TextView
+                android:layout_width="147sp"
+                android:layout_height="28sp"
+                android:layout_gravity="left"
+                android:text="거제조선소" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <TextView
         android:id="@+id/TextView"

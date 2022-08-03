@@ -1,32 +1,29 @@
 package com.nineone.inner_s_tool;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
-import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.ParcelUuid;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -57,41 +54,53 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
-    private SimpleDateFormat timeformat;
-    private SimpleDateFormat aftertime;
+public class MainSectorEntranceActivity extends AppCompatActivity implements SensorEventListener {
     private long RescanBaseTime;
+    private long SensorbaseTime;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
-    private TextView location_textView;
-    private CardView start_button;
+    private static SensorManager mSensorManager;
+    private TextView location_textView,data_textView,user_textView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        RescanBaseTime = SystemClock.elapsedRealtime();
+        setContentView(R.layout.activity_main_sector_entrance);
+        Intent intent = getIntent();//차트 리스트 페이지에서 정보 받아오기
+        String get_zone_name_num = intent.getExtras().getString("zone_name_num");//csv파일경로
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle("No " + get_zone_name_num + " Confferdam");
         location_textView = findViewById(R.id.Location_TextView);
-        start_button = findViewById(R.id.Start_Button);
-        start_button.setOnClickListener(mClickListener);
+        data_textView = findViewById(R.id.Data_TextView);
+        user_textView = findViewById(R.id.User_TextView);
+        google_gps();
         bluetoothCheck();
-
-        //google_gps();
-        //startTimerTask();
-        //long now2 = System.currentTimeMillis();
-       //Log.e("now2", now2+"");
-
+        senser_check();
     }
-
+    private void bluetoothCheck() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        // 지원하지 않는다면 어플을 종료시킨다.
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "이 기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        if (!mBluetoothAdapter.isEnabled()) {
+            //log.e("BLE1245", "124");
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        }
+        stopScan();
+        //log.e("BLE1245", "130");
+    }
     private ArrayList<Ble_item> listData = new ArrayList<>();
     private Map<String,Integer> BLE_HASHMAP;
     private Map<String,Object> SEND_HASHMAP;
@@ -112,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                             device.setTag_int_Rssi(result.getRssi());
                             break;
                         }
-                        Log.e("rssid", device.getTag_Name()+", "+device.getTag_Rssi_arrary().size());
+                        //   Log.e("rssid", device.getTag_Name()+", "+device.getTag_Rssi_arrary().size());
                         Log.e("getTag_Rssi", String.valueOf(device.getTag_Rssi_arrary()));
                     }
                     if (!contains) {
@@ -125,12 +134,9 @@ public class MainActivity extends AppCompatActivity {
                     Runnable runnable_ble_sned;
                     if (!ble_sned_Boolean) {
                         ble_sned_Boolean = true;
-                        runnable_ble_sned = new Runnable() {
-                            @Override
-                            public void run() {
-
-                                Network_Confirm();
-                            }
+                        runnable_ble_sned = () -> {
+                          //  ble_hashmap_add();
+                             Network_Confirm();
                         };
                         start_handler.postDelayed(runnable_ble_sned, 1000);
                     }
@@ -138,47 +144,25 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
-
         }
     };
-
-    private Timer timer = new Timer();
-    private void startTimerTask() {
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-               // Network_Confirm();
-                // Log.e("Min10", String.valueOf(Min10())+" , "+getTime());
-            }
-        },0, 1000);
-    }
-
-    public void stopTimerTask() {//타이머 스톱 함수
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
-
-    }
     private void Network_Confirm() {
         int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
         if (status == NetworkStatus.TYPE_MOBILE) {
             ble_hashmap_add();
-         //   Http_post(Network_data);
+            //   Http_post(Network_data);
             Log.e("모바일로 연결됨", "650");
         } else if (status == NetworkStatus.TYPE_WIFI) {
             ble_hashmap_add();
-         //   Http_post(Network_data);
+            //   Http_post(Network_data);
             Log.e("무선랜으로 연결됨", "652");
         } else {
-           // writeLog(Network_data);
+            // writeLog(Network_data);
             Log.e("연결 안됨.", "654");
         }
     }
-
     private void ble_hashmap_add(){
         BLE_HASHMAP = new HashMap<>();
         for (Ble_item device : listData) {
@@ -197,12 +181,49 @@ public class MainActivity extends AppCompatActivity {
 
         if(listData.size()!=0) {
             listData = new ArrayList<>();
-          //  Http_post();
+              Send_Http_post();
         }
+        ble_sned_Boolean = false;
     }
 
-    public void Http_post() {
-
+    private boolean mIsScanning = false;
+    private void startScan() {
+        if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
+            mBluetoothLeScanner.startScan(leScanCallback);
+            RescanBaseTime = SystemClock.elapsedRealtime();
+            mIsScanning = true;
+            Log.e("startscan", "287");
+            invalidateOptionsMenu();
+        }
+        long now = System.currentTimeMillis();
+        SimpleDateFormat sdfNow = new SimpleDateFormat("MM_dd_HH_mm_ss");
+    }
+    private void stopScan() {
+        if (mBluetoothLeScanner != null) {
+            mBluetoothLeScanner.stopScan(leScanCallback);
+            mIsScanning = false;
+            Log.e("startscan", "295");
+        }
+        invalidateOptionsMenu();
+    }
+    private void reScan() {
+        if (mBluetoothLeScanner != null) {
+            mBluetoothLeScanner.stopScan(leScanCallback);
+            mBluetoothLeScanner.startScan(leScanCallback);
+        }
+    }
+    private void getEllapse() {
+        long now = SystemClock.elapsedRealtime();
+        long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
+        long min = (ell / 1000) / 60;
+        if (20 < min) {
+            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
+            Log.e("BLE Scan:", " ReStart");
+            RescanBaseTime = SystemClock.elapsedRealtime();
+            reScan();
+        }
+    }
+    private void Send_Http_post() {
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
@@ -219,11 +240,14 @@ public class MainActivity extends AppCompatActivity {
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestMethod("POST");
                 JSONArray array = new JSONArray();
-
+                if(SEND_HASHMAP==null){
+                    Log.e("dd-209", "282");
+                    return;
+                }
                 JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
                     cred.put("user_id", "minu@nave");
-                    cred.put("pressure", "996.2099");
+                    cred.put("pressure", PRESSURE_avg);
                     cred.put("lat", String.valueOf(latitude));
                     cred.put("lng", String.valueOf(longitude));
                     //cred.put("ble", SEND_HASHMAP);
@@ -234,8 +258,8 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 array.put(cred);
-            //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
-              //  array.put(cred2);
+                //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
+                //  array.put(cred2);
                 OutputStream os = con.getOutputStream();
                 Log.e("dd-195", array.toString());
                 os.write(array.toString().getBytes("UTF-8"));
@@ -257,11 +281,30 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject job = new JSONObject(sb.toString());
                         String build_name = job.getString("build_name");
                         String level_name = job.getString("level_name");
-                        String buildlevel_name = build_name+" "+level_name;
+                        String zone_name = job.getString("zone_name");//xprmdlfma
+                        String env_O2 = job.getString("env_O2");//null이면 화면에 표시하지않음
+                        String env_O2_alarm = job.getString("env_O2_alarm");//
+                        String env_CO = job.getString("env_CO");//수신
+                        String env_CO_alarm = job.getString("env_CO_alarm");//
+                        String env_H2S = job.getString("env_H2S");//퇴실
+                        String env_H2S_alarm = job.getString("env_H2S_alarm");
+                        String env_Co2 = job.getString("env_Co2");//배터리
+                        String env_Co2_alarm = job.getString("env_Co2_alarm");//
+                        String env_CH4 = job.getString("env_CH4");//상태 코드
+                        String env_CH4_alarm = job.getString("env_CH4_alarm");
+                        String env_user = job.getString("user");//상태 코드
+                        String buildlevel_name = build_name+" "+level_name+" "+zone_name;
+                        String zone_data = "O2 : " + env_O2 + "\n"
+                                + "CO : " + env_CO + "\n"
+                                + "H2S : " + env_H2S + "\n"
+                                + "CO2 : " + env_Co2 + "\n"
+                                + "CH4 : " + env_CH4;
                         Runnable runnable_location_textView = new Runnable() {
                             @Override
                             public void run() {
                                 location_textView.setText(buildlevel_name);
+                                data_textView.setText(zone_data);
+                                user_textView.setText(env_user);
                             }
                         };
                         textchange_handler.postDelayed(runnable_location_textView, 0);
@@ -278,56 +321,51 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
-    //    ble_sned_Boolean = false;
     }
+    private Sensor mBarometer; // 기압계
+    private ArrayList<Float> PRESSURE_add = new ArrayList<>();
+    private float PRESSURE_avg;
 
-
-
-    private boolean mIsScanning = false;
-    private void startScan() {
-        if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
-            mBluetoothLeScanner.startScan(leScanCallback);
-            RescanBaseTime = SystemClock.elapsedRealtime();
-            mIsScanning = true;
-            Log.e("startscan", "287");
-            invalidateOptionsMenu();
+    private void senser_check(){
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mBarometer = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);//기압계
+        if(mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null){
+            // textBaro.setText("기압계 센서 지원하지 않음");
         }
-
-        long now = System.currentTimeMillis();
-        SimpleDateFormat sdfNow = new SimpleDateFormat("MM_dd_HH_mm_ss");
-
-
+        mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
     }
-
-    private void stopScan() {
-        if (mBluetoothLeScanner != null) {
-            mBluetoothLeScanner.stopScan(leScanCallback);
-            mIsScanning = false;
-            Log.e("startscan", "295");
-        }
-        invalidateOptionsMenu();
-    }
-    private void getEllapse() {
-
-        long now = SystemClock.elapsedRealtime();
-        long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
-        long min = (ell / 1000) / 60;
-        if (20 < min) {
-            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
-            Log.e("BLE Scan:", " ReStart");
-            RescanBaseTime = SystemClock.elapsedRealtime();
-            reScan();
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
+            //     long timestamp = sensorEvent.timestamp;
+            float presure = sensorEvent.values[0];
+            presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
+            //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
+            //   sector_list_adapter.notifyDataSetChanged();
+            //기압을 바탕으로 고도를 계산(맞는거 맞아???)
+            //float height = SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, presure);
+            PRESSURE_add.add(presure);
+            if(getTime(SensorbaseTime)>=10) {
+                float sum = 0;
+                int count = 0;
+                for (float device : PRESSURE_add) {
+                    sum += device;
+                    count++;
+                }
+                PRESSURE_avg = sum / count;
+                SensorbaseTime = SystemClock.elapsedRealtime();
+            }
         }
     }
-    private void reScan() {
-        if (mBluetoothLeScanner != null) {
-            // stopScan();
-            mBluetoothLeScanner.stopScan(leScanCallback);
-            mBluetoothLeScanner.startScan(leScanCallback);
-
-        }
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) { }
+    private long getTime(long timesec) {
+        //경과된 시간 체크
+        long nowTime = SystemClock.elapsedRealtime();
+        long overTime = nowTime - timesec;
+        long sec = (overTime / 1000) % 60;
+        return sec;
     }
-
     private double longitude = 0;
     private double latitude = 0;
     private LocationRequest locationRequest;
@@ -376,138 +414,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    private AdvertiseData mService_AdvData;
-    private AdvertiseSettings mService_AdvSettings;
-    private BluetoothLeAdvertiser mServiceAdvertiser;
-    private void main_ble() {
-
-        BluetoothAdapter.getDefaultAdapter().setName("MO-"+"0000");
-        mService_AdvSettings = new AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(false)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                // .setTimeout(0)
-                .build();
-        if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-            mServiceAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-            //   mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
-        }
-    }
-
-    private void bluetoothCheck() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        // mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        // 지원하지 않는다면 어플을 종료시킨다.
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "이 기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-        if (!mBluetoothAdapter.isEnabled()) {
-            //log.e("BLE1245", "124");
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
-        stopScan();
-        //log.e("BLE1245", "130");
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_ENABLE_BT) {
-            if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
-                //       mblecheck=false;
-
-            } else {
-                Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
-
-    private final Handler mhandler1_startAdvertising = new Handler();
-    private final Handler mhandler2_stopAdvertising = new Handler();
-    private final MyHandler textchange_handler = new MyHandler(this);
-    private final MyHandler start_handler = new MyHandler(this);
-    private static class MyHandler extends Handler {
-        private final WeakReference<MainActivity> mActivity;
-
-        public MyHandler(MainActivity activity) {
-            mActivity = new WeakReference<MainActivity>(activity);
-        }
-        @Override
-        public void handleMessage(Message msg) {
-            MainActivity activity = mActivity.get();
-        }
-    }
-    @Override
-    public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("종료 확인");
-        builder.setMessage("정말로 종료하시겠습니까?");
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                moveTaskToBack(true); // 태스크를 백그라운드로 이동
-                finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
-                android.os.Process.killProcess(android.os.Process.myPid()); // 앱 프로세스 종료
-            }
-        });
-        builder.setNegativeButton("취소", null);
-        builder.show();
-    }
-    private boolean isonoff = false;
-    private boolean mService_Advertiserstart = false;
-    private void not_network_ble_send() {
-        if(!isonoff)  {
-            // // Log.e("asd","asdasd");
-            mhandler1_startAdvertising.postDelayed(new Runnable() {
-                public void run() {
-                    mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
-                    Log.e("delay_check","mServiceAdvertiser");
-                    // Log.e("BLE", "Discovery onScanResult011: " + mService_AdvCallback.toString());
-                }
-            }, 0);
-            mhandler2_stopAdvertising.postDelayed(new Runnable() {
-                public void run() {
-                    mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
-                    mService_Advertiserstart = false;
-                    // Log.e("BLE", "Discovery onScanResult012: " +  mService_AdvCallback.toString());
-                }
-            }, 250);
-        }
-    }
-
-  /*  private void not_network_ble_UUID_set() {
-        if (!mService_Advertiserstart) {
-            Runnable runnable10;//.addServiceUuid(pUuid)
-            runnable10 = new Runnable() {
-                @Override
-                public void run() {
-                    ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
-                    mService_AdvData = new AdvertiseData.Builder()
-                            .setIncludeDeviceName(true)
-                            .setIncludeTxPowerLevel(false)
-                            //.addServiceUuid(pUuid)
-                            .addServiceData(pUuid, arrayBytes4)
-                            .build();
-                    not_network_ble_send();
-                    // Log.e("UUID_service2", "asdasd2");
-                }
-            };
-
-            //
-        }
-    }*/
     private Button.OnClickListener mClickListener = new View.OnClickListener() {//각 버튼 클릭리스너
         @Override
         public void onClick(View v) {
-            if (v.getId() == R.id.Start_Button) {
-                Intent intent = new Intent(MainActivity.this, MainSectorActivity.class);
-                startActivity(intent);
+            switch (v.getId()) {
+
             }
         }
     };
@@ -521,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         Log.e("connect_TAG", "onResume");
-      //  startScan();
+        startScan();
     }
 
     @Override
@@ -529,14 +440,16 @@ public class MainActivity extends AppCompatActivity {
         Log.e("connect_TAG", "onPause");
         super.onPause();
         stopScan();
-        isonoff=true;
-        if (fusedLocationClient != null) {
+        mSensorManager.unregisterListener(this);
+      /*
+       isonoff=true;
+      if (fusedLocationClient != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
         if (mServiceAdvertiser != null) {
             mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
-        }
-        stopTimerTask();
+        }*/
+
 
     }
 
@@ -551,40 +464,33 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.e("connect_TAG", "onDestroy()");
     }
+    private final MyHandler textchange_handler = new MyHandler(this);
+    private final MyHandler start_handler = new MyHandler(this);
+    private static class MyHandler extends Handler {
+        private final WeakReference<MainSectorEntranceActivity> mActivity;
 
-
-    private final AdvertiseCallback mService_AdvCallback = new AdvertiseCallback() {
+        public MyHandler(MainSectorEntranceActivity activity) {
+            mActivity = new WeakReference<MainSectorEntranceActivity>(activity);
+        }
         @Override
-        public void onStartFailure(int errorCode) {
-            super.onStartFailure(errorCode);
-            int statusText;
-            switch (errorCode) {
-                case ADVERTISE_FAILED_ALREADY_STARTED:
-                    //statusText = R.string.status_advertising;
-                    break;
-                case ADVERTISE_FAILED_DATA_TOO_LARGE:
-                    // statusText = R.string.status_advDataTooLarge;
-                    break;
-                case ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
-                    // statusText = R.string.status_advFeatureUnsupported;
-                    break;
-                case ADVERTISE_FAILED_INTERNAL_ERROR:
-                    //statusText = R.string.status_advInternalError;
-                    break;
-                case ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
-                    //statusText = R.string.status_advTooManyAdvertisers;
-                    break;
-                default:
-                    // statusText = R.string.status_notAdvertising;
+        public void handleMessage(Message msg) {
+            MainSectorEntranceActivity activity = mActivity.get();
+        }
+    }
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("퇴장 확인");
+        builder.setMessage("정말로 퇴장하시겠습니까?");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              //  moveTaskToBack(true); // 태스크를 백그라운드로 이동
+                finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
+                //android.os.Process.killProcess(android.os.Process.myPid()); // 앱 프로세스 종료
             }
-            location_textView.setText("전송오류");
-            // mAdvStatus.setText(statusText);
-        }
-
-        @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            super.onStartSuccess(settingsInEffect);
-            //mAdvStatus.setText(R.string.status_advertising);
-        }
-    };
+        });
+        builder.setNegativeButton("취소", null);
+        builder.show();
+    }
 }
