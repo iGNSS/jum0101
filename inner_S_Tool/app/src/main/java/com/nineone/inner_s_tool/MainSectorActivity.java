@@ -87,6 +87,10 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private static SensorManager mSensorManager;
     private TextView CAG_button,Information_button;//coming and going
     private boolean mInformation_boolean = false;
+
+    private long SensorbaseTime;
+    private long List_update_Time;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +100,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("연결");
         SensorbaseTime = SystemClock.elapsedRealtime();
-
+        List_update_Time=SystemClock.elapsedRealtime();
         CAG_button=findViewById(R.id.coming_and_going);
         CAG_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,7 +108,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 CAG_button.setSelected(true);
                 Information_button.setSelected(false);
                 mInformation_boolean = false;
-                Get_Http();
+                list_set_Http();
 
             }
         });
@@ -116,7 +120,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 CAG_button.setSelected(false);
                 Information_button.setSelected(true);
                 mInformation_boolean = true;
-                Get_Http();
+                list_set_Http();
             }
         });
         RecyclerViewlayout();
@@ -156,11 +160,12 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         });*/
 
-        Get_Http();
+        list_set_Http();
         recyclerViewAdapter.notifyDataSetChanged();
     }
 
-    private void Get_Http() {
+    private void list_set_Http() {
+        stopTimerTask();
         recyclerViewAdapter.item_Clear();
        /* int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
         if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
@@ -208,62 +213,86 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         };
         listcange_handler.postDelayed(list_change_runnable, 0);
             new Thread(() -> {
-                Document doc = null;
-                try {
-                    Log.e("dd-", "164");
-                    String url = "http://stag.nineone.com:8005/api/mobile";
-                    doc = Jsoup.connect(url).ignoreContentType(true).get();
-                    Elements contents = doc.select("body");          //회차 id값 가져오기
-                    for (Element li : contents) {
-                        JSONObject jsonObject = new JSONObject(li.text());
-                        String jsondata;
-                        if (jsonObject.has("data")) {
-                            jsondata = jsonObject.getString("data");
-                        } else {
-                            jsondata = "N/A";
-                        }
-                        Log.e("dd-", jsondata + " -165");
-
-                        String jsontag_data = jsondata;
-                        JSONArray jsonArray = new JSONArray(jsontag_data);
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject subJsonObject = jsonArray.getJSONObject(i);
-                            String zone_name = subJsonObject.getString("zone_name");//xprmdlfma
-                            String env_O2 = subJsonObject.getString("env_O2");//null이면 화면에 표시하지않음
-                            String env_O2_alarm = subJsonObject.getString("env_O2_alarm");//
-                            String env_CO = subJsonObject.getString("env_CO");//수신
-                            String env_CO_alarm = subJsonObject.getString("env_CO_alarm");//
-                            String env_H2S = subJsonObject.getString("env_H2S");//퇴실
-                            String env_H2S_alarm = subJsonObject.getString("env_H2S_alarm");
-                            String env_Co2 = subJsonObject.getString("env_Co2");//배터리
-                            String env_Co2_alarm = subJsonObject.getString("env_Co2_alarm");//
-                            String env_CH4 = subJsonObject.getString("env_CH4");//상태 코드
-                            String env_CH4_alarm = subJsonObject.getString("env_CH4_alarm");//
-                            String zone_data = "O2 : " + env_O2 + "\n"
-                                    + "CO : " + env_CO + "\n"
-                                    + "H2S : " + env_H2S + "\n"
-                                    + "CO2 : " + env_Co2 + "\n"
-                                    + "CH4 : " + env_CH4 + "\n";
-
-                            if (!mInformation_boolean) {
-
-                                recyclerViewAdapter.update("No " + zone_name + " Confferdam", "");
-                            } else {
-
-                                recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data);
-                            }
-
-                        }
-                    }
-                } catch (JSONException e) {
-                    Log.e("dd-", e.getMessage()+" -166");
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    Log.e("dd-", e.getMessage()+" -167");
-                    e.printStackTrace();
-                }
+                Get_Http();
             }).start();
        // }
+    }
+
+    private TimerTask timerTask;
+    private Timer timer = new Timer();
+    private void startTimerTask () {
+        timerTask = new TimerTask() {
+            @Override
+            public void run() { // 코드 작성
+                Get_Http();
+
+            }
+        };
+        timer.schedule(timerTask, 10000, 1000);
+    }
+    private void Get_Http(){
+        Document doc = null;
+        try {
+            Log.e("dd-", "164");
+            String url = "http://stag.nineone.com:8005/api/mobile";
+            doc = Jsoup.connect(url).ignoreContentType(true).get();
+            Elements contents = doc.select("body");          //회차 id값 가져오기
+            for (Element li : contents) {
+                JSONObject jsonObject = new JSONObject(li.text());
+                String jsondata;
+                if (jsonObject.has("data")) {
+                    jsondata = jsonObject.getString("data");
+                } else {
+                    jsondata = "N/A";
+                }
+                Log.e("dd-", jsondata + " -165");
+
+                String jsontag_data = jsondata;
+                JSONArray jsonArray = new JSONArray(jsontag_data);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject subJsonObject = jsonArray.getJSONObject(i);
+                    String zone_name = subJsonObject.getString("zone_name");//xprmdlfma
+                    String env_O2 = subJsonObject.getString("env_O2");//null이면 화면에 표시하지않음
+                    String env_O2_alarm = subJsonObject.getString("env_O2_alarm");//
+                    String env_CO = subJsonObject.getString("env_CO");//수신
+                    String env_CO_alarm = subJsonObject.getString("env_CO_alarm");//
+                    String env_H2S = subJsonObject.getString("env_H2S");//퇴실
+                    String env_H2S_alarm = subJsonObject.getString("env_H2S_alarm");
+                    String env_Co2 = subJsonObject.getString("env_Co2");//배터리
+                    String env_Co2_alarm = subJsonObject.getString("env_Co2_alarm");//
+                    String env_CH4 = subJsonObject.getString("env_CH4");//상태 코드
+                    String env_CH4_alarm = subJsonObject.getString("env_CH4_alarm");//
+                    String zone_data = "O2 : " + env_O2 + "\n"
+                            + "CO : " + env_CO + "\n"
+                            + "H2S : " + env_H2S + "\n"
+                            + "CO2 : " + env_Co2 + "\n"
+                            + "CH4 : " + env_CH4 + "\n";
+
+                    if (!mInformation_boolean) {
+
+                        recyclerViewAdapter.update("No " + zone_name + " Confferdam", "");
+                    } else {
+
+                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data);
+                        startTimerTask();
+                        //List_update_Time = SystemClock.elapsedRealtime();
+                    }
+
+                }
+            }
+        } catch (JSONException e) {
+            Log.e("dd-", e.getMessage()+" -166");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e("dd-", e.getMessage()+" -167");
+            e.printStackTrace();
+        }
+    }
+    private void stopTimerTask() {//타이머 스톱 함수
+        if (timerTask != null) {
+            timerTask.cancel();
+            timerTask = null;
+        }
     }
     private void Entrance_Http_post(String number) {
         new Thread(() -> {
@@ -323,7 +352,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         String return_zone_name = job.getString("zone_name");
                         Log.e("return_result",return_result+","+return_zone_name);
                         if(return_result){
-                            Intent intent = new Intent(MainSectorActivity.this, MainSectorEntranceActivity.class);
+                            Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
                             intent.putExtra("zone_name_num", return_zone_name);
                             startActivity(intent);
                         }else {
@@ -528,6 +557,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 PRESSURE_avg = sum / count;
                 SensorbaseTime = SystemClock.elapsedRealtime();
             }
+
         }
     }
     @Override
@@ -535,7 +565,6 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     }
 
-    private long SensorbaseTime;
     private long getTime(long timesec) {
         //경과된 시간 체크
         long nowTime = SystemClock.elapsedRealtime();
@@ -738,6 +767,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         Log.e("connect_TAG", "onPause");
         super.onPause();
         stopScan();
+        stopTimerTask();
         mSensorManager.unregisterListener(this);
       /*
        isonoff=true;

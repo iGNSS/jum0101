@@ -9,27 +9,78 @@
 
     <TextView
         android:id="@+id/Location_TextView"
-        android:layout_width="168sp"
+        android:layout_width="match_parent"
         android:layout_height="131sp"
         android:gravity="center"
         android:text="현재 위치"
+
+        android:background="@drawable/line_die"
         android:textColor="@color/black" />
 
-    <TextView
-        android:id="@+id/Data_TextView"
-        android:layout_width="170dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="242dp"
+        android:background="@drawable/line_die">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/black" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Air\n\nO2\n\nCO\n\nH2S\n\nCO2\n\nCH4"
+            android:textColor="@color/black" />
+        <TextView
+            android:id="@+id/Data_TextView"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="환경 정보"
+            android:textColor="@color/black" />
+        <TextView
+            android:id="@+id/Data_boolen_TextView"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/black" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/black" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
         android:gravity="center"
-        android:text="환경 정보"
+        android:text="작업자 명단"
+
+        android:background="@drawable/line_die"
         android:textColor="@color/black" />
+
     <TextView
         android:id="@+id/User_TextView"
-        android:layout_width="170dp"
-        android:layout_height="242dp"
+        android:layout_width="match_parent"
+        android:layout_height="133dp"
         android:gravity="center"
         android:text="유저"
+        android:background="@drawable/line_die"
         android:textColor="@color/black" />
 
-
+    <Button
+        android:id="@+id/exit_Button"
+        android:layout_width="match_parent"
+        android:layout_height="111dp"
+        android:gravity="center"
+        android:text="퇴장"
+        android:background="@color/blue"
+        android:textColor="@color/black" />
 
 </LinearLayout>

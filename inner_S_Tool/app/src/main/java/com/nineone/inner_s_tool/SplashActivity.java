@@ -44,7 +44,7 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
             Manifest.permission.ACCESS_FINE_LOCATION
     };
     private final String[] permissions11 = {
-            //   Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -192,8 +192,8 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
         super.onResume();
         Log.e("spetc", "onResume");
         if (all_permissions_cheack_boolean) {
-            GPSSetting();
-           /*  if (Build.VERSION.SDK_INT >= 29) {
+          //  GPSSetting();
+             if (Build.VERSION.SDK_INT >= 29) {
 
                int permissionCheck2 = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION);
                 if (permissionCheck2 == PackageManager.PERMISSION_DENIED) { //백그라운드 위치 권한 확인
@@ -204,7 +204,7 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
                 }
             } else {
                 GPSSetting();
-            }*/
+            }
             //  background_permissionDialog();
             //GPSSetting();
         }

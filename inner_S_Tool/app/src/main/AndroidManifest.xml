@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
 
     <uses-feature
         android:name="android.hardware.bluetooth"
@@ -67,12 +69,18 @@
             android:theme="@style/Theme.Inner_S_Tool"
             android:windowSoftInputMode="adjustNothing" />
         <activity
-            android:name=".MainSectorEntranceActivity"
+            android:name=".MainSectorEntrance_Activity"
             android:parentActivityName=".MainSectorActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Inner_S_Tool"
             android:windowSoftInputMode="adjustNothing" />
+        <service
+            android:name="com.nineone.inner_s_tool.Background_Service"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="true"
+            android:foregroundServiceType="location|connectedDevice" />
     </application>
 
 </manifest>

@@ -5,21 +5,28 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -77,6 +84,7 @@ public class MainSectorEntranceActivity extends AppCompatActivity implements Sen
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("No " + get_zone_name_num + " Confferdam");
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         location_textView = findViewById(R.id.Location_TextView);
         data_textView = findViewById(R.id.Data_TextView);
         user_textView = findViewById(R.id.User_TextView);
@@ -427,13 +435,19 @@ public class MainSectorEntranceActivity extends AppCompatActivity implements Sen
         super.onStart();
         Log.e("connect_TAG", "onStart()");
     }
-
     @Override
     public void onResume() {
         super.onResume();
         Log.e("connect_TAG", "onResume");
         startScan();
+       /* IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);//ble 상태 감지 필터
+        registerReceiver(mBroadcastReceiver1, filter1);
+        IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
+        registerReceiver(mBroadcastReceiver1, filter2);
+        IntentFilter filter3 = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);//인터넷 상태 감지 필터
+        registerReceiver(mBroadcastReceiver1, filter3);*/
     }
+
 
     @Override
     protected void onPause() {
@@ -464,6 +478,50 @@ public class MainSectorEntranceActivity extends AppCompatActivity implements Sen
         super.onDestroy();
         Log.e("connect_TAG", "onDestroy()");
     }
+
+    public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
+    public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
+    private boolean startForeground = false;
+    private LocationManager locationManager;
+    private void startService() {
+        if (!startForeground) {
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                startForeground = true;
+                invalidateOptionsMenu();
+                Intent serviceIntent1 = new Intent(getApplicationContext(), Background_Service.class);
+                serviceIntent1.setAction(ACTION_START_FOREGROUND_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(serviceIntent1);
+                } else {
+                    startService(serviceIntent1);
+                }
+            }
+        }
+    }
+
+    private void stopService() {
+        //if(startForeground) {
+        startForeground = false;
+        invalidateOptionsMenu();
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            Log.e("activityt_TAGstop", service.service.getClassName());
+            if ("com.nineone.inner_s_tool.Background_Service".equals(service.service.getClassName())) {
+                Log.e("activityt_TAGstop2", service.service.getClassName());
+                //log.e("stopService", "stopService");
+                Intent serviceIntent1 = new Intent(getApplicationContext(), Background_Service.class);
+                serviceIntent1.setAction(ACTION_STOP_FOREGROUND_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(serviceIntent1);
+                } else {
+                    startService(serviceIntent1);
+                }
+            }
+        }
+        // }
+    }
+
     private final MyHandler textchange_handler = new MyHandler(this);
     private final MyHandler start_handler = new MyHandler(this);
     private static class MyHandler extends Handler {
@@ -477,6 +535,74 @@ public class MainSectorEntranceActivity extends AppCompatActivity implements Sen
             MainSectorEntranceActivity activity = mActivity.get();
         }
     }
+    private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                //log.e("off1", action);
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        invalidateOptionsMenu();
+                        Toast.makeText(getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
+                        //log.e("off1", "off1");
+                        //mble_gps_false = true;
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        //log.e("off2", "off2");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        invalidateOptionsMenu();
+
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        break;
+                    default:
+                        //log.e("off5", String.valueOf(state));
+                        break;
+                }
+            }
+            if (action.equals(LocationManager.PROVIDERS_CHANGED_ACTION)) {
+                //log.e("off6", action + ", " + intent);
+
+            }
+            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+
+                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                if (isGpsEnabled || isNetworkEnabled) {
+                    //startService();
+                    invalidateOptionsMenu();
+                    //log.e("off7", String.valueOf(isGpsEnabled));
+                } else {
+                    invalidateOptionsMenu();
+                    //  mblecheck = false;
+                    Toast.makeText(getApplication(), "GPS가 종료되었습니다.\n GPS를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
+                    // blesendcheck.setText("중지 (GPS가 종료)");
+                    //log.e("off8", String.valueOf(isGpsEnabled));
+                }
+            }
+            if (action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
+                Log.e("NetworkInfo", action);
+                Bundle extras = intent.getExtras();
+                NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
+                NetworkInfo.State networkstate = info.getState();
+                Log.d("TEST Internet", info.toString() + " " + networkstate.toString());
+                if (networkstate == NetworkInfo.State.CONNECTED) {
+                    //  Toast.makeText(activity.getApplication(), "Internet connection is on", Toast.LENGTH_LONG).show();
+                    Log.e("testCONNECTED", "testCONNECTED");
+
+                } else {
+                    Log.e("testCONNECTED", "distestCONNECTED");
+                    //   Toast.makeText(activity.getApplication(), "Internet connection is Off", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    };
     @Override
     public void onBackPressed() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

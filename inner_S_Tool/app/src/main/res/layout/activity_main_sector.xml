@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray2"
+    android:background="@color/white"
     android:orientation="vertical">
 
     <LinearLayout
@@ -15,6 +15,7 @@
 
         <LinearLayout
             android:id="@+id/bletypeLayout"
+            android:layout_marginBottom="5sp"
             android:layout_width="match_parent"
             android:layout_height="50sp"
             android:background="@color/gray2"
