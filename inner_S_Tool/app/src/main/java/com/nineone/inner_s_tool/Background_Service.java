@@ -17,6 +17,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -37,13 +38,16 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -68,10 +72,13 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -129,7 +136,7 @@ public class Background_Service extends Service implements SensorEventListener {
                     main_Notification.setSmallIcon(R.mipmap.ic_launcher);
                     main_Notification.setContentTitle("현재 위치 측정 중");
                     //   builder.setContentText(fasf[0]+", "+fasf[2]);
-                    main_Notification.setContentText("수신중인 기기 수: 0");
+                    main_Notification.setContentText("");
                     main_Notification.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
                     Intent notificationIntent = new Intent(this, MainSectorEntranceActivity.class)
                             .setAction(Intent.ACTION_MAIN)
@@ -255,7 +262,7 @@ public class Background_Service extends Service implements SensorEventListener {
                                 //  ble_hashmap_add();
                                 Network_Confirm();
                             };
-                            start_handler.postDelayed(runnable_ble_sned, 5000);
+                            start_handler.postDelayed(runnable_ble_sned, 1000);
                         }
                     }
                     getEllapse();
@@ -266,7 +273,7 @@ public class Background_Service extends Service implements SensorEventListener {
         public void onBatchScanResults(List<ScanResult> results) {
         }
     };
-
+    private int sensorStartIdx=9;
     private boolean alarm_ON_OFF = false;
     public String bleupdate(BluetoothDevice newDevice, int rssi, byte[] scanRecord) {
         if (!isonoff) {
@@ -290,6 +297,8 @@ public class Background_Service extends Service implements SensorEventListener {
             CO2_errer2 = ((Sensor_Alarm >> 4) & 0x01);
             CH4_errer2 = ((Sensor_Alarm >> 3) & 0x01);
             StringBuilder alarmstring = new StringBuilder();
+            String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
+
             boolean mAlarm_on = false;
            /* if (newDevice.getName().equals("TJ-00CA-0000000B-0000")) {
                 int senser_O2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 6);
@@ -319,6 +328,45 @@ public class Background_Service extends Service implements SensorEventListener {
                 mAlarm_on = true;
                 alarmstring.append("CH4 ");
             }
+          //
+            int senser_O2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 6);
+            //   Log.e("655535", String.valueOf(senser_O2));
+            if(senser_O2 == 0xFFFF) {
+                string_O2 = "센서 측정 중";
+            }else{
+                string_O2 = String.format(Locale.KOREA,"%.2f", senser_O2 * 0.01) + " %";
+            }
+            int senser_CO = ConvertToIntLittle(scanRecord, sensorStartIdx + 8);
+            if(senser_CO==0xFFFF) {
+                string_CO = "센서 측정 중";
+            }else{
+                string_CO = senser_CO + " ppm";
+            }
+
+            int senser_H2S = ConvertToIntLittle(scanRecord, sensorStartIdx + 10);
+
+            if(senser_H2S==0xFFFF) {
+                string_H2S = "센서 측정 중";
+            }else{
+                string_H2S = senser_H2S + " ppm";
+            }
+
+            int senser_CO2 = ConvertToIntLittle(scanRecord, sensorStartIdx + 12);
+
+            if(senser_CO2==0xFFFF) {
+                string_CO2 = "센서 측정 중";
+            }else{
+                string_CO2 = senser_CO2 + " ppm";
+            }
+
+            int senser_CH4 = ConvertToIntLittle(scanRecord, sensorStartIdx + 14);
+            if(senser_CH4==0xFFFF) {
+                string_CH4 = "센서 측정 중";
+            }else{
+                string_CH4 = senser_CH4 + " ppm";
+            }
+           // mAlarm_on=true;
+            String zone_data = "O2:"+string_O2 + ", CO:" + string_CO + ", H2S:" + string_H2S + ", CO2:" + string_CO2 + ",CH4:" + string_CH4;
 
             if (mAlarm_on) {
 
@@ -338,19 +386,9 @@ public class Background_Service extends Service implements SensorEventListener {
                     String[] DeviceNameArray = newDevice.getName().trim().split("-");
                     index_num = Long.parseLong(DeviceNameArray[2], 16);
 
-
-
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-                    PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK |
-                            PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                            PowerManager.ON_AFTER_RELEASE, "My:Tag");
-                    wakeLock.acquire(2000);
-                    //if(index_num<2147483647) {
-                    int int_index_num = (int) index_num;
-                    notificationManager.notify(int_index_num, senser_warning_Notification);
-                    // }
-                    //  }
+                    main_Notification.setContentTitle("네트워크 연결 실패");
+                    main_Notification.setContentText(zone_data);
+                    mNotificationManager.notify(1, main_Notification.build());
                     Runnable alarm_runnable = new Runnable() {
                         @Override
                         public void run() {
@@ -425,7 +463,9 @@ public class Background_Service extends Service implements SensorEventListener {
 
         if(listData.size()!=0) {
             listData = new ArrayList<>();
-            Send_Http_post();
+            if (!isonoff) {
+                Send_Http_post();
+            }
         }
         ble_sned_Boolean = false;
     }
@@ -466,6 +506,7 @@ public class Background_Service extends Service implements SensorEventListener {
         }
     }
     private void Send_Http_post() {
+
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
@@ -488,7 +529,9 @@ public class Background_Service extends Service implements SensorEventListener {
                 }
                 JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
-                    cred.put("user_id", "minu@nave");
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+                    String mstart_name = sp.getString("startname", "");
+                    cred.put("user_id", mstart_name);
                     cred.put("pressure", PRESSURE_avg);
                     cred.put("lat", String.valueOf(latitude));
                     cred.put("lng", String.valueOf(longitude));
@@ -535,13 +578,31 @@ public class Background_Service extends Service implements SensorEventListener {
                         String env_CH4 = job.getString("env_CH4");//상태 코드
                         boolean env_CH4_alarm = job.getBoolean("env_CH4_alarm");
                         String env_user = job.getString("user");//상태 코드
-
                         boolean mAlarm_on = false;
 
+                      /*  String env_O2_alarm_String = "OFF";
+                        String env_CO_alarm_String = "OFF";
+                        String env_H2S_alarm_String = "OFF";
+                        String env_CO2_alarm_String = "OFF";
+                        String env_CH4_alarm_String = "OFF";
+
+                        if(env_O2_alarm){
+                            env_O2_alarm_String = "ON";
+                        }else if(env_CO_alarm){
+                            env_CO_alarm_String = "ON";
+                        }else if(env_H2S_alarm){
+                            env_H2S_alarm_String = "ON";
+                        }else if(env_Co2_alarm){
+                            env_CO2_alarm_String = "ON";
+                        }else if(env_CH4_alarm){
+                            env_CH4_alarm_String = "ON";
+                        }*/
                         String buildlevel_name = build_name + " " + level_name + " " + zone_name;
                         String zone_data = env_O2 + "-" + env_CO + "-" + env_H2S + "-" + env_Co2 + "-" + env_CH4;
+                        String zone_data2 = "O2:"+env_O2 + ", CO:" + env_CO + ", H2S:" + env_H2S + ", CO2:" + env_Co2 + ",CH4:" + env_CH4;
+
                         String zone_boolen_data = env_O2_alarm + "-" + env_CO_alarm + "-" + env_H2S_alarm + "-" + env_Co2_alarm + "-" + env_CH4_alarm;
-                        String zone_data2 = "O2 : " + env_O2 + "\n"
+                        String zone_data3 = "O2 : " + env_O2 + "\n"
                                 + "CO : " + env_CO + "\n"
                                 + "H2S : " + env_H2S + "\n"
                                 + "CO2 : " + env_Co2 + "\n"
@@ -549,7 +610,6 @@ public class Background_Service extends Service implements SensorEventListener {
 
                         if (env_O2_alarm || env_CO_alarm || env_H2S_alarm || env_Co2_alarm || env_CH4_alarm) {
                             mAlarm_on = true;
-
                         }
                         if(!alarm_ON_OFF) {
                             if (mAlarm_on) {
@@ -568,9 +628,9 @@ public class Background_Service extends Service implements SensorEventListener {
                             @Override
                             public void run() {
                                 main_Notification.setContentTitle("현재 위치 : " + buildlevel_name);
-                                main_Notification.setContentText(zone_data);
+                                main_Notification.setContentText(zone_data2);
                                 // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
+                                mNotificationManager.notify(1, main_Notification.build());
                                 Intent intent = new Intent("custom-event-name");
                                 intent.putExtra("buildlevel_name", buildlevel_name);
                                 intent.putExtra("zone_data", zone_data);
@@ -623,24 +683,26 @@ public class Background_Service extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
-            //     long timestamp = sensorEvent.timestamp;
-            float presure = sensorEvent.values[0];
-            presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
-            //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
-            //   sector_list_adapter.notifyDataSetChanged();
-            //기압을 바탕으로 고도를 계산(맞는거 맞아???)
-            //float height = SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, presure);
-            PRESSURE_add.add(presure);
-            if(getTime(SensorbaseTime)>=10) {
-                float sum = 0;
-                int count = 0;
-                for (float device : PRESSURE_add) {
-                    sum += device;
-                    count++;
+        if (!isonoff) {
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
+                //     long timestamp = sensorEvent.timestamp;
+                float presure = sensorEvent.values[0];
+                presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
+                //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
+                //   sector_list_adapter.notifyDataSetChanged();
+                //기압을 바탕으로 고도를 계산(맞는거 맞아???)
+                //float height = SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, presure);
+                PRESSURE_add.add(presure);
+                if (getTime(SensorbaseTime) >= 10) {
+                    float sum = 0;
+                    int count = 0;
+                    for (float device : PRESSURE_add) {
+                        sum += device;
+                        count++;
+                    }
+                    PRESSURE_avg = sum / count;
+                    SensorbaseTime = SystemClock.elapsedRealtime();
                 }
-                PRESSURE_avg = sum / count;
-                SensorbaseTime = SystemClock.elapsedRealtime();
             }
         }
     }
@@ -683,17 +745,19 @@ public class Background_Service extends Service implements SensorEventListener {
 
     private final LocationCallback locationCallback = new LocationCallback(){
         @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) {
-                return;
-            }
-            for (Location location : locationResult.getLocations()) {
-                longitude = location.getLongitude();
-                latitude = location.getLatitude();
-                location.getTime();
-                Log.e("gpsTracker21",
-                        "위도 : " + longitude + ", " +
-                                "경도 : " + latitude);
+        public void onLocationResult(@NonNull LocationResult locationResult) {
+            if (!isonoff) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    longitude = location.getLongitude();
+                    latitude = location.getLatitude();
+                    location.getTime();
+                    Log.e("gpsTracker21",
+                            "위도 : " + longitude + ", " +
+                                    "경도 : " + latitude);
+                }
             }
         }
     };
@@ -794,5 +858,21 @@ public class Background_Service extends Service implements SensorEventListener {
         stopForeground(true);
         stopSelf();
       //  stopTimerTask();
+    }
+    private int ConvertToIntLittle(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put(txValue[startidx + 1]);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
+
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
     }
 }

@@ -16,8 +16,257 @@
 
         android:background="@drawable/line_die"
         android:textColor="@color/black" />
-
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="242sp"
+        android:background="@drawable/line_die"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/black" />
+        <TableLayout
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="match_parent"
+            android:background="@color/black">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/textdesign"
+                    android:gravity="center"
+                    android:text="공기"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/textdesign"
+                    android:gravity="center"
+                    android:text="농도"
+                    android:textColor="@color/white"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/textdesign"
+                    android:gravity="center"
+                    android:text="경고"
+                    android:textColor="@color/white"/>
+
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingBottom="1sp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="O2"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/Data_O2_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:text="0 %"/>
+
+                <TextView
+                    android:id="@+id/Data_O2_Boolean_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="OFF"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingBottom="1sp">
+
+                <TextView
+                    android:id="@+id/all_count"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="CO"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/Data_CO_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="0 ppm"/>
+
+                <TextView
+                    android:id="@+id/Data_CO_Boolean_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="OFF"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingBottom="1sp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="H2S"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/Data_H2S_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="0 ppm"/>
+
+                <TextView
+                    android:id="@+id/Data_H2S_Boolean_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="OFF"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingBottom="1sp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="CO2"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/Data_CO2_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="0 ppm"/>
+
+                <TextView
+                    android:id="@+id/Data_CO2_Boolean_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="OFF"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingBottom="1sp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="CH4"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/Data_CH4_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="0 ppm"/>
+
+                <TextView
+                    android:id="@+id/Data_CH4_Boolean_TextView"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/white"
+                    android:gravity="center"
+                    android:paddingBottom="1sp"
+                    android:text="OFF"/>
+            </TableRow>
+        </TableLayout>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/black" />
+    </LinearLayout>
+   <!-- <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="242dp"
         android:background="@drawable/line_die">
@@ -32,7 +281,7 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Air\n\nO2\n\nCO\n\nH2S\n\nCO2\n\nCH4"
+            android:text="공기\n\nO2\n\nCO\n\nH2S\n\nCO2\n\nCH4"
             android:textColor="@color/black" />
         <TextView
             android:id="@+id/Data_TextView"
@@ -40,7 +289,7 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="환경 정보"
+            android:text="농도\n\n0 %\n\n0 ppm\n\n0 ppm\n\n0 ppm\n\n0 ppm"
             android:textColor="@color/black" />
         <TextView
             android:id="@+id/Data_boolen_TextView"
@@ -48,6 +297,7 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:gravity="center"
+            android:text="경고\n\nOFF\n\nOFF\n\nOFF\n\nOFF\n\nOFF"
             android:textColor="@color/black" />
         <TextView
             android:layout_width="0dp"
@@ -55,10 +305,10 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:textColor="@color/black" />
-    </LinearLayout>
+    </LinearLayout>-->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="34dp"
+        android:layout_height="34sp"
         android:gravity="center"
         android:text="작업자 명단"
 
@@ -68,19 +318,19 @@
     <TextView
         android:id="@+id/User_TextView"
         android:layout_width="match_parent"
-        android:layout_height="133dp"
+        android:layout_height="109dp"
+        android:background="@drawable/line_die"
         android:gravity="center"
         android:text="유저"
-        android:background="@drawable/line_die"
         android:textColor="@color/black" />
 
     <Button
         android:id="@+id/exit_Button"
         android:layout_width="match_parent"
-        android:layout_height="111dp"
+        android:layout_height="66dp"
+        android:background="@color/blue"
         android:gravity="center"
         android:text="퇴장"
-        android:background="@color/blue"
         android:textColor="@color/black" />
 
 </LinearLayout>

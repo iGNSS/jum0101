@@ -86,8 +86,8 @@ public class MainSectorEntranceActivity extends AppCompatActivity implements Sen
         actionBar.setTitle("No " + get_zone_name_num + " Confferdam");
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         location_textView = findViewById(R.id.Location_TextView);
-        data_textView = findViewById(R.id.Data_TextView);
-        user_textView = findViewById(R.id.User_TextView);
+        //data_textView = findViewById(R.id.Data_TextView);
+       // user_textView = findViewById(R.id.User_TextView);
         google_gps();
         bluetoothCheck();
         senser_check();

@@ -81,11 +81,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         viewHolder.tagname.setText(item.getItem_tag_name());
 
         if(!mScanmode) {
-            viewHolder.tagdata.setVisibility(View.INVISIBLE);
+            viewHolder.tagdata.setVisibility(View.GONE);
             viewHolder.tagbutton.setVisibility(View.VISIBLE);
         }else{
             viewHolder.tagdata.setVisibility(View.VISIBLE);
-            viewHolder.tagbutton.setVisibility(View.INVISIBLE);
+            viewHolder.tagbutton.setVisibility(View.GONE);
             viewHolder.tagdata.setText(item.getItem_tag_data());
         }
     }

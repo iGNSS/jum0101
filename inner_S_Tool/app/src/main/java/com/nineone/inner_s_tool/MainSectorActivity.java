@@ -10,6 +10,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.AdvertiseCallback;
@@ -19,20 +20,27 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -108,6 +116,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 CAG_button.setSelected(true);
                 Information_button.setSelected(false);
                 mInformation_boolean = false;
+
                 list_set_Http();
 
             }
@@ -194,13 +203,32 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
                     recyclerViewAdapter.item_noti();
                     mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                    for(int i=1;i<=6;i++){
+                        recyclerViewAdapter.update("No " + i + " Confferdam", "");
+                    }
                     recyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
                         public void onItemClick(View v, int position) {//리스트를 클릭했을때 이벤트
-                            if (position != RecyclerView.NO_POSITION) {
-                                String[] LintNameArray = recyclerViewAdapter.sector_list_items().get(position).getItem_tag_name().split(" ");
-                                Entrance_Http_post(LintNameArray[1]);
-                                Log.e("dd-", LintNameArray[1] + " -143");
+
+                            int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
+                            if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(MainSectorActivity.this);
+                                builder.setCancelable(false);
+                                builder.setTitle("네트워크 오류");
+                                builder.setMessage("네트워크가 꺼져 있어 입장이 불가합니다.");
+                                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        //  finish();
+                                    }
+                                });
+                                builder.show();
+                            }else {
+                                if (position != RecyclerView.NO_POSITION) {
+                                    String[] LintNameArray = recyclerViewAdapter.sector_list_items().get(position).getItem_tag_name().split(" ");
+                                    Entrance_Http_post(LintNameArray[1]);
+                                    Log.e("dd-", LintNameArray[1] + " -143");
+                                }
                             }
                         }
                     });
@@ -208,13 +236,29 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
                     recyclerViewAdapter.item_noti();
                     mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                    int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
+                    if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainSectorActivity.this);
+                        builder.setCancelable(false);
+                        builder.setTitle("네트워크 오류");
+                        builder.setMessage("네트워크가 꺼져 자세한 정보를 불러올 수 없습니다.");
+                        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //  finish();
+                            }
+                        });
+                        builder.show();
+                    }else {
+                        new Thread(() -> {
+                            Get_Http();
+                        }).start();
+                    }
                 }
             }
         };
         listcange_handler.postDelayed(list_change_runnable, 0);
-            new Thread(() -> {
-                Get_Http();
-            }).start();
+
        // }
     }
 
@@ -266,11 +310,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             + "CO : " + env_CO + "\n"
                             + "H2S : " + env_H2S + "\n"
                             + "CO2 : " + env_Co2 + "\n"
-                            + "CH4 : " + env_CH4 + "\n";
+                            + "CH4 : " + env_CH4;
 
                     if (!mInformation_boolean) {
 
-                        recyclerViewAdapter.update("No " + zone_name + " Confferdam", "");
+                     //   recyclerViewAdapter.update("No " + zone_name + " Confferdam", "");
                     } else {
 
                         recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data);
@@ -294,6 +338,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             timerTask = null;
         }
     }
+    private final MyHandler data_send_handler = new MyHandler(this);
     private void Entrance_Http_post(String number) {
         new Thread(() -> {
             try {
@@ -313,11 +358,21 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 JSONArray array = new JSONArray();
                 if(SEND_HASHMAP==null){
                     Log.e("dd-209", "282");
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                    Toast.makeText(getApplicationContext(),"위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                        }
+                    }, 0);
                     return;
                 }
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+                String mstart_name = sp.getString("startname", "");
                 JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
-                    cred.put("user_id", "minu");
+                    cred.put("user_id", mstart_name);
                     cred.put("mean_pressure", PRESSURE_avg);
                     //cred.put("ble", SEND_HASHMAP);
                     cred.put("zone_name", number);
@@ -352,9 +407,28 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         String return_zone_name = job.getString("zone_name");
                         Log.e("return_result",return_result+","+return_zone_name);
                         if(return_result){
-                            Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
-                            intent.putExtra("zone_name_num", return_zone_name);
-                            startActivity(intent);
+                            runOnUiThread(new Runnable() {//약간의 딜레이
+                                @Override
+                                public void run() {
+                                    ProgressDialog mProgressDialog = ProgressDialog.show(MainSectorActivity.this, "", "입장 중 입니다.", true);
+                                    data_send_handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                                                    mProgressDialog.dismiss();
+                                                    Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
+                                                    intent.putExtra("zone_name_num", return_zone_name);
+                                                    startActivity(intent);
+                                                }
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }, 1000);
+                                }
+                            });
+
                         }else {
                             Runnable Entrance_fail_runnable = new Runnable() {
                                 @Override
@@ -759,6 +833,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     public void onResume() {
         super.onResume();
         Log.e("connect_TAG", "onResume");
+        IntentFilter filter3 = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);//인터넷 상태 감지 필터
+        registerReceiver(mBroadcastReceiver1, filter3);
         startScan();
     }
 
@@ -769,6 +845,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         stopScan();
         stopTimerTask();
         mSensorManager.unregisterListener(this);
+        try {
+            unregisterReceiver(mBroadcastReceiver1);
+        } catch (Exception ignored) {
+
+        }
       /*
        isonoff=true;
       if (fusedLocationClient != null) {
@@ -792,7 +873,34 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         super.onDestroy();
         Log.e("connect_TAG", "onDestroy()");
     }
+    private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
 
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
+                Log.e("NetworkInfo", action);
+                Bundle extras = intent.getExtras();
+                NetworkInfo info = (NetworkInfo) extras.getParcelable("networkInfo");
+                NetworkInfo.State networkstate = info.getState();
+                Log.d("TEST Internet", info.toString() + " " + networkstate.toString());
+                if (networkstate == NetworkInfo.State.CONNECTED) {
+                    //  Toast.makeText(activity.getApplication(), "Internet connection is on", Toast.LENGTH_LONG).show();
+                    list_set_Http();
+                    Log.e("testCONNECTED", "testCONNECTED");
+                } else {
+                    Log.e("testCONNECTED", "distestCONNECTED");
+                    //   Toast.makeText(activity.getApplication(), "Internet connection is Off", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    };
+    @Override
+    public void onBackPressed() {
+
+        finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
+
+    }
 /*
   private AdvertiseData mService_AdvData;
     private AdvertiseSettings mService_AdvSettings;

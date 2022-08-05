@@ -5,12 +5,14 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -247,9 +249,17 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
                     new Thread() {
                         @Override
                         public void run() {
-                            Intent newIntent = new Intent(getApplicationContext(), MainActivity.class);
-                            startActivity(newIntent);
-                            finish();
+                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            String mstart_name = sp.getString("startname", "");
+                            if(mstart_name.equals("")) {
+                                Intent newIntent = new Intent(getApplicationContext(), MainLoginActivity.class);
+                                startActivity(newIntent);
+                                finish();
+                            }else{
+                                Intent newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                                startActivity(newIntent);
+                                finish();
+                            }
 
                         }
                     }.start();
