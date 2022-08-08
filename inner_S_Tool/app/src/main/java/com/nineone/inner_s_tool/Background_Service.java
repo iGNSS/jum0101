@@ -1,10 +1,12 @@
 package com.nineone.inner_s_tool;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,6 +17,7 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -110,6 +113,7 @@ public class Background_Service extends Service implements SensorEventListener {
             String action = intent.getAction();
             Log.e("activityt_TAGaction", action);
             if (ACTION_STOP_SERVICE.equals(intent.getAction())) {
+                stopScan();
                 isonoff = true;
                 onDestroy();
                 Log.e("activityt_TAG", "serviceddd");
@@ -118,6 +122,7 @@ public class Background_Service extends Service implements SensorEventListener {
                 case ACTION_START_FOREGROUND_SERVICE:
 
                     if (ACTION_STOP_SERVICE.equals(intent.getAction())) {
+                        stopScan();
                         isonoff = true;
                         onDestroy();
                         Log.e("activityt_TAG", "serviceddd");
@@ -131,14 +136,14 @@ public class Background_Service extends Service implements SensorEventListener {
                     RescanBaseTime = SystemClock.elapsedRealtime();
                     Intent stopSelf = new Intent(this, Background_Service.class);
                     stopSelf.setAction(ACTION_STOP_SERVICE);
-                    PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_IMMUTABLE);
+                   // PendingIntent pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_IMMUTABLE);
                     main_Notification = new NotificationCompat.Builder(this, "default");
                     main_Notification.setSmallIcon(R.mipmap.ic_launcher);
                     main_Notification.setContentTitle("현재 위치 측정 중");
                     //   builder.setContentText(fasf[0]+", "+fasf[2]);
                     main_Notification.setContentText("");
-                    main_Notification.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
-                    Intent notificationIntent = new Intent(this, MainSectorEntranceActivity.class)
+                  //  main_Notification.addAction(R.drawable.ic_launcher_foreground, "Close", pStopSelf);
+                    Intent notificationIntent = new Intent(this, MainSectorEntrance_Activity.class)
                             .setAction(Intent.ACTION_MAIN)
                             .addCategory(Intent.CATEGORY_LAUNCHER)
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -167,6 +172,7 @@ public class Background_Service extends Service implements SensorEventListener {
 
                     break;
                 case ACTION_STOP_FOREGROUND_SERVICE:
+                    stopScan();
                     isonoff = true;
                     stopForegroundService();
                     onDestroy();
@@ -213,9 +219,9 @@ public class Background_Service extends Service implements SensorEventListener {
         }else{
             isonoff = true;
 
-            stopForegroundService();
-            onDestroy();
-            Toast.makeText(getApplication(), "블루투스가 꺼져있어\n백그라운드모드가 실행되지 않았습니다.", Toast.LENGTH_SHORT).show();
+            //stopForegroundService();
+          //  onDestroy();
+           // Toast.makeText(getApplication(), "블루투스가 꺼져있어\n백그라운드모드가 실행되지 않았습니다.", Toast.LENGTH_SHORT).show();
 
         }
     }
@@ -664,6 +670,89 @@ public class Background_Service extends Service implements SensorEventListener {
             }
         }).start();
     }
+    private void Exit_Http_post() {
+        new Thread(() -> {
+            try {
+                Log.e("dd-", "164");
+                String url = "http://stag.nineone.com:8005/api/pressurecal";
+                URL object = null;
+                object = new URL(url);
+                Log.e("dd-", "168");
+                HttpURLConnection con = null;
+
+                con = (HttpURLConnection) object.openConnection();
+                con.setDoOutput(true);
+                con.setDoInput(true);
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestMethod("POST");
+                JSONArray array = new JSONArray();
+                if (SEND_HASHMAP == null) {
+                 /*   Log.e("dd-209", "282");
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                            Toast.makeText(getApplicationContext(),"위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                        }
+                    }, 0);*/
+                    return;
+                }
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+                String mstart_name = sp.getString("startname", "");
+                String Shared_zone_name_num = sp.getString("Shared_zone_name_num", "");
+                JSONObject cred = new JSONObject(SEND_HASHMAP);
+                try {
+                    cred.put("user_id", mstart_name);
+                    cred.put("mean_pressure", PRESSURE_avg);
+                    //cred.put("ble", SEND_HASHMAP);
+                    cred.put("zone_name", Shared_zone_name_num);
+                    cred.put("entrance_check" , false);
+                    Log.e("dd-187", "187");
+                } catch (JSONException e) {
+                    Log.e("dd-189", "\n" + e.getMessage());
+                    e.printStackTrace();
+                }
+                array.put(cred);
+                //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
+                //  array.put(cred2);
+                OutputStream os = con.getOutputStream();
+                Log.e("dd-195", array.toString());
+                os.write(array.toString().getBytes("UTF-8"));
+                os.close();
+                //display what returns the POST request
+
+                StringBuilder sb = new StringBuilder();
+                int HttpResult = con.getResponseCode();
+                if (HttpResult == HttpURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(
+                            new InputStreamReader(con.getInputStream(), "utf-8"));
+                    String line = null;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    br.close();
+                    Log.e("dd-Bufferedexit", "\n" + sb.toString());
+                    try {
+                        JSONObject job = new JSONObject(sb.toString());
+                        boolean return_result = job.getBoolean("result");
+                        String return_zone_name = job.getString("zone_name");
+                        Log.e("return_result", return_result + "," + return_zone_name);
+
+
+                    } catch (JSONException e) {
+                        // Handle error
+                    }
+                } else {
+                    Log.e("dd-212", "\n" + con.getResponseMessage());
+                }
+            } catch (IOException e) {
+                Log.e("dd-215", e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
+    }
     private void sendMessage(){
         Log.d("messageService", "Broadcasting message");
 
@@ -823,7 +912,9 @@ public class Background_Service extends Service implements SensorEventListener {
     @Override
     public void onDestroy() { //여기다가 종료할때 모든 코드 넣기 https://developer.android.com/guide/components/services?hl=ko
         super.onDestroy();
+        stopScan();
         isonoff = true;
+        Exit_Http_post();
         try {
             unregisterReceiver(mBroadcastReceiver1);
         } catch (Exception ignored) {

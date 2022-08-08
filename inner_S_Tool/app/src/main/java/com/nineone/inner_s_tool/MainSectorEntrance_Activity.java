@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -45,12 +47,14 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_sector_entrance);
 
-        Intent intent = getIntent();//차트 리스트 페이지에서 정보 받아오기
-        String get_zone_name_num = intent.getExtras().getString("zone_name_num");//csv파일경로
+      //  Intent intent = getIntent();//차트 리스트 페이지에서 정보 받아오기
+     //   String get_zone_name_num = intent.getExtras().getString("zone_name_num");//
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String Shared_zone_name_num = sp.getString("Shared_zone_name_num", "");
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("No " + get_zone_name_num + " Confferdam");
+        actionBar.setTitle("No " + Shared_zone_name_num + " Confferdam");
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         location_textView = findViewById(R.id.Location_TextView);
@@ -249,6 +253,15 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
             public void onClick(DialogInterface dialog, int which) {
                 //  moveTaskToBack(true); // 태스크를 백그라운드로 이동
                 stopService();
+                Intent intent = new Intent(MainSectorEntrance_Activity.this,MainSectorActivity.class);
+
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                //저장을 하기위해 Editor를 불러온다.
+                SharedPreferences.Editor edit = preferences.edit();
+                edit.putString("Shared_zone_name_num", "0");
+                edit.apply();
+
+                startActivity(intent);
                 finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
                 //android.os.Process.killProcess(android.os.Process.myPid()); // 앱 프로세스 종료
             }

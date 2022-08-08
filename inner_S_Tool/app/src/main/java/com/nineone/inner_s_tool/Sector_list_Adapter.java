@@ -34,7 +34,7 @@ public class Sector_list_Adapter extends RecyclerView.Adapter<Sector_list_Adapte
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {//ViewHolder 객체를 생성
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item, parent, false);
-        listData.add(new Sector_list_item("asd","asd"));
+        listData.add(new Sector_list_item("asd","asd",false));
         return new ViewHolder(view);
 
     }
@@ -57,7 +57,7 @@ public class Sector_list_Adapter extends RecyclerView.Adapter<Sector_list_Adapte
     }
     boolean testboolean = false;
     public String update(String mtagname, String mtagdata) {
-        listData.add(new Sector_list_item(mtagname, mtagdata));
+        listData.add(new Sector_list_item(mtagname, mtagdata,false));
         if(!testboolean){
             testboolean=true;
             list_notifyDataSetChanged();

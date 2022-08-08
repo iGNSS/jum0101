@@ -1,10 +1,12 @@
 package com.nineone.inner_s_tool;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
@@ -22,6 +24,16 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,7 +150,6 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
 
 
             Log.e("asd94", "asd");
-            //  GPSSetting();
             Log.e("asd96", "asd");
         }
         return true;
@@ -202,13 +213,16 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
                     //위치 권한 요청
                     background_permissionDialog();
                 } else {
-                    GPSSetting();
+                    Log.e("dd--216","dd");
+                    buttonSwitchGPS_ON();
+               //     GPSSetting();
                 }
             } else {
-                GPSSetting();
+                 Log.e("dd--221","dd");
+                 buttonSwitchGPS_ON();
+              //  GPSSetting();
             }
             //  background_permissionDialog();
-            //GPSSetting();
         }
     }
 
@@ -242,33 +256,34 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
         } else {
 
             Log.e("asd167", "asd");
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                            String mstart_name = sp.getString("startname", "");
-                            if(mstart_name.equals("")) {
-                                Intent newIntent = new Intent(getApplicationContext(), MainLoginActivity.class);
-                                startActivity(newIntent);
-                                finish();
-                            }else{
-                                Intent newIntent = new Intent(getApplicationContext(), MainActivity.class);
-                                startActivity(newIntent);
-                                finish();
-                            }
-
-                        }
-                    }.start();
-                }
-            }, 200);
+            next_activity();
         }
 
     }
+    private void next_activity(){
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        String mstart_name = sp.getString("startname", "");
+                        Intent newIntent;
+                        if(mstart_name.equals("")) {
+                            newIntent = new Intent(getApplicationContext(), MainLoginActivity.class);
+                        }else{
+                            newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                        }
+                        startActivity(newIntent);
+                        finish();
 
+                    }
+                }.start();
+            }
+        }, 200);
+    }
     @Override
     protected void onPause() {
         Log.e("spetc", "onPause");
@@ -329,6 +344,65 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
         Toast.makeText(getApplicationContext(), "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
         finish();
     }
+  private int REQUEST_CHECK_SETTINGS = 1002;
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            Log.e("dd--921","dd");
+            if (resultCode == Activity.RESULT_OK) { // gps
+                Log.e("asd167", "asd");
+                next_activity();
+                Log.e("dd--924","dd");
+            } else {
+              //  buttonSwitchGPS_ON();
+                Log.e("dd--926","dd");
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+    public void buttonSwitchGPS_ON() {
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
+
+        LocationSettingsRequest.Builder locationSettingsRequestBuilder = new LocationSettingsRequest.Builder();
+
+        locationSettingsRequestBuilder.addLocationRequest(locationRequest);
 
 
+        locationSettingsRequestBuilder.setAlwaysShow(true);
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = settingsClient.checkLocationSettings(locationSettingsRequestBuilder.build());
+
+        Log.e("dd--1172","dd");
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                next_activity();
+                Log.e("dd--1076","dd");
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+                if (e instanceof ResolvableApiException) {
+                    Log.e("dd--1085","dd");
+                    try {
+                        ResolvableApiException resolvableApiException = (ResolvableApiException) e;
+                        resolvableApiException.startResolutionForResult(SplashActivity.this, REQUEST_CHECK_SETTINGS);
+                        Log.e("dd--1089","dd");
+                    } catch (IntentSender.SendIntentException sendIntentException) {
+                        Log.e("dd--1091",sendIntentException.getMessage());
+                        sendIntentException.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
 }

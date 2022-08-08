@@ -516,6 +516,7 @@ public class MainActivity extends AppCompatActivity {
             if (v.getId() == R.id.Start_Button) {
                 Intent intent = new Intent(MainActivity.this, MainSectorActivity.class);
                 startActivity(intent);
+                finish();
             }
         }
     };

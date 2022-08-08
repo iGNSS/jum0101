@@ -83,6 +83,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         if(!mScanmode) {
             viewHolder.tagdata.setVisibility(View.GONE);
             viewHolder.tagbutton.setVisibility(View.VISIBLE);
+            if(item.getItem_location_t_f()){
+                viewHolder.linearbackcolorlayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.blue));
+            }else{
+                viewHolder.linearbackcolorlayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.white));
+            }
         }else{
             viewHolder.tagdata.setVisibility(View.VISIBLE);
             viewHolder.tagbutton.setVisibility(View.GONE);
@@ -90,18 +95,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         }
     }
 
-    public String update(String mname, String mdata) {
+    public String update(String mname, String mdata, boolean mboolean) {
 
         boolean contains = false;
         for (Sector_list_item device : listData) {
             if (mname.equals(device.getItem_tag_name())) {
                 contains = true;
+                device.setItem_tag_name(mname);
+                device.setItem_tag_data(mdata);
+                device.setItem_location_t_f(mboolean);
                 // update
                 break;
             }
         }
         if (!contains) {
-            listData.add(new Sector_list_item(mname, mdata));
+            listData.add(new Sector_list_item(mname, mdata, mboolean));
         }
        if(!testboolean){
            testboolean=true;
@@ -161,12 +169,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         private final TextView tagname;
         private final TextView tagdata;
         private final Button tagbutton;
+        private LinearLayout linearbackcolorlayout;
         public ViewHolder(View itemView) {//ViewHolder에 띄울 텍스트
             super(itemView);
             //txtid=(TextView)itemView.findViewById(R.id.txt_id);
             tagname=(TextView)itemView.findViewById(R.id.device_name);
             tagdata=(TextView)itemView.findViewById(R.id.device_data);
             tagbutton=(Button)itemView.findViewById(R.id.device_button);
+            linearbackcolorlayout =(LinearLayout) itemView.findViewById(R.id.linearbackcolorlayout);
             tagbutton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

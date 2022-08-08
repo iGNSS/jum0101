@@ -85,7 +85,7 @@
             android:name="com.nineone.inner_s_tool.Background_Service"
             android:enabled="true"
             android:exported="false"
-            android:stopWithTask="true"
+            android:stopWithTask="false"
             android:foregroundServiceType="location|connectedDevice" />
     </application>
 

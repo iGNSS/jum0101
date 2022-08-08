@@ -1,5 +1,6 @@
 package com.nineone.inner_s_tool;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -25,6 +26,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -47,6 +49,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -55,6 +58,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -93,11 +97,12 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private BluetoothLeScanner mBluetoothLeScanner;
     private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
     private static SensorManager mSensorManager;
-    private TextView CAG_button,Information_button;//coming and going
+    private TextView CAG_button, Information_button;//coming and going
     private boolean mInformation_boolean = false;
 
     private long SensorbaseTime;
     private long List_update_Time;
+    private LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,9 +112,10 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("연결");
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         SensorbaseTime = SystemClock.elapsedRealtime();
-        List_update_Time=SystemClock.elapsedRealtime();
-        CAG_button=findViewById(R.id.coming_and_going);
+        List_update_Time = SystemClock.elapsedRealtime();
+        CAG_button = findViewById(R.id.coming_and_going);
         CAG_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -122,7 +128,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         });
         CAG_button.setSelected(true);
-        Information_button=findViewById(R.id.Information_button);
+        Information_button = findViewById(R.id.Information_button);
         Information_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -134,19 +140,21 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         });
         RecyclerViewlayout();
         bluetoothCheck();
+        buttonSwitchGPS_ON();
         senser_check();
 
     }
+
     private RecyclerView mSector_RecyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
-    private void RecyclerViewlayout(){
+    private void RecyclerViewlayout() {
         mSector_RecyclerView = (RecyclerView) findViewById(R.id.sector_RecyclerView);
         mSector_RecyclerView.setNestedScrollingEnabled(false);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         mSector_RecyclerView.setItemAnimator(null);
         mSector_RecyclerView.setLayoutManager(linearLayoutManager);
-        recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(),false);
+        recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
         recyclerViewAdapter.item_noti();
         mSector_RecyclerView.setAdapter(recyclerViewAdapter);
 
@@ -203,8 +211,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
                     recyclerViewAdapter.item_noti();
                     mSector_RecyclerView.setAdapter(recyclerViewAdapter);
-                    for(int i=1;i<=6;i++){
-                        recyclerViewAdapter.update("No " + i + " Confferdam", "");
+                    for (int i = 1; i <= 6; i++) {
+                        recyclerViewAdapter.update("No " + i + " Confferdam", "", false);
                     }
                     recyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
@@ -223,7 +231,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                                     }
                                 });
                                 builder.show();
-                            }else {
+                            } else {
                                 if (position != RecyclerView.NO_POSITION) {
                                     String[] LintNameArray = recyclerViewAdapter.sector_list_items().get(position).getItem_tag_name().split(" ");
                                     Entrance_Http_post(LintNameArray[1]);
@@ -232,6 +240,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             }
                         }
                     });
+                     startTimerTask2 ();
                 } else {
                     recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
                     recyclerViewAdapter.item_noti();
@@ -249,7 +258,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             }
                         });
                         builder.show();
-                    }else {
+                    } else {
                         new Thread(() -> {
                             Get_Http();
                         }).start();
@@ -259,22 +268,41 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         };
         listcange_handler.postDelayed(list_change_runnable, 0);
 
-       // }
+        // }
     }
 
     private TimerTask timerTask;
     private Timer timer = new Timer();
-    private void startTimerTask () {
+
+    private void startTimerTask1() {
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-                Get_Http();
-
+                if (!mInformation_boolean) {
+                    location_Confirm_Confirm_Http_post();
+                } else {
+                    Get_Http();
+                }
             }
         };
         timer.schedule(timerTask, 10000, 1000);
     }
-    private void Get_Http(){
+
+    private void startTimerTask2() {
+        timerTask = new TimerTask() {
+            @Override
+            public void run() { // 코드 작성
+                if (!mInformation_boolean) {
+                    location_Confirm_Confirm_Http_post();
+                } else {
+                    Get_Http();
+                }
+            }
+        };
+        timer.schedule(timerTask, 3000, 1000);
+    }
+
+    private void Get_Http() {
         Document doc = null;
         try {
             Log.e("dd-", "164");
@@ -312,34 +340,31 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             + "CO2 : " + env_Co2 + "\n"
                             + "CH4 : " + env_CH4;
 
-                    if (!mInformation_boolean) {
-
-                     //   recyclerViewAdapter.update("No " + zone_name + " Confferdam", "");
-                    } else {
-
-                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data);
-                        startTimerTask();
-                        //List_update_Time = SystemClock.elapsedRealtime();
+                    if (mInformation_boolean) {
+                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false);
+                        startTimerTask1();
                     }
-
                 }
             }
         } catch (JSONException e) {
-            Log.e("dd-", e.getMessage()+" -166");
+            Log.e("dd-", e.getMessage() + " -166");
             e.printStackTrace();
         } catch (IOException e) {
-            Log.e("dd-", e.getMessage()+" -167");
+            Log.e("dd-", e.getMessage() + " -167");
             e.printStackTrace();
         }
     }
+
     private void stopTimerTask() {//타이머 스톱 함수
         if (timerTask != null) {
             timerTask.cancel();
             timerTask = null;
         }
     }
-    private final MyHandler data_send_handler = new MyHandler(this);
-    private void Entrance_Http_post(String number) {
+
+    private final MyHandler list_location_Confirm_handler = new MyHandler(this);
+
+    private void location_Confirm_Confirm_Http_post() {
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
@@ -356,16 +381,16 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestMethod("POST");
                 JSONArray array = new JSONArray();
-                if(SEND_HASHMAP==null){
-                    Log.e("dd-209", "282");
+                if (SEND_HASHMAP == null) {
+                 /*   Log.e("dd-209", "282");
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run()
                         {
-                    Toast.makeText(getApplicationContext(),"위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(),"위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
                         }
-                    }, 0);
+                    }, 0);*/
                     return;
                 }
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -375,7 +400,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     cred.put("user_id", mstart_name);
                     cred.put("mean_pressure", PRESSURE_avg);
                     //cred.put("ble", SEND_HASHMAP);
-                    cred.put("zone_name", number);
+                    cred.put("zone_name", "0");
+                    cred.put("entrance_check" , false);
                     Log.e("dd-187", "187");
                 } catch (JSONException e) {
                     Log.e("dd-189", "\n" + e.getMessage());
@@ -405,8 +431,107 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         JSONObject job = new JSONObject(sb.toString());
                         boolean return_result = job.getBoolean("result");
                         String return_zone_name = job.getString("zone_name");
-                        Log.e("return_result",return_result+","+return_zone_name);
-                        if(return_result){
+                        Log.e("return_result", return_result + "," + return_zone_name);
+
+
+                        Runnable Entrance_fail_runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                for (int i = 1; i <= 6; i++) {
+                                    recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)));
+                                }
+                            }
+                        };
+                        list_location_Confirm_handler.postDelayed(Entrance_fail_runnable, 0);
+
+                    } catch (JSONException e) {
+                        // Handle error
+                    }
+                } else {
+                    Log.e("dd-212", "\n" + con.getResponseMessage());
+                }
+            } catch (IOException e) {
+                Log.e("dd-215", e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private final MyHandler data_send_handler = new MyHandler(this);
+
+    private void Entrance_Http_post(String number) {
+        new Thread(() -> {
+            try {
+                Log.e("dd-", "164");
+                String url = "http://stag.nineone.com:8005/api/pressurecal";
+                URL object = null;
+                object = new URL(url);
+                Log.e("dd-", "168");
+                HttpURLConnection con = null;
+
+                con = (HttpURLConnection) object.openConnection();
+                con.setDoOutput(true);
+                con.setDoInput(true);
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestMethod("POST");
+                JSONArray array = new JSONArray();
+                if (SEND_HASHMAP == null) {
+                    Log.e("dd-209", "282");
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                        }
+                    }, 0);
+                    return;
+                }
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+                String mstart_name = sp.getString("startname", "");
+                JSONObject cred = new JSONObject(SEND_HASHMAP);
+                try {
+                    cred.put("user_id", mstart_name);
+                    cred.put("mean_pressure", PRESSURE_avg);
+                    //cred.put("ble", SEND_HASHMAP);
+                    cred.put("zone_name", number);
+                    cred.put("entrance_check" , true);
+                    Log.e("dd-187", "187");
+                } catch (JSONException e) {
+                    Log.e("dd-189", "\n" + e.getMessage());
+                    e.printStackTrace();
+                }
+                array.put(cred);
+                //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
+                //  array.put(cred2);
+                OutputStream os = con.getOutputStream();
+                Log.e("dd-195", array.toString());
+                os.write(array.toString().getBytes("UTF-8"));
+                os.close();
+                //display what returns the POST request
+
+              //  Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
+               // intent.putExtra("zone_name_num", 6);
+              //  startActivity(intent);
+
+                StringBuilder sb = new StringBuilder();
+                int HttpResult = con.getResponseCode();
+                if (HttpResult == HttpURLConnection.HTTP_OK) {
+                    BufferedReader br = new BufferedReader(
+                            new InputStreamReader(con.getInputStream(), "utf-8"));
+                    String line = null;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    br.close();
+                    Log.e("dd-BufferedReadersector", "\n" + sb.toString());
+                    try {
+                        JSONObject job = new JSONObject(sb.toString());
+                        boolean return_result = job.getBoolean("result");
+                        String return_zone_name = job.getString("zone_name");
+
+                        Log.e("return_result", return_result + "," + return_zone_name);
+                        if (return_result) {
                             runOnUiThread(new Runnable() {//약간의 딜레이
                                 @Override
                                 public void run() {
@@ -417,9 +542,18 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                                             try {
                                                 if (mProgressDialog != null && mProgressDialog.isShowing()) {
                                                     mProgressDialog.dismiss();
+                                                    stopScan();
                                                     Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
-                                                    intent.putExtra("zone_name_num", return_zone_name);
+                                                  //  intent.putExtra("zone_name_num", return_zone_name);
+
+                                                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                                    //저장을 하기위해 Editor를 불러온다.
+                                                    SharedPreferences.Editor edit = preferences.edit();
+                                                    edit.putString("Shared_zone_name_num", return_zone_name);
+                                                    edit.apply();
+
                                                     startActivity(intent);
+                                                    finish();
                                                 }
                                             } catch (Exception e) {
                                                 e.printStackTrace();
@@ -429,7 +563,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                                 }
                             });
 
-                        }else {
+                        } else {
                             Runnable Entrance_fail_runnable = new Runnable() {
                                 @Override
                                 public void run() {
@@ -446,7 +580,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                                     builder.show();
                                 }
                             };
-                            Entrance_fail_handler.postDelayed(Entrance_fail_runnable,0);
+                            Entrance_fail_handler.postDelayed(Entrance_fail_runnable, 0);
                         }
                     } catch (JSONException e) {
                         // Handle error
@@ -460,9 +594,10 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         }).start();
     }
+
     private ArrayList<Ble_item> listData = new ArrayList<>();
-    private Map<String,Integer> BLE_HASHMAP;
-    private Map<String,Object> SEND_HASHMAP;
+    private Map<String, Integer> BLE_HASHMAP;
+    private Map<String, Object> SEND_HASHMAP;
     private boolean ble_sned_Boolean = false;
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
@@ -480,12 +615,12 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             device.setTag_int_Rssi(result.getRssi());
                             break;
                         }
-                     //   Log.e("rssid", device.getTag_Name()+", "+device.getTag_Rssi_arrary().size());
+                        //   Log.e("rssid", device.getTag_Name()+", "+device.getTag_Rssi_arrary().size());
                         Log.e("getTag_Rssi", String.valueOf(device.getTag_Rssi_arrary()));
                     }
                     if (!contains) {
                         String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
-                        if ( DeviceNameArray.length >= 3) {
+                        if (DeviceNameArray.length >= 3) {
                             Log.e("rssid2", String.valueOf(result.getRssi()));
                             listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi()));
                         }
@@ -495,7 +630,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         ble_sned_Boolean = true;
                         runnable_ble_sned = () -> {
                             ble_hashmap_add();
-                           // Network_Confirm();
+                            // Network_Confirm();
                         };
                         start_handler.postDelayed(runnable_ble_sned, 1000);
                     }
@@ -503,11 +638,13 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 }
             }
         }
+
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
         }
     };
-    private void ble_hashmap_add(){
+
+    private void ble_hashmap_add() {
         BLE_HASHMAP = new HashMap<>();
         for (Ble_item device : listData) {
             int sum = 0;
@@ -516,14 +653,14 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 sum += device.getTag_Rssi_arrary().get(i);
             }
             avg = sum / device.getTag_Rssi_arrary().size();
-            BLE_HASHMAP.put(device.getTag_Name(),avg);
+            BLE_HASHMAP.put(device.getTag_Name(), avg);
         }
         SEND_HASHMAP = new HashMap<>();
-        SEND_HASHMAP.put("ble",BLE_HASHMAP);
+        SEND_HASHMAP.put("ble", BLE_HASHMAP);
         Log.e("dd-", String.valueOf(listData));
         Log.e("dd-", String.valueOf(BLE_HASHMAP));
 
-        if(listData.size()!=0) {
+        if (listData.size() != 0) {
             listData = new ArrayList<>();
             //  Send_Http_post();
         }
@@ -601,27 +738,28 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private ArrayList<Float> PRESSURE_add = new ArrayList<>();
     private float PRESSURE_avg;
 
-    private void senser_check(){
+    private void senser_check() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mBarometer = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);//기압계
-        if(mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null){
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null) {
             // textBaro.setText("기압계 센서 지원하지 않음");
         }
         mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
 
     }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
-       //     long timestamp = sensorEvent.timestamp;
+            //     long timestamp = sensorEvent.timestamp;
             float presure = sensorEvent.values[0];
             presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
-         //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
-         //   sector_list_adapter.notifyDataSetChanged();
+            //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
+            //   sector_list_adapter.notifyDataSetChanged();
             //기압을 바탕으로 고도를 계산(맞는거 맞아???)
             //float height = SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, presure);
             PRESSURE_add.add(presure);
-            if(getTime(SensorbaseTime)>=10) {
+            if (getTime(SensorbaseTime) >= 10) {
                 float sum = 0;
                 int count = 0;
                 for (float device : PRESSURE_add) {
@@ -634,6 +772,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
         }
     }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
@@ -644,10 +783,10 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         long nowTime = SystemClock.elapsedRealtime();
         //시스템이 부팅된 이후의 시간
         long overTime = nowTime - timesec;
-       //
+        //
         // Log.e("overtime", String.valueOf(overTime));
         long sec = (overTime / 1000) % 60;
-        long min = ((overTime / 1000) / 60)% 60;
+        long min = ((overTime / 1000) / 60) % 60;
         long hour = ((overTime / 1000) / 60) / 60;
         //  long ms = overTime % 1000;
 
@@ -672,6 +811,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
 
     private boolean mIsScanning = false;
+
     private void startScan() {
         if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
             mBluetoothLeScanner.startScan(leScanCallback);
@@ -683,6 +823,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         long now = System.currentTimeMillis();
         SimpleDateFormat sdfNow = new SimpleDateFormat("MM_dd_HH_mm_ss");
     }
+
     private void stopScan() {
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(leScanCallback);
@@ -691,6 +832,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         }
         invalidateOptionsMenu();
     }
+
     private void reScan() {
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(leScanCallback);
@@ -715,6 +857,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private double latitude = 0;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient fusedLocationClient;
+
     private void google_gps() {
         locationRequest = LocationRequest.create();
         locationRequest.setInterval(1000);
@@ -736,6 +879,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         });
     }
+
     private void startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -743,7 +887,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
-    private final LocationCallback locationCallback = new LocationCallback(){
+    private final LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             if (locationResult == null) {
@@ -790,10 +934,20 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
                 finish();
             }
+        }if (requestCode == REQUEST_CHECK_SETTINGS) {
+            Log.e("dd--921","dd");
+            if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
+                //       mblecheck=false;
+                Log.e("dd--924","dd");
+            } else {
+                buttonSwitchGPS_ON();
+                Log.e("dd--926","dd");
+            }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
     private final MyHandler Entrance_fail_handler = new MyHandler(this);
     private final MyHandler listcange_handler = new MyHandler(this);
     private final Handler mhandler1_startAdvertising = new Handler();
@@ -808,6 +962,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         public MyHandler(MainSectorActivity activity) {
             mActivity = new WeakReference<MainSectorActivity>(activity);
         }
+
         @Override
         public void handleMessage(Message msg) {
             MainSectorActivity activity = mActivity.get();
@@ -823,6 +978,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         }
     };
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -833,8 +989,16 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     public void onResume() {
         super.onResume();
         Log.e("connect_TAG", "onResume");
+        IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);//ble 상태 감지 필터
+        registerReceiver(mBroadcastReceiver1, filter1);
+        IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
+        filter2.addAction(Intent.ACTION_PROVIDER_CHANGED);
+        registerReceiver(mBroadcastReceiver1, filter2);
+
         IntentFilter filter3 = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);//인터넷 상태 감지 필터
         registerReceiver(mBroadcastReceiver1, filter3);
+
+
         startScan();
     }
 
@@ -873,11 +1037,69 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         super.onDestroy();
         Log.e("connect_TAG", "onDestroy()");
     }
+
     private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            Log.e("testdCONNECTEDgg", action+","+intent.getAction());
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                //log.e("off1", action);
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        bluetoothCheck();
+                        //  stopScan();
+                        invalidateOptionsMenu();
+                        Toast.makeText(getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
+                        //log.e("off1", "off1");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        //log.e("off2", "off2");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        invalidateOptionsMenu();
+
+                        //log.e("off3", "off3");
+                        // startService();
+                        // mblecheck = true;
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        //log.e("off4", "off4");
+                        break;
+                    default:
+                        //log.e("off5", String.valueOf(state));
+                        break;
+                }
+            }
+            if (action.equals(LocationManager.PROVIDERS_CHANGED_ACTION)) {
+                //log.e("off6", action + ", " + intent);
+
+            }
+
+            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+
+                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                if (isGpsEnabled || isNetworkEnabled) {
+                    //startService();
+                    invalidateOptionsMenu();
+                    Log.e("testCONNECTEDg", "testCONNECTEDg");
+                    //log.e("off7", String.valueOf(isGpsEnabled));
+                } else {
+                   // stopScan();
+                    Log.e("testdCONNECTEDg", "testdCONNECTEDg");
+                    invalidateOptionsMenu();
+                    //  mblecheck = false;
+                    buttonSwitchGPS_ON();
+                    Toast.makeText(getApplication(), "GPS가 종료되었습니다.\n GPS를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
+
+                    // blesendcheck.setText("중지 (GPS가 종료)");
+                    //log.e("off8", String.valueOf(isGpsEnabled));
+                }
+            }
             if (action.equals("android.net.conn.CONNECTIVITY_CHANGE")) {
                 Log.e("NetworkInfo", action);
                 Bundle extras = intent.getExtras();
@@ -895,72 +1117,118 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             }
         }
     };
+
     @Override
     public void onBackPressed() {
-
+        Intent intent = new Intent(MainSectorActivity.this,MainActivity.class);
+        startActivity(intent);
         finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
 
     }
-/*
-  private AdvertiseData mService_AdvData;
-    private AdvertiseSettings mService_AdvSettings;
-    private BluetoothLeAdvertiser mServiceAdvertiser;
-    private boolean isonoff = false;
-    private boolean mService_Advertiserstart = false;
-private void main_ble() {
 
-        BluetoothAdapter.getDefaultAdapter().setName("MO-"+"0000");
-        mService_AdvSettings = new AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(false)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                // .setTimeout(0)
-                .build();
-        if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-            mServiceAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-            //   mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+    /*
+      private AdvertiseData mService_AdvData;
+        private AdvertiseSettings mService_AdvSettings;
+        private BluetoothLeAdvertiser mServiceAdvertiser;
+        private boolean isonoff = false;
+        private boolean mService_Advertiserstart = false;
+    private void main_ble() {
+
+            BluetoothAdapter.getDefaultAdapter().setName("MO-"+"0000");
+            mService_AdvSettings = new AdvertiseSettings.Builder()
+                    .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                    .setConnectable(false)
+                    .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                    // .setTimeout(0)
+                    .build();
+            if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
+                mServiceAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
+                //   mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+            }
         }
-    }
-     private void not_network_ble_send() {
-        if(!isonoff)  {
-            // // Log.e("asd","asdasd");
-            mhandler1_startAdvertising.postDelayed(new Runnable() {
-                public void run() {
-                    mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
-                    Log.e("delay_check","mServiceAdvertiser");
-                    // Log.e("BLE", "Discovery onScanResult011: " + mService_AdvCallback.toString());
-                }
-            }, 0);
-            mhandler2_stopAdvertising.postDelayed(new Runnable() {
-                public void run() {
-                    mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
-                    mService_Advertiserstart = false;
-                    // Log.e("BLE", "Discovery onScanResult012: " +  mService_AdvCallback.toString());
-                }
-            }, 250);
+         private void not_network_ble_send() {
+            if(!isonoff)  {
+                // // Log.e("asd","asdasd");
+                mhandler1_startAdvertising.postDelayed(new Runnable() {
+                    public void run() {
+                        mServiceAdvertiser.startAdvertising(mService_AdvSettings, mService_AdvData, mService_AdvCallback);
+                        Log.e("delay_check","mServiceAdvertiser");
+                        // Log.e("BLE", "Discovery onScanResult011: " + mService_AdvCallback.toString());
+                    }
+                }, 0);
+                mhandler2_stopAdvertising.postDelayed(new Runnable() {
+                    public void run() {
+                        mServiceAdvertiser.stopAdvertising(mService_AdvCallback);
+                        mService_Advertiserstart = false;
+                        // Log.e("BLE", "Discovery onScanResult012: " +  mService_AdvCallback.toString());
+                    }
+                }, 250);
+            }
         }
+
+        private void not_network_ble_UUID_set() {
+              if (!mService_Advertiserstart) {
+                  Runnable runnable10;//.addServiceUuid(pUuid)
+                  runnable10 = new Runnable() {
+                      @Override
+                      public void run() {
+                          ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
+                          mService_AdvData = new AdvertiseData.Builder()
+                                  .setIncludeDeviceName(true)
+                                  .setIncludeTxPowerLevel(false)
+                                  //.addServiceUuid(pUuid)
+                                  .addServiceData(pUuid, arrayBytes4)
+                                  .build();
+                          not_network_ble_send();
+                          // Log.e("UUID_service2", "asdasd2");
+                      }
+                  };
+
+                  //
+              }
+          }*/
+    private static final int REQUEST_CHECK_SETTINGS = 0x1;
+    public void buttonSwitchGPS_ON() {
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
+
+        LocationSettingsRequest.Builder locationSettingsRequestBuilder = new LocationSettingsRequest.Builder();
+
+        locationSettingsRequestBuilder.addLocationRequest(locationRequest);
+
+
+        locationSettingsRequestBuilder.setAlwaysShow(true);
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = settingsClient.checkLocationSettings(locationSettingsRequestBuilder.build());
+
+        Log.e("dd--1172","dd");
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                Log.e("dd--1076","dd");
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+                if (e instanceof ResolvableApiException) {
+                    Log.e("dd--1085","dd");
+                    try {
+                        ResolvableApiException resolvableApiException = (ResolvableApiException) e;
+                        resolvableApiException.startResolutionForResult(MainSectorActivity.this, REQUEST_CHECK_SETTINGS);
+                        Log.e("dd--1089","dd");
+                    } catch (IntentSender.SendIntentException sendIntentException) {
+                        Log.e("dd--1091",sendIntentException.getMessage());
+                        sendIntentException.printStackTrace();
+                    }
+                }
+            }
+        });
     }
-
-    private void not_network_ble_UUID_set() {
-          if (!mService_Advertiserstart) {
-              Runnable runnable10;//.addServiceUuid(pUuid)
-              runnable10 = new Runnable() {
-                  @Override
-                  public void run() {
-                      ParcelUuid pUuid = new ParcelUuid(hiuuid_7);
-                      mService_AdvData = new AdvertiseData.Builder()
-                              .setIncludeDeviceName(true)
-                              .setIncludeTxPowerLevel(false)
-                              //.addServiceUuid(pUuid)
-                              .addServiceData(pUuid, arrayBytes4)
-                              .build();
-                      not_network_ble_send();
-                      // Log.e("UUID_service2", "asdasd2");
-                  }
-              };
-
-              //
-          }
-      }*/
-
 }
