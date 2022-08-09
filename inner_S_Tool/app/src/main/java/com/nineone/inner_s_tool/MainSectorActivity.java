@@ -138,6 +138,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 list_set_Http();
             }
         });
+        mInformation_boolean = false;
         RecyclerViewlayout();
         bluetoothCheck();
         buttonSwitchGPS_ON();
@@ -278,28 +279,32 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-                if (!mInformation_boolean) {
-                    location_Confirm_Confirm_Http_post();
-                } else {
-                    Get_Http();
+                if(!Entrance_check) {
+                    if (!mInformation_boolean) {
+                        location_Confirm_Confirm_Http_post();
+                    } else {
+                        Get_Http();
+                    }
                 }
             }
         };
-        timer.schedule(timerTask, 10000, 1000);
+        timer.schedule(timerTask, 1000, 10000);
     }
 
     private void startTimerTask2() {
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-                if (!mInformation_boolean) {
-                    location_Confirm_Confirm_Http_post();
-                } else {
-                    Get_Http();
+                if(!Entrance_check) {
+                    if (!mInformation_boolean) {
+                        location_Confirm_Confirm_Http_post();
+                    } else {
+                        Get_Http();
+                    }
                 }
             }
         };
-        timer.schedule(timerTask, 3000, 1000);
+        timer.schedule(timerTask, 1000, 3000);
     }
 
     private void Get_Http() {
@@ -363,7 +368,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     }
 
     private final MyHandler list_location_Confirm_handler = new MyHandler(this);
-
+    private boolean Entrance_check = false;
     private void location_Confirm_Confirm_Http_post() {
         new Thread(() -> {
             try {
@@ -431,7 +436,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         JSONObject job = new JSONObject(sb.toString());
                         boolean return_result = job.getBoolean("result");
                         String return_zone_name = job.getString("zone_name");
-                        Log.e("return_result", return_result + "," + return_zone_name);
+                        Log.e("return_result1", return_result + "," + return_zone_name);
 
 
                         Runnable Entrance_fail_runnable = new Runnable() {
@@ -462,6 +467,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private void Entrance_Http_post(String number) {
         new Thread(() -> {
             try {
+                Entrance_check = true;
                 Log.e("dd-", "164");
                 String url = "http://stag.nineone.com:8005/api/pressurecal";
                 URL object = null;
@@ -477,12 +483,22 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 con.setRequestMethod("POST");
                 JSONArray array = new JSONArray();
                 if (SEND_HASHMAP == null) {
-                    Log.e("dd-209", "282");
+                    Log.e("dd-512", "282");
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             Toast.makeText(getApplicationContext(), "위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                        }
+                    }, 0);
+                    return;
+                }if(PRESSURE_avg == 0){
+                    Log.e("dd-513", "282");
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "기압 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
                         }
                     }, 0);
                     return;
@@ -505,7 +521,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
                 //  array.put(cred2);
                 OutputStream os = con.getOutputStream();
-                Log.e("dd-195", array.toString());
+                Log.e("dd-514", array.toString());
                 os.write(array.toString().getBytes("UTF-8"));
                 os.close();
                 //display what returns the POST request
@@ -524,13 +540,13 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         sb.append(line + "\n");
                     }
                     br.close();
-                    Log.e("dd-BufferedReadersector", "\n" + sb.toString());
+                    Log.e("dd-515",  sb.toString());
                     try {
                         JSONObject job = new JSONObject(sb.toString());
                         boolean return_result = job.getBoolean("result");
                         String return_zone_name = job.getString("zone_name");
 
-                        Log.e("return_result", return_result + "," + return_zone_name);
+                        Log.e("return_result2", return_result + "," + return_zone_name);
                         if (return_result) {
                             runOnUiThread(new Runnable() {//약간의 딜레이
                                 @Override
@@ -605,8 +621,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             if (result.getDevice().getName() != null) {
 
                 BluetoothDevice bluetoothDevice = result.getDevice();
-                if (bluetoothDevice.getName().startsWith("TJ-")) {
-                    Log.e("rssid1", String.valueOf(result.getRssi()));
+                if (bluetoothDevice.getName().startsWith("TJ-00CA-00000002")) {
+              //  if (bluetoothDevice.getName().startsWith("TJ-")) {
+                  //  Log.e("rssid1", String.valueOf(result.getRssi()));
                     boolean contains = false;
                     for (Ble_item device : listData) {
                         if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
@@ -657,8 +674,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         }
         SEND_HASHMAP = new HashMap<>();
         SEND_HASHMAP.put("ble", BLE_HASHMAP);
-        Log.e("dd-", String.valueOf(listData));
-        Log.e("dd-", String.valueOf(BLE_HASHMAP));
+      //  Log.e("dd-", String.valueOf(listData));
+      //  Log.e("dd-", String.valueOf(BLE_HASHMAP));
 
         if (listData.size() != 0) {
             listData = new ArrayList<>();
@@ -931,8 +948,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 //       mblecheck=false;
 
             } else {
+                bluetoothCheck();
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
-                finish();
+               // finish();
             }
         }if (requestCode == REQUEST_CHECK_SETTINGS) {
             Log.e("dd--921","dd");

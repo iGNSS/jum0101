@@ -60,6 +60,8 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         location_textView = findViewById(R.id.Location_TextView);
 
         user_textView = findViewById(R.id.User_TextView);
+        mdata_height_TextView= findViewById(R.id.Height_TextView);
+        mdata_entrance_TextView = findViewById(R.id.Entrance_TextView);
         text_arrary();
     //    data_textView = findViewById(R.id.Data_TextView);
      //   data_boolen_textView = findViewById(R.id.Data_boolen_TextView);
@@ -150,6 +152,7 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
     }
     private TextView mdata_O2_textView,mdata_CO_textView,mdata_H2S_textView,mdata_CO2_textView,mdata_CH4_textView;
     private TextView mdata_O2_boolean_textView,mdata_CO_boolean_textView,mdata_H2S_boolean_textView,mdata_CO2_boolean_textView,mdata_CH4_boolean_textView;
+    private TextView mdata_height_TextView,mdata_entrance_TextView;
     private void text_arrary(){
         mdata_O2_textView = findViewById(R.id.Data_O2_TextView);
         mdata_O2_boolean_textView = findViewById(R.id.Data_O2_Boolean_TextView);
@@ -171,6 +174,10 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
             String message_zone_data = intent.getStringExtra("zone_data");
             String message_zone_boolen_data = intent.getStringExtra("zone_boolen_data");
             String message_env_user = intent.getStringExtra("env_user");
+            String message_zone_height = intent.getStringExtra("zone_height");
+            String message_zone_entrance = intent.getStringExtra("zone_entrance");
+            mdata_height_TextView.setText(message_zone_height);
+            mdata_entrance_TextView.setText(message_zone_entrance);
             //log.e("receiver", "Got message: " + message);
             Log.e("delay_check", "textData");
             String[] zone_data_array = message_zone_data.trim().split("-");
@@ -286,8 +293,9 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
             } else {
+                bluetoothCheck();
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
-                finish();
+             //   finish();
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

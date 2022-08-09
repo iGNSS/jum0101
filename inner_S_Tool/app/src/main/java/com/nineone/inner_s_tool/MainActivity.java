@@ -428,8 +428,9 @@ public class MainActivity extends AppCompatActivity {
                 //       mblecheck=false;
 
             } else {
+                bluetoothCheck();
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
-                finish();
+              //  finish();
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

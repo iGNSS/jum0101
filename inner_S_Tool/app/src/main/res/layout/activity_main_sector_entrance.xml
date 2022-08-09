@@ -6,16 +6,66 @@
     android:gravity="center"
     android:background="@color/white"
     android:orientation="vertical">
-
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30sp"
+        android:gravity="center"
+        android:text="현재 위치"
+        android:background="@drawable/line_die"
+        android:textColor="@color/black" />
     <TextView
         android:id="@+id/Location_TextView"
         android:layout_width="match_parent"
-        android:layout_height="131sp"
+        android:layout_height="70sp"
         android:gravity="center"
-        android:text="현재 위치"
 
         android:background="@drawable/line_die"
         android:textColor="@color/black" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="95sp"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="30sp"
+                android:gravity="center"
+                android:text="현재 높이"
+                android:background="@drawable/line_die"
+                android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/Height_TextView"
+                android:layout_width="match_parent"
+                android:layout_height="65sp"
+                android:gravity="center"
+                android:background="@drawable/line_die"
+                android:textColor="@color/black" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="30sp"
+                android:gravity="center"
+                android:text="출입 여부"
+                android:background="@drawable/line_die"
+                android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/Entrance_TextView"
+                android:layout_width="match_parent"
+                android:layout_height="65sp"
+                android:gravity="center"
+                android:background="@drawable/line_die"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="242sp"
@@ -308,7 +358,7 @@
     </LinearLayout>-->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="34sp"
+        android:layout_height="30sp"
         android:gravity="center"
         android:text="작업자 명단"
 
@@ -318,7 +368,7 @@
     <TextView
         android:id="@+id/User_TextView"
         android:layout_width="match_parent"
-        android:layout_height="109dp"
+        android:layout_height="75sp"
         android:background="@drawable/line_die"
         android:gravity="center"
         android:text="유저"
@@ -327,7 +377,7 @@
     <Button
         android:id="@+id/exit_Button"
         android:layout_width="match_parent"
-        android:layout_height="66dp"
+        android:layout_height="60dp"
         android:background="@color/blue"
         android:gravity="center"
         android:text="퇴장"

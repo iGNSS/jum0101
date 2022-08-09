@@ -127,6 +127,7 @@ public class Background_Service extends Service implements SensorEventListener {
                         onDestroy();
                         Log.e("activityt_TAG", "serviceddd");
                     }
+                    senser_check();
                     IntentFilter filter1 = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);//ble 상태 감지 필터
                     registerReceiver(mBroadcastReceiver1, filter1);
                     IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
@@ -532,6 +533,12 @@ public class Background_Service extends Service implements SensorEventListener {
                 if (SEND_HASHMAP == null) {
                     Log.e("dd-209", "282");
                     return;
+                }if (latitude == 0) {
+                    Log.e("dd-209", "283");
+                    return;
+                }if (PRESSURE_avg==0){
+                    Log.e("dd-209", "284");
+                    return;
                 }
                 JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
@@ -539,6 +546,7 @@ public class Background_Service extends Service implements SensorEventListener {
                     String mstart_name = sp.getString("startname", "");
                     cred.put("user_id", mstart_name);
                     cred.put("pressure", PRESSURE_avg);
+                    Log.e("dd-579", String.valueOf(PRESSURE_avg));
                     cred.put("lat", String.valueOf(latitude));
                     cred.put("lng", String.valueOf(longitude));
                     //cred.put("ble", SEND_HASHMAP);
@@ -567,12 +575,14 @@ public class Background_Service extends Service implements SensorEventListener {
                         sb.append(line + "\n");
                     }
                     br.close();
-                    Log.e("dd-209", "\n" + sb.toString());
+                    Log.e("dd-210", "\n" + sb.toString());
                     try {
                         JSONObject job = new JSONObject(sb.toString());
                         String build_name = job.getString("build_name");
                         String level_name = job.getString("level_name");
                         String zone_name = job.getString("zone_name");//xprmdlfma
+                        double zone_height = job.getDouble("zone_height");//상태 코드
+                        String zone_entrance = job.getString("zone_entrance");//상태 코드
                         String env_O2 = job.getString("env_O2");//null이면 화면에 표시하지않음
                         boolean env_O2_alarm = job.getBoolean("env_O2_alarm");//
                         String env_CO = job.getString("env_CO");//수신
@@ -608,6 +618,8 @@ public class Background_Service extends Service implements SensorEventListener {
                         String zone_data2 = "O2:"+env_O2 + ", CO:" + env_CO + ", H2S:" + env_H2S + ", CO2:" + env_Co2 + ",CH4:" + env_CH4;
 
                         String zone_boolen_data = env_O2_alarm + "-" + env_CO_alarm + "-" + env_H2S_alarm + "-" + env_Co2_alarm + "-" + env_CH4_alarm;
+
+
                         String zone_data3 = "O2 : " + env_O2 + "\n"
                                 + "CO : " + env_CO + "\n"
                                 + "H2S : " + env_H2S + "\n"
@@ -641,6 +653,8 @@ public class Background_Service extends Service implements SensorEventListener {
                                 intent.putExtra("buildlevel_name", buildlevel_name);
                                 intent.putExtra("zone_data", zone_data);
                                 intent.putExtra("zone_boolen_data", zone_boolen_data);
+                                intent.putExtra("zone_height", String.format(Locale.KOREA,"%.4f", zone_height));
+                                intent.putExtra("zone_entrance", zone_entrance);
                                 intent.putExtra("env_user", env_user);
                                 Log.e("delay_check", "massage");
                                 LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
@@ -774,6 +788,7 @@ public class Background_Service extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (!isonoff) {
             if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
+
                 //     long timestamp = sensorEvent.timestamp;
                 float presure = sensorEvent.values[0];
                 presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
@@ -792,6 +807,7 @@ public class Background_Service extends Service implements SensorEventListener {
                     PRESSURE_avg = sum / count;
                     SensorbaseTime = SystemClock.elapsedRealtime();
                 }
+                Log.e("PRESSURE_avg", String.valueOf(PRESSURE_avg));
             }
         }
     }
@@ -915,6 +931,7 @@ public class Background_Service extends Service implements SensorEventListener {
         stopScan();
         isonoff = true;
         Exit_Http_post();
+        mSensorManager.unregisterListener(this);
         try {
             unregisterReceiver(mBroadcastReceiver1);
         } catch (Exception ignored) {
