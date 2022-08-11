@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center"
     android:background="@color/white"
+    android:paddingBottom="5dp"
     android:orientation="vertical">
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="30sp"
+        android:layout_height="0dp"
+        android:layout_weight="30"
         android:gravity="center"
         android:text="현재 위치"
         android:background="@drawable/line_die"
@@ -16,14 +19,16 @@
     <TextView
         android:id="@+id/Location_TextView"
         android:layout_width="match_parent"
-        android:layout_height="70sp"
+        android:layout_height="0dp"
+        android:layout_weight="70"
         android:gravity="center"
-
+        android:textSize="20sp"
         android:background="@drawable/line_die"
         android:textColor="@color/black" />
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="95sp"
+        android:layout_height="0dp"
+        android:layout_weight="95"
         android:orientation="horizontal">
         <LinearLayout
             android:layout_width="0dp"
@@ -32,7 +37,8 @@
             android:orientation="vertical">
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="30sp"
+                android:layout_height="0dp"
+                android:layout_weight="30"
                 android:gravity="center"
                 android:text="현재 높이"
                 android:background="@drawable/line_die"
@@ -40,7 +46,8 @@
             <TextView
                 android:id="@+id/Height_TextView"
                 android:layout_width="match_parent"
-                android:layout_height="65sp"
+                android:layout_height="0dp"
+                android:layout_weight="65"
                 android:gravity="center"
                 android:background="@drawable/line_die"
                 android:textColor="@color/black" />
@@ -52,23 +59,28 @@
             android:orientation="vertical">
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="30sp"
+                android:layout_height="0dp"
+                android:layout_weight="30"
                 android:gravity="center"
                 android:text="출입 여부"
                 android:background="@drawable/line_die"
                 android:textColor="@color/black" />
-            <TextView
+
+            <ImageView
                 android:id="@+id/Entrance_TextView"
                 android:layout_width="match_parent"
-                android:layout_height="65sp"
+                android:layout_height="0dp"
+                android:layout_weight="65"
                 android:gravity="center"
                 android:background="@drawable/line_die"
-                android:textColor="@color/black" />
+                app:srcCompat="@drawable/senser_data_no" />
+
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="242sp"
+        android:layout_height="0dp"
+        android:layout_weight="240"
         android:background="@drawable/line_die"
         android:orientation="horizontal">
         <TextView
@@ -94,7 +106,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/textdesign"
                     android:gravity="center"
-                    android:text="공기"
+                    android:text="Gas"
                     android:textColor="@color/white" />
 
                 <TextView
@@ -103,7 +115,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/textdesign"
                     android:gravity="center"
-                    android:text="농도"
+                    android:text="Density"
                     android:textColor="@color/white"/>
 
                 <TextView
@@ -112,7 +124,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/textdesign"
                     android:gravity="center"
-                    android:text="경고"
+                    android:text="Status"
                     android:textColor="@color/white"/>
 
             </TableRow>
@@ -358,7 +370,8 @@
     </LinearLayout>-->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="30sp"
+        android:layout_height="0dp"
+        android:layout_weight="30"
         android:gravity="center"
         android:text="작업자 명단"
 
@@ -368,7 +381,8 @@
     <TextView
         android:id="@+id/User_TextView"
         android:layout_width="match_parent"
-        android:layout_height="75sp"
+        android:layout_height="0dp"
+        android:layout_weight="75"
         android:background="@drawable/line_die"
         android:gravity="center"
         android:text="유저"
@@ -377,10 +391,12 @@
     <Button
         android:id="@+id/exit_Button"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="0dp"
+        android:layout_weight="60"
         android:background="@color/blue"
         android:gravity="center"
         android:text="퇴장"
+        android:textSize="20sp"
         android:textColor="@color/black" />
 
 </LinearLayout>

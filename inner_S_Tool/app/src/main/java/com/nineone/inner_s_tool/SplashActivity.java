@@ -58,7 +58,7 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
             Manifest.permission.ACCESS_FINE_LOCATION
     };
     private final String[] permissions11 = {
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+           // Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -274,7 +274,13 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
                         if(mstart_name.equals("")) {
                             newIntent = new Intent(getApplicationContext(), MainLoginActivity.class);
                         }else{
-                            newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            SharedPreferences sp2 = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            String Shared_zone_name_num = sp2.getString("Shared_zone_name_num", "0");
+                            if(Shared_zone_name_num.equals("0")) {
+                                newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            }else{
+                                newIntent = new Intent(getApplicationContext(), MainSectorEntrance_Activity.class);
+                            }
                         }
                         startActivity(newIntent);
                         finish();

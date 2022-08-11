@@ -524,19 +524,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Log.e("connect_TAG", "onStart()");
+       // Log.e("connect_TAG", "onStart()");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.e("connect_TAG", "onResume");
+      //  Log.e("connect_TAG", "onResume");
       //  startScan();
     }
 
     @Override
     protected void onPause() {
-        Log.e("connect_TAG", "onPause");
+        //Log.e("connect_TAG", "onPause");
         super.onPause();
         stopScan();
         isonoff=true;
@@ -552,14 +552,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        Log.e("connect_TAG", "onStop");
+       // Log.e("connect_TAG", "onStop");
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.e("connect_TAG", "onDestroy()");
+       // Log.e("connect_TAG", "onDestroy()");
     }
 
 
@@ -625,6 +625,9 @@ public class MainActivity extends AppCompatActivity {
                 Intent newIntent = new Intent(MainActivity.this, MainLoginActivity.class);
                 startActivity(newIntent);
             finish();
+            return true;
+        }else if(itemId == R.id.exit){
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);

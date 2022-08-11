@@ -44,6 +44,7 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -111,7 +112,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("연결");
+        actionBar.setTitle("삼성 중공업");
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         SensorbaseTime = SystemClock.elapsedRealtime();
         List_update_Time = SystemClock.elapsedRealtime();
@@ -119,11 +120,14 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         CAG_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CAG_button.setSelected(true);
-                Information_button.setSelected(false);
-                mInformation_boolean = false;
+                if(mInformation_boolean) {
+                    CAG_button.setSelected(true);
+                    Information_button.setSelected(false);
+                    mInformation_boolean = false;
+                    recyclerViewAdapter.item_Clear();
+                    list_set_Http();
+                }
 
-                list_set_Http();
 
             }
         });
@@ -132,10 +136,13 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         Information_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CAG_button.setSelected(false);
-                Information_button.setSelected(true);
-                mInformation_boolean = true;
-                list_set_Http();
+                if(!mInformation_boolean) {
+                    CAG_button.setSelected(false);
+                    Information_button.setSelected(true);
+                    mInformation_boolean = true;
+                    recyclerViewAdapter.item_Clear();
+                    list_set_Http();
+                }
             }
         });
         mInformation_boolean = false;
@@ -164,7 +171,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             public void onItemClick(View v, int position) {//리스트를 클릭했을때 이벤트
                 if (position != RecyclerView.NO_POSITION) {
                     String[] LintNameArray = recyclerViewAdapter.sector_list_items().get(position).getItem_tag_name().split(" ");
-                    Entrance_Http_post(LintNameArray[1]);
+                    Entrance_check_in_Http_post(LintNameArray[1]);
                     Log.e("dd-", LintNameArray[1] + " -143");
 
                    Intent intent = new Intent(MainSectorActivity.this, MainSectorEntranceActivity.class);
@@ -183,28 +190,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     }
 
     private void list_set_Http() {
-        stopTimerTask();
         recyclerViewAdapter.item_Clear();
-       /* int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
-        if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
-            Runnable runnable9 = new Runnable() {
-                @Override
-                public void run() {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainSectorActivity.this);
-                    builder.setCancelable(false);
-                    builder.setTitle("실행 종료");
-                    builder.setMessage("인터넷 연결되지 않아 리스트를 불러 올 수 없습니다.\n확인 후 재 실행해 주세요");
-                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                          //  finish();
-                        }
-                    });
-                    builder.show();
-                }
-            };
-            listcange_handler.postDelayed(runnable9, 0);
-        } else {*/
+        stopTimerTask();
         Runnable list_change_runnable = new Runnable() {
             @Override
             public void run() {
@@ -235,13 +222,13 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             } else {
                                 if (position != RecyclerView.NO_POSITION) {
                                     String[] LintNameArray = recyclerViewAdapter.sector_list_items().get(position).getItem_tag_name().split(" ");
-                                    Entrance_Http_post(LintNameArray[1]);
+                                    Entrance_check_in_Http_post(LintNameArray[1]);
                                     Log.e("dd-", LintNameArray[1] + " -143");
                                 }
                             }
                         }
                     });
-                     startTimerTask2 ();
+                     startTimerTask1 ();
                 } else {
                     recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
                     recyclerViewAdapter.item_noti();
@@ -261,7 +248,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         builder.show();
                     } else {
                         new Thread(() -> {
-                            Get_Http();
+                            Get_Information_list_Http();
                         }).start();
                     }
                 }
@@ -274,21 +261,23 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     private TimerTask timerTask;
     private Timer timer = new Timer();
-
+    private int period = 3000;
     private void startTimerTask1() {
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
                 if(!Entrance_check) {
-                    if (!mInformation_boolean) {
-                        location_Confirm_Confirm_Http_post();
-                    } else {
-                        Get_Http();
+                    if (mInformation_boolean) {
+                        period=10000;
+                        Get_Information_list_Http();
+                    }else{
+                        period=3000;
+                        work_location_check_Http_post();
                     }
                 }
             }
         };
-        timer.schedule(timerTask, 1000, 10000);
+        timer.schedule(timerTask, 1000, period);
     }
 
     private void startTimerTask2() {
@@ -297,9 +286,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             public void run() { // 코드 작성
                 if(!Entrance_check) {
                     if (!mInformation_boolean) {
-                        location_Confirm_Confirm_Http_post();
-                    } else {
-                        Get_Http();
+                        Log.e("return_result1","startTimerTask2");
+                        work_location_check_Http_post();
                     }
                 }
             }
@@ -307,7 +295,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         timer.schedule(timerTask, 1000, 3000);
     }
 
-    private void Get_Http() {
+    private void Get_Information_list_Http() {
         Document doc = null;
         try {
             Log.e("dd-", "164");
@@ -339,12 +327,12 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     String env_Co2_alarm = subJsonObject.getString("env_Co2_alarm");//
                     String env_CH4 = subJsonObject.getString("env_CH4");//상태 코드
                     String env_CH4_alarm = subJsonObject.getString("env_CH4_alarm");//
-                    String zone_data = "O2 : " + env_O2 + "\n"
-                            + "CO : " + env_CO + "\n"
-                            + "H2S : " + env_H2S + "\n"
-                            + "CO2 : " + env_Co2 + "\n"
-                            + "CH4 : " + env_CH4;
-
+                    String zone_data = "O2 : " + env_O2 + " %\n"
+                            + "CO : " + env_CO + " ppm\n"
+                            + "H2S : " + env_H2S + " ppm\n"
+                            + "CO2 : " + env_Co2 + " ppm\n"
+                            + "CH4 : " + env_CH4 + " ppm";
+                    Log.e("zone_data1",zone_data);
                     if (mInformation_boolean) {
                         recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false);
                         startTimerTask1();
@@ -369,7 +357,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     private final MyHandler list_location_Confirm_handler = new MyHandler(this);
     private boolean Entrance_check = false;
-    private void location_Confirm_Confirm_Http_post() {
+    private void work_location_check_Http_post() {
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
@@ -387,15 +375,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 con.setRequestMethod("POST");
                 JSONArray array = new JSONArray();
                 if (SEND_HASHMAP == null) {
-                 /*   Log.e("dd-209", "282");
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                            Toast.makeText(getApplicationContext(),"위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
-                        }
-                    }, 0);*/
+
                     return;
                 }
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -443,7 +423,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             @Override
                             public void run() {
                                 for (int i = 1; i <= 6; i++) {
-                                    recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)));
+                                    if (!mInformation_boolean) {
+                                        recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)));
+                                    }
                                 }
                             }
                         };
@@ -464,7 +446,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     private final MyHandler data_send_handler = new MyHandler(this);
 
-    private void Entrance_Http_post(String number) {
+    private void Entrance_check_in_Http_post(String number) {
         new Thread(() -> {
             try {
                 Entrance_check = true;
@@ -488,20 +470,23 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(getApplicationContext(), "위치 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "BLE 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
                         }
                     }, 0);
                     return;
-                }if(PRESSURE_avg == 0){
-                    Log.e("dd-513", "282");
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), "기압 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
-                        }
-                    }, 0);
-                    return;
+                }
+                if(Barometer_have_boolean) {
+                    if (PRESSURE_avg == 0) {
+                        Log.e("dd-513", "282");
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "기압 데이터 수집 중 입니다\n잠시 후 다시 시도해 주세요", Toast.LENGTH_SHORT).show();
+                            }
+                        }, 0);
+                        return;
+                    }
                 }
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
                 String mstart_name = sp.getString("startname", "");
@@ -621,8 +606,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             if (result.getDevice().getName() != null) {
 
                 BluetoothDevice bluetoothDevice = result.getDevice();
-                if (bluetoothDevice.getName().startsWith("TJ-00CA-00000002")) {
-              //  if (bluetoothDevice.getName().startsWith("TJ-")) {
+                if (bluetoothDevice.getName().startsWith("TJ-")) {
                   //  Log.e("rssid1", String.valueOf(result.getRssi()));
                     boolean contains = false;
                     for (Ble_item device : listData) {
@@ -754,35 +738,34 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private Sensor mBarometer; // 기압계
     private ArrayList<Float> PRESSURE_add = new ArrayList<>();
     private float PRESSURE_avg;
-
+    private boolean Barometer_have_boolean = true;
     private void senser_check() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mBarometer = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);//기압계
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null) {
-            // textBaro.setText("기압계 센서 지원하지 않음");
+            Barometer_have_boolean= false;
+            Log.e("기압없음", "763");
         }
         mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
 
     }
-
+    private int SensorbaseTimecount=5;
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
             //     long timestamp = sensorEvent.timestamp;
+            Log.e("기압없음", "764");
             float presure = sensorEvent.values[0];
             presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
-            //   Log.e("TYPE_PRESSURE", String.valueOf(presure));
-            //   sector_list_adapter.notifyDataSetChanged();
-            //기압을 바탕으로 고도를 계산(맞는거 맞아???)
-            //float height = SensorManager.getAltitude(SensorManager.PRESSURE_STANDARD_ATMOSPHERE, presure);
             PRESSURE_add.add(presure);
-            if (getTime(SensorbaseTime) >= 10) {
+            if (getTime(SensorbaseTime) >= SensorbaseTimecount) {
                 float sum = 0;
                 int count = 0;
                 for (float device : PRESSURE_add) {
                     sum += device;
                     count++;
                 }
+                SensorbaseTimecount=10;
                 PRESSURE_avg = sum / count;
                 SensorbaseTime = SystemClock.elapsedRealtime();
             }
@@ -1067,7 +1050,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
-                        bluetoothCheck();
+                     //   bluetoothCheck();
                         //  stopScan();
                         invalidateOptionsMenu();
                         Toast.makeText(getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
@@ -1142,6 +1125,15 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         startActivity(intent);
         finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
 
+    }
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        final int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /*

@@ -23,11 +23,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -49,14 +52,15 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
 
       //  Intent intent = getIntent();//차트 리스트 페이지에서 정보 받아오기
      //   String get_zone_name_num = intent.getExtras().getString("zone_name_num");//
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        String Shared_zone_name_num = sp.getString("Shared_zone_name_num", "");
+
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("No " + Shared_zone_name_num + " Confferdam");
+        actionBar.setTitle("LNG 선박");
+     //   actionBar.setTitle("No " + Shared_zone_name_num + " Confferdam");
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
+        bluetoothCheck();
+        startService();
         location_textView = findViewById(R.id.Location_TextView);
 
         user_textView = findViewById(R.id.User_TextView);
@@ -65,8 +69,8 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         text_arrary();
     //    data_textView = findViewById(R.id.Data_TextView);
      //   data_boolen_textView = findViewById(R.id.Data_boolen_TextView);
-        bluetoothCheck();
-        startService();
+
+
         exit_button = findViewById(R.id.exit_Button);
         exit_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,6 +132,8 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         super.onResume();
         Log.e("connect_TAG", "onResume");
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("custom-event-name"));
+       // LocalBroadcastManager.getInstance(this).registerReceiver(mexitMessageReceiver, new IntentFilter("exit-event"));
+
         mble_gps_false = false;
 
     }
@@ -152,7 +158,8 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
     }
     private TextView mdata_O2_textView,mdata_CO_textView,mdata_H2S_textView,mdata_CO2_textView,mdata_CH4_textView;
     private TextView mdata_O2_boolean_textView,mdata_CO_boolean_textView,mdata_H2S_boolean_textView,mdata_CO2_boolean_textView,mdata_CH4_boolean_textView;
-    private TextView mdata_height_TextView,mdata_entrance_TextView;
+    private TextView mdata_height_TextView;
+    private ImageView mdata_entrance_TextView;
     private void text_arrary(){
         mdata_O2_textView = findViewById(R.id.Data_O2_TextView);
         mdata_O2_boolean_textView = findViewById(R.id.Data_O2_Boolean_TextView);
@@ -165,34 +172,55 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         mdata_CH4_textView = findViewById(R.id.Data_CH4_TextView);
         mdata_CH4_boolean_textView = findViewById(R.id.Data_CH4_Boolean_TextView);
     }
+    private final BroadcastReceiver  mexitMessageReceiver= new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String mexit_zone_data = intent.getStringExtra("exit_zone_name");
+        }
+    };
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             // TODO Auto-generated method stub
             // Get extra data included in the Intent
-            String message_buildlevel_name = intent.getStringExtra("buildlevel_name");
+          //  String message_buildlevel_name = intent.getStringExtra("buildlevel_name");
             String message_zone_data = intent.getStringExtra("zone_data");
             String message_zone_boolen_data = intent.getStringExtra("zone_boolen_data");
             String message_env_user = intent.getStringExtra("env_user");
             String message_zone_height = intent.getStringExtra("zone_height");
-            String message_zone_entrance = intent.getStringExtra("zone_entrance");
-            mdata_height_TextView.setText(message_zone_height);
-            mdata_entrance_TextView.setText(message_zone_entrance);
+            boolean message_zone_entrance = intent.getBooleanExtra("zone_entrance", false);
+            if (message_zone_height != null) {
+                mdata_height_TextView.setText(message_zone_height);
+            }
+            if(!message_zone_entrance) {
+                mdata_entrance_TextView.setImageResource(R.drawable.senser_data_no);
+            }else{
+                mdata_entrance_TextView.setImageResource(R.drawable.senser_data_ok);
+            }
+           // mdata_entrance_TextView.setText(message_zone_entrance);
             //log.e("receiver", "Got message: " + message);
             Log.e("delay_check", "textData");
-            String[] zone_data_array = message_zone_data.trim().split("-");
-            String[] zone_data_boolen_array = message_zone_boolen_data.trim().split("-");
-            location_textView.setText(message_buildlevel_name);
-            mdata_O2_textView.setText(zone_data_array[0]);
-            mdata_CO_textView.setText(zone_data_array[1]);
-            mdata_H2S_textView.setText(zone_data_array[2]);
-            mdata_CO2_textView.setText(zone_data_array[3]);
-            mdata_CH4_textView.setText(zone_data_array[4]);
+            if(message_zone_data!=null) {
+                String[] zone_data_array = message_zone_data.trim().split("-");
+               // actionBar.setTitle("No " + Shared_zone_name_num + " Confferdam");
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplication());
+                String Shared_zone_name_num = sp.getString("Shared_zone_name_num", "0");
+                location_textView.setText("No " + Shared_zone_name_num + " Confferdam");
+
+                mdata_O2_textView.setText(zone_data_array[0] + " %");
+                if(zone_data_array.length>=5) {
+                    mdata_CO_textView.setText(zone_data_array[1] + " ppm");
+                    mdata_H2S_textView.setText(zone_data_array[2] + " ppm");
+                    mdata_CO2_textView.setText(zone_data_array[3] + " ppm");
+                    mdata_CH4_textView.setText(zone_data_array[4] + " ppm");
+                }
+            }
             String env_O2_alarm_String = "OFF";
             String env_CO_alarm_String = "OFF";
             String env_H2S_alarm_String = "OFF";
             String env_CO2_alarm_String = "OFF";
             String env_CH4_alarm_String = "OFF";
+            String[] zone_data_boolen_array = message_zone_boolen_data.trim().split("-");
             if (zone_data_boolen_array[0].equals("true")) {
                 env_O2_alarm_String = "ON";
                 mdata_O2_boolean_textView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.red));
@@ -232,7 +260,10 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
             //data_textView.setText("농도\n\n"+zone_data_array[0]+" %\n\n"+zone_data_array[1]+" ppm\n\n"+zone_data_array[2]+" ppm\n\n"+zone_data_array[3]+" ppm\n\n"+zone_data_array[4]+" ppm");
             // data_boolen_textView.setText("경고\n\n"+zone_data_boolen_array[0]+"\n\n"+zone_data_boolen_array[1]+"\n\n"+zone_data_boolen_array[2]+"\n\n"+zone_data_boolen_array[3]+"\n\n"+zone_data_boolen_array[4]);
 
-            user_textView.setText(message_env_user);
+            if(message_env_user!=null) {
+                String replace_env_user = message_env_user.replace("\""," ").replace("[","").replace("]","");
+                user_textView.setText(replace_env_user);
+            }
             //Log.d("receiver", "Got message: " + message);
         }
     };
@@ -252,29 +283,42 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
 
     @Override
     public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("퇴장 확인");
-        builder.setMessage("정말로 퇴장하시겠습니까?");
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //  moveTaskToBack(true); // 태스크를 백그라운드로 이동
-                stopService();
-                Intent intent = new Intent(MainSectorEntrance_Activity.this,MainSectorActivity.class);
+        int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
+        if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("네트워크 오류");
+            builder.setMessage("퇴장을 위해서는 네트워크 연결이 필요합니다.");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.show();
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("퇴장 확인");
+            builder.setMessage("정말로 퇴장하시겠습니까?");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //  moveTaskToBack(true); // 태스크를 백그라운드로 이동
+                    stopService();
+                    Intent intent = new Intent(MainSectorEntrance_Activity.this, MainSectorActivity.class);
 
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                //저장을 하기위해 Editor를 불러온다.
-                SharedPreferences.Editor edit = preferences.edit();
-                edit.putString("Shared_zone_name_num", "0");
-                edit.apply();
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    //저장을 하기위해 Editor를 불러온다.
+                    SharedPreferences.Editor edit = preferences.edit();
+                    edit.putString("Shared_zone_name_num", "0");
+                    edit.apply();
 
-                startActivity(intent);
-                finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
-                //android.os.Process.killProcess(android.os.Process.myPid()); // 앱 프로세스 종료
-            }
-        });
-        builder.setNegativeButton("취소", null);
-        builder.show();
+                    startActivity(intent);
+                    finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
+                    //android.os.Process.killProcess(android.os.Process.myPid()); // 앱 프로세스 종료
+                }
+            });
+            builder.setNegativeButton("취소", null);
+            builder.show();
+        }
     }
     private void bluetoothCheck() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -302,5 +346,15 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
         }
     }
     private boolean mble_gps_false = false;
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        final int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
 
+            onBackPressed();
+
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }
