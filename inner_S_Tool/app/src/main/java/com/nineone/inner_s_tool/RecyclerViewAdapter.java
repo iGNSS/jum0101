@@ -80,7 +80,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
         viewHolder.tagname.setText(item.getItem_tag_name());
 
-        if(!mScanmode) {
+        if(!item.getItem_list_in_information()) {
             viewHolder.tagdata.setVisibility(View.GONE);
             viewHolder.tagbutton.setVisibility(View.VISIBLE);
             if(item.getItem_location_t_f()){
@@ -95,7 +95,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         }
     }
 
-    public String update(String mname, String mdata, boolean mboolean) {
+    public String update(String mname, String mdata, boolean m_location_boolean, boolean list_t_f) {
 
         boolean contains = false;
         for (Sector_list_item device : listData) {
@@ -103,13 +103,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 contains = true;
                 device.setItem_tag_name(mname);
                 device.setItem_tag_data(mdata);
-                device.setItem_location_t_f(mboolean);
+                device.setItem_location_t_f(m_location_boolean);
+                device.setItem_list_in_information(list_t_f);
                 // update
                 break;
             }
         }
         if (!contains) {
-            listData.add(new Sector_list_item(mname, mdata, mboolean));
+            listData.add(new Sector_list_item(mname, mdata, m_location_boolean, list_t_f));
         }
        if(!testboolean){
            testboolean=true;

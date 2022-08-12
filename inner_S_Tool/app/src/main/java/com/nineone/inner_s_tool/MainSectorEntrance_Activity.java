@@ -206,13 +206,14 @@ public class MainSectorEntrance_Activity extends AppCompatActivity{
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplication());
                 String Shared_zone_name_num = sp.getString("Shared_zone_name_num", "0");
                 location_textView.setText("No " + Shared_zone_name_num + " Confferdam");
-
-                mdata_O2_textView.setText(zone_data_array[0] + " %");
-                if(zone_data_array.length>=5) {
-                    mdata_CO_textView.setText(zone_data_array[1] + " ppm");
-                    mdata_H2S_textView.setText(zone_data_array[2] + " ppm");
-                    mdata_CO2_textView.setText(zone_data_array[3] + " ppm");
-                    mdata_CH4_textView.setText(zone_data_array[4] + " ppm");
+                if(zone_data_array.length>=1) {
+                    mdata_O2_textView.setText(zone_data_array[0] + " %");
+                    if (zone_data_array.length >= 5) {
+                        mdata_CO_textView.setText(zone_data_array[1] + " ppm");
+                        mdata_H2S_textView.setText(zone_data_array[2] + " ppm");
+                        mdata_CO2_textView.setText(zone_data_array[3] + " ppm");
+                        mdata_CH4_textView.setText(zone_data_array[4] + " ppm");
+                    }
                 }
             }
             String env_O2_alarm_String = "OFF";

@@ -196,11 +196,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             @Override
             public void run() {
                 if (!mInformation_boolean) {
-                    recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
+                   // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
                     recyclerViewAdapter.item_noti();
-                    mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                   // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
                     for (int i = 1; i <= 6; i++) {
-                        recyclerViewAdapter.update("No " + i + " Confferdam", "", false);
+                        recyclerViewAdapter.update("No " + i + " Confferdam", "", false,false);
                     }
                     recyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
@@ -230,9 +230,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     });
                      startTimerTask1 ();
                 } else {
-                    recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
+                   // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
                     recyclerViewAdapter.item_noti();
-                    mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                   // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
                     int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
                     if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainSectorActivity.this);
@@ -334,7 +334,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             + "CH4 : " + env_CH4 + " ppm";
                     Log.e("zone_data1",zone_data);
                     if (mInformation_boolean) {
-                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false);
+                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false,true);
                         startTimerTask1();
                     }
                 }
@@ -424,7 +424,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             public void run() {
                                 for (int i = 1; i <= 6; i++) {
                                     if (!mInformation_boolean) {
-                                        recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)));
+                                        recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)),false);
                                     }
                                 }
                             }
@@ -1050,7 +1050,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
-                     //   bluetoothCheck();
+                        bluetoothCheck();
                         //  stopScan();
                         invalidateOptionsMenu();
                         Toast.makeText(getApplication(), "블루투스가 종료되었습니다.\n 블루투스를 실행시켜 주세요 ", Toast.LENGTH_SHORT).show();
@@ -1061,7 +1061,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         break;
                     case BluetoothAdapter.STATE_ON:
                         invalidateOptionsMenu();
-
+                        startScan();
                         //log.e("off3", "off3");
                         // startService();
                         // mblecheck = true;
