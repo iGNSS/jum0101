@@ -277,7 +277,7 @@ public class SplashActivity extends AppCompatActivity {//어플에서 제일 처
                             SharedPreferences sp2 = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                             String Shared_zone_name_num = sp2.getString("Shared_zone_name_num", "0");
                             if(Shared_zone_name_num.equals("0")) {
-                                newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                                newIntent = new Intent(getApplicationContext(), Main_Card_Activity.class);
                             }else{
                                 newIntent = new Intent(getApplicationContext(), MainSectorEntrance_Activity.class);
                             }

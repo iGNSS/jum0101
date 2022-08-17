@@ -361,7 +361,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
-                String url = "http://stag.nineone.com:8005/api/pressurecal";
+                String url = "http://stag.nineone.com:8005/api/scanentrance";
                 URL object = null;
                 object = new URL(url);
                 Log.e("dd-", "168");
@@ -383,10 +383,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 JSONObject cred = new JSONObject(SEND_HASHMAP);
                 try {
                     cred.put("user_id", mstart_name);
-                    cred.put("mean_pressure", PRESSURE_avg);
-                    //cred.put("ble", SEND_HASHMAP);
-                    cred.put("zone_name", "0");
-                    cred.put("entrance_check" , false);
+                    cred.put("lat", String.valueOf(latitude));
+                    cred.put("lng", String.valueOf(longitude));
                     Log.e("dd-187", "187");
                 } catch (JSONException e) {
                     Log.e("dd-189", "\n" + e.getMessage());
@@ -414,10 +412,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     Log.e("dd-209", "\n" + sb.toString());
                     try {
                         JSONObject job = new JSONObject(sb.toString());
-                        boolean return_result = job.getBoolean("result");
                         String return_zone_name = job.getString("zone_name");
-                        Log.e("return_result1", return_result + "," + return_zone_name);
-
 
                         Runnable Entrance_fail_runnable = new Runnable() {
                             @Override
@@ -494,6 +489,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 try {
                     cred.put("user_id", mstart_name);
                     cred.put("mean_pressure", PRESSURE_avg);
+                    Log.e("PRESSURE_avg", String.valueOf(PRESSURE_avg));
                     //cred.put("ble", SEND_HASHMAP);
                     cred.put("zone_name", number);
                     cred.put("entrance_check" , true);
@@ -1121,7 +1117,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(MainSectorActivity.this,MainActivity.class);
+        Intent intent = new Intent(MainSectorActivity.this,Main_Card_Activity.class);
         startActivity(intent);
         finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
 

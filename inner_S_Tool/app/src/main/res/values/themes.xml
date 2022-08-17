@@ -15,4 +15,11 @@
     </style>
 
     <style name="Theme.Notitel" parent="Theme.AppCompat.Light.NoActionBar" />
+    <style name="Theme.Nocardview" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>

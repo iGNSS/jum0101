@@ -164,7 +164,7 @@ public class Background_Service extends Service implements SensorEventListener {
                     startForeground(1, notification);
 
                     ble_setting();
-                    google_gps();
+                  //  google_gps();
                     startScan();
                      soundPool = new SoundPool.Builder().setMaxStreams(8).build();
                      soundPlay = soundPool.load(getApplicationContext(), R.raw.arml, 1);
@@ -240,7 +240,7 @@ public class Background_Service extends Service implements SensorEventListener {
                 BluetoothDevice bluetoothDevice = result.getDevice();
                 if (bluetoothDevice.getName().startsWith("TJ-")) {
 
-                    Log.e("PRESSURE_avg", "242");
+                  //  Log.e("PRESSURE_avg", "242");
                     int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
                     if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
                         bleupdate(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
@@ -569,9 +569,6 @@ public class Background_Service extends Service implements SensorEventListener {
                 if (SEND_HASHMAP == null) {
                     Log.e("dd-209", "282");
                     return;
-                }if (latitude == 0) {
-                    Log.e("dd-209", "283");
-                    return;
                 }
                 if(Barometer_have_boolean) {
                     if (PRESSURE_avg == 0) {
@@ -585,8 +582,6 @@ public class Background_Service extends Service implements SensorEventListener {
                     String mstart_name = sp.getString("startname", "");
                     cred.put("user_id", mstart_name);
                     cred.put("pressure", PRESSURE_avg);
-                    cred.put("lat", String.valueOf(latitude));
-                    cred.put("lng", String.valueOf(longitude));
                     //cred.put("ble", SEND_HASHMAP);
                     cred.put("mobile_time", String.valueOf(System.currentTimeMillis()));
                     Log.e("dd-187", "187");
@@ -872,7 +867,7 @@ public class Background_Service extends Service implements SensorEventListener {
         return sec;
     }
 
-    private double longitude = 0;
+  /*  private double longitude = 0;
     private double latitude = 0;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient fusedLocationClient;
@@ -916,7 +911,7 @@ public class Background_Service extends Service implements SensorEventListener {
                 }
             }
         }
-    };
+    };*/
 
     private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
 
@@ -994,9 +989,9 @@ public class Background_Service extends Service implements SensorEventListener {
         if (mBluetoothLeScanner != null) {
             mBluetoothLeScanner.stopScan(leScanCallback);
         }
-        if (fusedLocationClient != null) {
+  /*      if (fusedLocationClient != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
-        }
+        }*/
         stopForeground(true);
         stopSelf();
     }

@@ -84,7 +84,7 @@ public class MainLoginActivity extends AppCompatActivity {
                 SharedPreferences.Editor edit = preferences.edit();
                 edit.putString("startname", editText.getText().toString());
                 edit.apply();
-                Intent newIntent = new Intent(getApplicationContext(), MainActivity.class);
+                Intent newIntent = new Intent(getApplicationContext(), Main_Card_Activity.class);
                 startActivity(newIntent);
                 finish();
             }
