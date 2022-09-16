@@ -616,17 +616,17 @@ public class MainActivity extends AppCompatActivity {
         if (itemId == android.R.id.home) {
             // ignore
             return true;
-        }else if (itemId == R.id.logout) {
+        } else if (itemId == R.id.logout) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             //저장을 하기위해 Editor를 불러온다.
             SharedPreferences.Editor edit = preferences.edit();
             edit.putString("startname", "");
             edit.apply();
-                Intent newIntent = new Intent(MainActivity.this, MainLoginActivity.class);
-                startActivity(newIntent);
+            Intent newIntent = new Intent(MainActivity.this, MainLoginActivity.class);
+            startActivity(newIntent);
             finish();
             return true;
-        }else if(itemId == R.id.exit){
+        } else if (itemId == R.id.exit) {
             onBackPressed();
             return true;
         }

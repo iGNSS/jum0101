@@ -44,6 +44,8 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -120,7 +122,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         CAG_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(mInformation_boolean) {
+                if (mInformation_boolean) {
                     CAG_button.setSelected(true);
                     Information_button.setSelected(false);
                     mInformation_boolean = false;
@@ -136,7 +138,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         Information_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!mInformation_boolean) {
+                if (!mInformation_boolean) {
                     CAG_button.setSelected(false);
                     Information_button.setSelected(true);
                     mInformation_boolean = true;
@@ -196,11 +198,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             @Override
             public void run() {
                 if (!mInformation_boolean) {
-                   // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
+                    // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), false);
                     recyclerViewAdapter.item_noti();
-                   // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                    // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
                     for (int i = 1; i <= 6; i++) {
-                        recyclerViewAdapter.update("No " + i + " Confferdam", "", false,false);
+                        recyclerViewAdapter.update("No " + i + " Confferdam", "", false, false);
                     }
                     recyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
@@ -228,11 +230,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             }
                         }
                     });
-                     startTimerTask1 ();
+                    startTimerTask1();
                 } else {
-                   // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
+                    // recyclerViewAdapter = new RecyclerViewAdapter(getApplicationContext(), true);
                     recyclerViewAdapter.item_noti();
-                   // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
+                    // mSector_RecyclerView.setAdapter(recyclerViewAdapter);
                     int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
                     if (status == NetworkStatus.TYPE_NOT_CONNECTED) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainSectorActivity.this);
@@ -262,16 +264,17 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private TimerTask timerTask;
     private Timer timer = new Timer();
     private int period = 3000;
+
     private void startTimerTask1() {
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-                if(!Entrance_check) {
+                if (!Entrance_check) {
                     if (mInformation_boolean) {
-                        period=10000;
+                        period = 10000;
                         Get_Information_list_Http();
-                    }else{
-                        period=3000;
+                    } else {
+                        period = 3000;
                         work_location_check_Http_post();
                     }
                 }
@@ -284,9 +287,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-                if(!Entrance_check) {
+                if (!Entrance_check) {
                     if (!mInformation_boolean) {
-                        Log.e("return_result1","startTimerTask2");
+                        Log.e("return_result1", "startTimerTask2");
                         work_location_check_Http_post();
                     }
                 }
@@ -332,9 +335,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             + "H2S : " + env_H2S + " ppm\n"
                             + "CO2 : " + env_Co2 + " ppm\n"
                             + "CH4 : " + env_CH4 + " ppm";
-                    Log.e("zone_data1",zone_data);
+                    Log.e("zone_data1", zone_data);
                     if (mInformation_boolean) {
-                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false,true);
+                        recyclerViewAdapter.update("No." + zone_name + " Confferdam", zone_data, false, true);
                         startTimerTask1();
                     }
                 }
@@ -357,6 +360,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
     private final MyHandler list_location_Confirm_handler = new MyHandler(this);
     private boolean Entrance_check = false;
+
     private void work_location_check_Http_post() {
         new Thread(() -> {
             try {
@@ -419,7 +423,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                             public void run() {
                                 for (int i = 1; i <= 6; i++) {
                                     if (!mInformation_boolean) {
-                                        recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)),false);
+                                        recyclerViewAdapter.update("No " + i + " Confferdam", "", return_zone_name.equals(String.valueOf(i)), false);
                                     }
                                 }
                             }
@@ -470,7 +474,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     }, 0);
                     return;
                 }
-                if(Barometer_have_boolean) {
+                if (Barometer_have_boolean) {
                     if (PRESSURE_avg == 0) {
                         Log.e("dd-513", "282");
                         Handler handler = new Handler(Looper.getMainLooper());
@@ -492,7 +496,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     Log.e("PRESSURE_avg", String.valueOf(PRESSURE_avg));
                     //cred.put("ble", SEND_HASHMAP);
                     cred.put("zone_name", number);
-                    cred.put("entrance_check" , true);
+                    cred.put("entrance_check", true);
                     Log.e("dd-187", "187");
                 } catch (JSONException e) {
                     Log.e("dd-189", "\n" + e.getMessage());
@@ -507,9 +511,9 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 os.close();
                 //display what returns the POST request
 
-              //  Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
-               // intent.putExtra("zone_name_num", 6);
-              //  startActivity(intent);
+                //  Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
+                // intent.putExtra("zone_name_num", 6);
+                //  startActivity(intent);
 
                 StringBuilder sb = new StringBuilder();
                 int HttpResult = con.getResponseCode();
@@ -521,7 +525,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         sb.append(line + "\n");
                     }
                     br.close();
-                    Log.e("dd-515",  sb.toString());
+                    Log.e("dd-515", sb.toString());
                     try {
                         JSONObject job = new JSONObject(sb.toString());
                         boolean return_result = job.getBoolean("result");
@@ -541,7 +545,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                                                     mProgressDialog.dismiss();
                                                     stopScan();
                                                     Intent intent = new Intent(MainSectorActivity.this, MainSectorEntrance_Activity.class);
-                                                  //  intent.putExtra("zone_name_num", return_zone_name);
+                                                    //  intent.putExtra("zone_name_num", return_zone_name);
 
                                                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                                                     //저장을 하기위해 Editor를 불러온다.
@@ -603,7 +607,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
 
                 BluetoothDevice bluetoothDevice = result.getDevice();
                 if (bluetoothDevice.getName().startsWith("TJ-")) {
-                  //  Log.e("rssid1", String.valueOf(result.getRssi()));
+                    //  Log.e("rssid1", String.valueOf(result.getRssi()));
                     boolean contains = false;
                     for (Ble_item device : listData) {
                         if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
@@ -654,8 +658,8 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         }
         SEND_HASHMAP = new HashMap<>();
         SEND_HASHMAP.put("ble", BLE_HASHMAP);
-      //  Log.e("dd-", String.valueOf(listData));
-      //  Log.e("dd-", String.valueOf(BLE_HASHMAP));
+        //  Log.e("dd-", String.valueOf(listData));
+        //  Log.e("dd-", String.valueOf(BLE_HASHMAP));
 
         if (listData.size() != 0) {
             listData = new ArrayList<>();
@@ -735,17 +739,20 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private ArrayList<Float> PRESSURE_add = new ArrayList<>();
     private float PRESSURE_avg;
     private boolean Barometer_have_boolean = true;
+
     private void senser_check() {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mBarometer = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);//기압계
         if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null) {
-            Barometer_have_boolean= false;
+            Barometer_have_boolean = false;
             Log.e("기압없음", "763");
         }
         mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
 
     }
-    private int SensorbaseTimecount=5;
+
+    private int SensorbaseTimecount = 5;
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
@@ -761,7 +768,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     sum += device;
                     count++;
                 }
-                SensorbaseTimecount=10;
+                SensorbaseTimecount = 10;
                 PRESSURE_avg = sum / count;
                 SensorbaseTime = SystemClock.elapsedRealtime();
             }
@@ -929,16 +936,17 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             } else {
                 bluetoothCheck();
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
-               // finish();
+                // finish();
             }
-        }if (requestCode == REQUEST_CHECK_SETTINGS) {
-            Log.e("dd--921","dd");
+        }
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            Log.e("dd--921", "dd");
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
                 //       mblecheck=false;
-                Log.e("dd--924","dd");
+                Log.e("dd--924", "dd");
             } else {
                 buttonSwitchGPS_ON();
-                Log.e("dd--926","dd");
+                Log.e("dd--926", "dd");
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -1040,7 +1048,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            Log.e("testdCONNECTEDgg", action+","+intent.getAction());
+            Log.e("testdCONNECTEDgg", action + "," + intent.getAction());
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 //log.e("off1", action);
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
@@ -1053,6 +1061,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                         //log.e("off1", "off1");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
+                        stopScan();
                         //log.e("off2", "off2");
                         break;
                     case BluetoothAdapter.STATE_ON:
@@ -1086,7 +1095,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                     Log.e("testCONNECTEDg", "testCONNECTEDg");
                     //log.e("off7", String.valueOf(isGpsEnabled));
                 } else {
-                   // stopScan();
+                    // stopScan();
                     Log.e("testdCONNECTEDg", "testdCONNECTEDg");
                     invalidateOptionsMenu();
                     //  mblecheck = false;
@@ -1116,19 +1125,55 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     };
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.blemenu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.REstart_scan).setVisible(true);
+        if (mIsScanning) {
+            menu.findItem(R.id.action_scan).setVisible(false);
+            menu.findItem(R.id.action_stop).setVisible(true);
+            menu.findItem(R.id.REstart_scan).setTitle("");
+        } else {
+            menu.findItem(R.id.action_scan).setVisible(true);
+            menu.findItem(R.id.action_stop).setVisible(false);
+            menu.findItem(R.id.REstart_scan).setTitle("재시작");
+        }
+        if ((mBluetoothAdapter == null) || (!mBluetoothAdapter.isEnabled()) || (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))) {
+            menu.findItem(R.id.action_scan).setEnabled(false);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public void onBackPressed() {
-        Intent intent = new Intent(MainSectorActivity.this,Main_Card_Activity.class);
+        Intent intent = new Intent(MainSectorActivity.this, Main_Card_Activity.class);
         startActivity(intent);
         finish(); // 액티비티 종료 + 태스크 리스트에서 지우기
 
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         final int itemId = item.getItemId();
         if (itemId == android.R.id.home) {
             onBackPressed();
             return true;
+        } if (itemId == R.id.REstart_scan) {
+            if(!mIsScanning) {
+                startScan();
+            }else{
+                stopScan();
+            }
+            return true;
         }
+
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -1194,6 +1239,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
               }
           }*/
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
+
     public void buttonSwitchGPS_ON() {
 
         LocationRequest locationRequest = LocationRequest.create();
@@ -1211,11 +1257,11 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
         SettingsClient settingsClient = LocationServices.getSettingsClient(this);
         Task<LocationSettingsResponse> task = settingsClient.checkLocationSettings(locationSettingsRequestBuilder.build());
 
-        Log.e("dd--1172","dd");
+        Log.e("dd--1172", "dd");
         task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
             @Override
             public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                Log.e("dd--1076","dd");
+                Log.e("dd--1076", "dd");
             }
         });
 
@@ -1224,13 +1270,13 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             public void onFailure(@NonNull Exception e) {
 
                 if (e instanceof ResolvableApiException) {
-                    Log.e("dd--1085","dd");
+                    Log.e("dd--1085", "dd");
                     try {
                         ResolvableApiException resolvableApiException = (ResolvableApiException) e;
                         resolvableApiException.startResolutionForResult(MainSectorActivity.this, REQUEST_CHECK_SETTINGS);
-                        Log.e("dd--1089","dd");
+                        Log.e("dd--1089", "dd");
                     } catch (IntentSender.SendIntentException sendIntentException) {
-                        Log.e("dd--1091",sendIntentException.getMessage());
+                        Log.e("dd--1091", sendIntentException.getMessage());
                         sendIntentException.printStackTrace();
                     }
                 }

@@ -11,7 +11,7 @@
 
 
     <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginTop="90sp"
         android:layout_marginBottom="100sp"
@@ -20,9 +20,10 @@
         app:cardElevation="10sp"
         android:layout_gravity="center">
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            android:layout_gravity="center"
             android:elevation="10sp"
             app:contentPadding="0dp"
             android:background="@drawable/card_design"
@@ -30,9 +31,9 @@
 
             <ImageView
                 android:id="@+id/card_image"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="5"
+                android:layout_weight="10"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16sp"
                 android:background="@drawable/image_design"
@@ -45,15 +46,33 @@
                 android:layout_weight="1"
                 android:layout_gravity="center"
                 android:layout_marginBottom="8sp"
-                android:text="삼성중공업" />
+                android:autoSizeTextType="uniform"
 
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="50sp"
+                android:autoSizeStepGranularity="2sp"
+                android:text="삼성중공업" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"/>
             <TextView
                 android:id="@+id/desc"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_gravity="center"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="40sp"
+                android:autoSizeStepGranularity="2sp"
                 android:text="거제조선소" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

@@ -1,5 +1,6 @@
 package com.nineone.inner_s_tool;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,7 +24,7 @@ public class View_card_adapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private List<View_card_model> models;
     private LayoutInflater layoutInflater;
     private Context context;
-
+    private Activity activity;
 
     public View_card_adapter(List<View_card_model> models, Context context) {
         this.models = models;
@@ -32,7 +33,7 @@ public class View_card_adapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public int getItemCount() {
-        return models.size();
+        return Integer.MAX_VALUE;
     }
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -43,9 +44,10 @@ public class View_card_adapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        final View_card_model item = models.get(position);
+        final View_card_model item = models.get(position % models.size());
         final ViewHolder viewHolder = (ViewHolder) holder;
-        int get_position = viewHolder.getAdapterPosition();
+      //  int get_position = viewHolder.getAdapterPosition();
+        int get_position = position % models.size();
         layoutInflater = LayoutInflater.from(context);
 
 
@@ -61,7 +63,7 @@ public class View_card_adapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     Intent intent = new Intent(context, MainSectorActivity.class);
                     //intent.putExtra("param", models.get(position).getTitle());
                     context.startActivity(intent);
-
+                    ((Activity)context).finish();
                 }else{
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setCancelable(false);
