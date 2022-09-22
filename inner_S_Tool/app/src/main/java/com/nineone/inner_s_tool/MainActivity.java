@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
     private TextView location_textView;
     private CardView start_button;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,18 +92,19 @@ public class MainActivity extends AppCompatActivity {
         location_textView = findViewById(R.id.Location_TextView);
         start_button = findViewById(R.id.Start_Button);
         start_button.setOnClickListener(mClickListener);
+
         bluetoothCheck();
 
         //google_gps();
         //startTimerTask();
         //long now2 = System.currentTimeMillis();
-       //Log.e("now2", now2+"");
+        //Log.e("now2", now2+"");
 
     }
 
     private ArrayList<Ble_item> listData = new ArrayList<>();
-    private Map<String,Integer> BLE_HASHMAP;
-    private Map<String,Object> SEND_HASHMAP;
+    private Map<String, Integer> BLE_HASHMAP;
+    private Map<String, Object> SEND_HASHMAP;
     private boolean ble_sned_Boolean = false;
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
@@ -120,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
                             device.setTag_int_Rssi(result.getRssi());
                             break;
                         }
-                        Log.e("rssid", device.getTag_Name()+", "+device.getTag_Rssi_arrary().size());
+                        Log.e("rssid", device.getTag_Name() + ", " + device.getTag_Rssi_arrary().size());
                         Log.e("getTag_Rssi", String.valueOf(device.getTag_Rssi_arrary()));
                     }
                     if (!contains) {
                         String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
-                        if ( DeviceNameArray.length >= 3) {
+                        if (DeviceNameArray.length >= 3) {
                             Log.e("rssid2", String.valueOf(result.getRssi()));
                             listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi()));
                         }
@@ -154,14 +156,15 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private Timer timer = new Timer();
+
     private void startTimerTask() {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-               // Network_Confirm();
+                // Network_Confirm();
                 // Log.e("Min10", String.valueOf(Min10())+" , "+getTime());
             }
-        },0, 1000);
+        }, 0, 1000);
     }
 
     public void stopTimerTask() {//타이머 스톱 함수
@@ -171,23 +174,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     private void Network_Confirm() {
         int status = NetworkStatus.getConnectivityStatus(getApplicationContext());
         if (status == NetworkStatus.TYPE_MOBILE) {
             ble_hashmap_add();
-         //   Http_post(Network_data);
+            //   Http_post(Network_data);
             Log.e("모바일로 연결됨", "650");
         } else if (status == NetworkStatus.TYPE_WIFI) {
             ble_hashmap_add();
-         //   Http_post(Network_data);
+            //   Http_post(Network_data);
             Log.e("무선랜으로 연결됨", "652");
         } else {
-           // writeLog(Network_data);
+            // writeLog(Network_data);
             Log.e("연결 안됨.", "654");
         }
     }
 
-    private void ble_hashmap_add(){
+    private void ble_hashmap_add() {
         BLE_HASHMAP = new HashMap<>();
         for (Ble_item device : listData) {
             int sum = 0;
@@ -196,16 +200,16 @@ public class MainActivity extends AppCompatActivity {
                 sum += device.getTag_Rssi_arrary().get(i);
             }
             avg = sum / device.getTag_Rssi_arrary().size();
-            BLE_HASHMAP.put(device.getTag_Name(),avg);
+            BLE_HASHMAP.put(device.getTag_Name(), avg);
         }
         SEND_HASHMAP = new HashMap<>();
-        SEND_HASHMAP.put("ble",BLE_HASHMAP);
+        SEND_HASHMAP.put("ble", BLE_HASHMAP);
         Log.e("dd-", String.valueOf(listData));
         Log.e("dd-", String.valueOf(BLE_HASHMAP));
 
-        if(listData.size()!=0) {
+        if (listData.size() != 0) {
             listData = new ArrayList<>();
-          //  Http_post();
+            //  Http_post();
         }
     }
 
@@ -242,8 +246,8 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 array.put(cred);
-            //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
-              //  array.put(cred2);
+                //    JSONObject cred2 = new JSONObject(SEND_HASHMAP);
+                //  array.put(cred2);
                 OutputStream os = con.getOutputStream();
                 Log.e("dd-195", array.toString());
                 os.write(array.toString().getBytes("UTF-8"));
@@ -265,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject job = new JSONObject(sb.toString());
                         String build_name = job.getString("build_name");
                         String level_name = job.getString("level_name");
-                        String buildlevel_name = build_name+" "+level_name;
+                        String buildlevel_name = build_name + " " + level_name;
                         Runnable runnable_location_textView = new Runnable() {
                             @Override
                             public void run() {
@@ -286,12 +290,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
-    //    ble_sned_Boolean = false;
+        //    ble_sned_Boolean = false;
     }
 
 
-
     private boolean mIsScanning = false;
+
     private void startScan() {
         if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
             mBluetoothLeScanner.startScan(leScanCallback);
@@ -315,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
         }
         invalidateOptionsMenu();
     }
+
     private void getEllapse() {
 
         long now = SystemClock.elapsedRealtime();
@@ -327,9 +332,11 @@ public class MainActivity extends AppCompatActivity {
             reScan();
         }
     }
+
     private void reScan() {
         if (mBluetoothLeScanner != null) {
             // stopScan();
+
             mBluetoothLeScanner.stopScan(leScanCallback);
             mBluetoothLeScanner.startScan(leScanCallback);
 

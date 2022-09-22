@@ -159,11 +159,9 @@ public class MainFragment extends Fragment {
         RescanBaseTime = SystemClock.elapsedRealtime();
         locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
 
-
         addressMode_UI_setting(rootView);
         GPSSetting();
         list_setting(rootView);
- 
         check_If_list_Empty();
 
         return rootView;
@@ -216,8 +214,6 @@ public class MainFragment extends Fragment {
                 }
             }
         }
-
-
         // }
     }
     private void addressMode_UI_setting(ViewGroup rootView){
@@ -308,7 +304,6 @@ public class MainFragment extends Fragment {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
-
         //log.e("BLE1245", "130");
     }
 
@@ -317,7 +312,6 @@ public class MainFragment extends Fragment {
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
                 //       mblecheck=false;
-
             } else {
                 Toast.makeText(getActivity(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
                 activity.finish();
@@ -388,13 +382,13 @@ public class MainFragment extends Fragment {
             if (result.getDevice().getName() != null) {
                 //  Log.e("BLE", "Discovery onScanResult01: 작동2 " + result.getDevice().getName());
                 if (result.getDevice().getName().startsWith("TJ-")) {
-                  /*  Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
+                    Log.e("1231236", result.getDevice().getName()+","+String.valueOf(result.getScanRecord().getManufacturerSpecificData()));
                     Log.e("1231235", Arrays.toString(result.getScanRecord().getBytes()));
                     if(result.getDevice().getName().equals("TJ-00CA-00000010-0000")) {
                         int senser_O2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 6);
                         int senser_CO2 = ConvertToIntLittle(result.getScanRecord().getBytes(), 9 + 12);
                         Log.e("mAlarm_on1", senser_O2+", "+senser_CO2+", " +  Arrays.toString(result.getScanRecord().getBytes()));
-                    }*/
+                    }
                     byte[] byte_ScanRocord = result.getScanRecord().getBytes();
                     int isLeft = byte_ScanRocord[9];
                     String byte_ScanRocord_str = Arrays.toString(byte_ScanRocord);
@@ -465,7 +459,9 @@ public class MainFragment extends Fragment {
             recyclerVierAdapter.item_Clear();
             recyclerVierAdapter.notifyDataSetChanged();
             recyclerVierAdapter.BGW_adress_add_reset();
+
             check_If_list_Empty();
+            bluetoothCheck();
             return true;
         }/*else if(itemId == R.id.action_clear){
             recyclerVierAdapter.item_Clear();
@@ -519,9 +515,7 @@ public class MainFragment extends Fragment {
                 fos_open_flag_ble = false;
                 Log.e("startscan", "295");
             }
-
             // bletypeLayout.setVisibility(View.VISIBLE);
-
             check_If_list_Empty();
             activity.invalidateOptionsMenu();
 

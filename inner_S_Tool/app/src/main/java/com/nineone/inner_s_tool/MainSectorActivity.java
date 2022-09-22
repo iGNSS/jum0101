@@ -1,5 +1,9 @@
 package com.nineone.inner_s_tool;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -603,6 +607,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
     private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, final ScanResult result) {
+
             if (result.getDevice().getName() != null) {
 
                 BluetoothDevice bluetoothDevice = result.getDevice();
@@ -917,19 +922,44 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
             finish();
             return;
         }
-
         if (!mBluetoothAdapter.isEnabled()) {
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityResult.launch(intent);
+        }
+    /*    if (!mBluetoothAdapter.isEnabled()) {
             //log.e("BLE1245", "124");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
+        }*/
         stopScan();
         //log.e("BLE1245", "130");
     }
+    ActivityResultLauncher<Intent> startActivityResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        @Override
+        public void onActivityResult(ActivityResult result) {
+
+            if (result.getResultCode() == Activity.RESULT_OK) {
+                Log.e("Activity result", "OK");
+                // There are no request codes
+                Intent data = result.getData();
+            }
+            if (result.getResultCode() == REQUEST_CHECK_SETTINGS) {
+                Log.e("dd--921", "dd");
+                if (result.getResultCode() == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
+                    //       mblecheck=false;
+                    Log.e("dd--924", "dd");
+                } else {
+                    buttonSwitchGPS_ON();
+                    Log.e("dd--926", "dd");
+                }
+            }
+
+        }
+    });
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_ENABLE_BT) {
+      /*  if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면
                 //       mblecheck=false;
 
@@ -938,7 +968,7 @@ public class MainSectorActivity extends AppCompatActivity implements SensorEvent
                 Toast.makeText(getApplicationContext(), "블루투스를 활성화 하여 주세요 ", Toast.LENGTH_SHORT).show();
                 // finish();
             }
-        }
+        }*/
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             Log.e("dd--921", "dd");
             if (resultCode == Activity.RESULT_OK) { // 블루투스 활성화를 취소를 클릭하였다면

@@ -144,6 +144,7 @@ public class Connect_Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
         ActionBar actionBar = getSupportActionBar();
+
         assert actionBar != null;
         actionBar.setTitle("연결");
         mCA_layout = findViewById(R.id.CA_layout);
@@ -359,9 +360,16 @@ public class Connect_Activity extends AppCompatActivity {
                             customToastView("[단말기 번호] 입력한 데이터 타입이 안 맞습니다");
                         }
                     } else {
-                        send_ok_check = false;
+                        long tag_no_val = 0;
+
+                        tagsend_data[4] = (byte) (tag_no_val);
+                        tagsend_data[5] = (byte) (tag_no_val >> 8);
+                        tagsend_data[6] = (byte) (tag_no_val >> 16);
+                        tagsend_data[7] = (byte) (tag_no_val >> 24);
+
+                    //    send_ok_check = false;
                         // Toast.makeText(getApplication(), "[단말기 번호] 정보를 입력해 주세요", Toast.LENGTH_LONG).show();
-                        customToastView("[단말기 번호] 정보를 입력해 주세요");
+                    //    customToastView("[단말기 번호] 정보를 입력해 주세요");
 
                     }
 
@@ -926,7 +934,7 @@ public class Connect_Activity extends AppCompatActivity {
         vw_txtmacaddrValue.setText("");
         vw_txt_tag_adress.setText("");
         //tag_type.setText("");
-        tag_no.setText("0");
+        tag_no.setText("");
         selectValue(rfPowerSpinner, "0");
 
         selectValue(sensorSpinner, "0(없음)");
@@ -1186,7 +1194,7 @@ public class Connect_Activity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 Log.e("afterTextChanged", editable.toString());
                 if (tag_no.length() == 0) {
-                    tag_no.setText("0");
+                //    tag_no.setText("");
                 }
             }
         });

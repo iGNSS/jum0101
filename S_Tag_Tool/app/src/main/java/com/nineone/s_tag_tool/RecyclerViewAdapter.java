@@ -874,7 +874,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 public void onClick(View view) {
                     int pos = getAdapterPosition();
                     if(pos != RecyclerView.NO_POSITION){
-
                         if(mListener !=null){
                            // Intent intent = new Intent(activity, Connect_Activity.class);
                            // intent.putExtra("address",listData.get(pos).getDevice().getAddress());
