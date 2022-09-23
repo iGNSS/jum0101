@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:padding="10dp"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        app:srcCompat="@drawable/inner_icon" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/LoginEdit"
+            android:layout_width="match_parent"
+            android:layout_height="53dp"
+            android:layout_gravity="center"
+            android:background="@drawable/loginedit_design"
+            android:gravity="center"
+            android:hint="ID를 입력해주세요"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="10sp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="20sp"
+            android:gravity="end">
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+            <TextView
+                android:text="아이디 저장"
+                android:layout_width="wrap_content"
+                android:textColor="@color/black"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/LoginEdit_ok_no_text"
+            android:layout_width="match_parent"
+            android:layout_height="50sp"
+            android:layout_gravity="center" />
+
+        <Button
+            android:id="@+id/LoginButton_ok_no_text"
+            android:layout_width="match_parent"
+            android:layout_height="50sp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/blue"
+            android:text="로그인"
+            android:textColor="@color/white" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="100sp"
+        android:layout_gravity="center" />
+</LinearLayout>
