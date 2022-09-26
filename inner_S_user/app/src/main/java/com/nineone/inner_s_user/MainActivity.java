@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
     private JupiterService jupiterService;
     private boolean mInformation_boolean = false;
     private boolean mid_send_success = false;
-    private String NAME_url_string, NAME_port_string, NAME_path_string;
-    private TextView NAME_url_text, NAME_port_text, NAME_path_text;
+   // private String NAME_url_string, NAME_port_string, NAME_path_string;
+  //  private TextView NAME_url_text, NAME_port_text, NAME_path_text;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,9 +69,9 @@ public class MainActivity extends AppCompatActivity {
         ID_name_text = findViewById(R.id.IDname);
         mlogin_fail = findViewById(R.id.login_fail);
         mlogin_fail.setText("ID를 전송해 주세요");
-        NAME_url_text = findViewById(R.id.UVadress);
-        NAME_port_text = findViewById(R.id.UVport);
-        NAME_path_text = findViewById(R.id.UVpath);
+      //  NAME_url_text = findViewById(R.id.UVadress);
+      //  NAME_port_text = findViewById(R.id.UVport);
+      //  NAME_path_text = findViewById(R.id.UVpath);
         SendButton = findViewById(R.id.SendButton);
         //textView2 = findViewById(R.id.UVcount);
       //  mmiiliscUV = findViewById(R.id.miiliscUV);
@@ -83,19 +83,20 @@ public class MainActivity extends AppCompatActivity {
         jupiterService.sendUserInfo();*/
 
         SharedPreferences sf = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-        NAME_url_string = sf.getString("UV_url", "stag.nineone.com");
+      /*  NAME_url_string = sf.getString("UV_url", "stag.nineone.com");
         NAME_port_string = sf.getString("UV_port", "9988");
         NAME_path_string = sf.getString("UV_path", "user");
         NAME_url_text.setText(NAME_url_string);
         NAME_port_text.setText(NAME_port_string);
         NAME_path_text.setText(NAME_path_string);
-
+                NAME_url_text.setOnLongClickListener(mClickListener);
+        NAME_port_text.setOnLongClickListener(mClickListener);
+        NAME_path_text.setOnLongClickListener(mClickListener);
+*/
         ID_name_string = sf.getString("ID_name", "inners_aos");
         ID_name_text.setText(ID_name_string);
         ID_name_text.setOnLongClickListener(mClickListener);
-        NAME_url_text.setOnLongClickListener(mClickListener);
-        NAME_port_text.setOnLongClickListener(mClickListener);
-        NAME_path_text.setOnLongClickListener(mClickListener);
+
      //   ID_name_in_Http_post();
 
 
@@ -113,11 +114,28 @@ public class MainActivity extends AppCompatActivity {
                         mInformation_boolean = true;
                         //   startTimerTask1();
                     } else {
-                        textView1.setText("전송 멈춤");
-                        button1.setText("시작");
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+                        alertDialog.setTitle("전송 중지");
+                        alertDialog.setMessage("전송을 중지 하시겠습니까?");
+                        alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                textView1.setText("전송 멈춤");
+                                button1.setText("시작");
 
-                        mInformation_boolean = false;
-                        jupiterService.stopJupiterService();
+                                mInformation_boolean = false;
+                                jupiterService.stopJupiterService();
+
+                            }
+                        });
+                        alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        });
+
+                        alertDialog.show();
 
                         //  stopTimerTask();
                     }
@@ -140,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             try {
                 Log.e("dd-", "164");
-                String url = "http://" + NAME_url_string + ":" + NAME_port_string + "/" + NAME_path_string;
+                String url = "http://stag.nineone.com:9988/user";
 
                 URL object = null;
                 object = new URL(url);
@@ -405,7 +423,7 @@ public class MainActivity extends AppCompatActivity {
 
                 alertDialog.show();
             }
-            if (v.getId() == R.id.UVadress) {
+    /*        if (v.getId() == R.id.UVadress) {
                 final EditText editText = new EditText((MainActivity.this));
                 editText.setGravity(Gravity.CENTER);
                 editText.setText(NAME_url_string);
@@ -514,7 +532,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
                 alertDialog.show();
-            }
+            }*/
             return false;
         }
     };

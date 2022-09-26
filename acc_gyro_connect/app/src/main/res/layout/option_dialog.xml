@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="300dp"
+    android:background="#ffffff">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:textSize="16dp"
+        android:gravity="center"
+        android:textColor="#000"
+        android:background="#C06E44"
+        android:text="설정" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+    <LinearLayout
+        android:layout_marginRight="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:layout_gravity="right">
+        <LinearLayout
+            android:layout_marginRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <TextView
+                android:id="@+id/sensor_true"
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_weight="3"
+                android:layout_height="match_parent"
+                android:textSize="30dp"
+                android:hint="센서필수"
+                android:layout_gravity="center"
+                android:gravity="center" />
+            <CheckBox
+                android:id="@+id/ch1"
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:background="@drawable/chackbox"
+                android:textSize="30dp"
+                android:layout_gravity="center"
+                android:button="@android:color/transparent"
+                android:gravity="center" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <TextView
+                android:id="@+id/name_ture"
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_weight="3"
+                android:layout_height="match_parent"
+                android:textSize="30dp"
+                android:hint="이름필수"
+                android:layout_gravity="center"
+                android:gravity="center" />
+            <CheckBox
+                android:id="@+id/ch2"
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:background="@drawable/chackbox"
+                android:textSize="30dp"
+                android:layout_gravity="center"
+                android:button="@android:color/transparent"
+                android:gravity="center" />
+
+        </LinearLayout>
+        <!--    <EditText
+                android:id="@+id/put_text2"
+                android:layout_margin="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:hint="주민번호(앞자리)"
+                android:textSize="30dp"
+                android:layout_gravity="center"
+                android:gravity="center" />-->
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+
+
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+    <LinearLayout
+        android:layout_marginRight="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:orientation="horizontal"
+        android:layout_gravity="right">
+        <Button
+            android:text="취소"
+            android:textSize="20dp"
+            android:id="@+id/btnCancle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:scaleType="center"/>
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#000000" />
+        <Button
+            android:text="확인"
+            android:textSize="20dp"
+            android:layout_marginLeft="4dp"
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:scaleType="center"/>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+</LinearLayout>

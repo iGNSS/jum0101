@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="Table">
+        <item>KIER</item>
+        <item>KEPCO</item>
+        <item>KIST</item>
+        <item>tjOffice</item>
+    </string-array>
+
+    <string-array name="KIER_cout">
+        <item>B1</item>
+        <item>1F</item>
+        <item>2F</item>
+        <item>3F</item>
+        <item>4F</item>
+        <item>5F</item>
+        <item>0F</item>
+    </string-array>
+    <string-array name="KEPCO_cout">
+
+        <item>1F</item>
+        <item>2F</item>
+        <item>4F</item>
+        <item>0F</item>
+    </string-array>
+    <string-array name="KIST_cout">
+        <item>1F</item>
+        <item>2F</item>
+        <item>3F</item>
+
+    </string-array>
+    <string-array name="tjOffice_cout">
+        <item>4F</item>
+        <item>5F</item>
+        <item>6F</item>
+        <item>7F</item>
+
+    </string-array>
+</resources>

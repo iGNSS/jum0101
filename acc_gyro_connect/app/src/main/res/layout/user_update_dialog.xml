@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:background="#ffffff">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:textSize="16dp"
+        android:gravity="center"
+        android:textColor="#000"
+        android:background="#C06E44"
+        android:text="사용자를 입력해 주세요." />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+    <LinearLayout
+        android:layout_marginRight="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:layout_gravity="right">
+        <LinearLayout
+            android:layout_marginRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <TextView
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textSize="30dp"
+                android:textColor="@color/black"
+                android:text="사용자 이름 : "
+                android:layout_gravity="center"
+                android:gravity="center" />
+            <EditText
+                android:id="@+id/put_text"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:textSize="30dp"
+                android:hint="이름 입력"
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                android:gravity="center" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <TextView
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textSize="30dp"
+                android:text="나이 : "
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                android:gravity="center" />
+            <Button
+                android:id="@+id/Age_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:textSize="30dp"
+                android:hint="나이 선택"
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                android:gravity="center" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginRight="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+            <TextView
+                android:layout_margin="10dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:textSize="30dp"
+                android:text="성별 : "
+
+                android:textColor="@color/black"
+                android:layout_gravity="center"
+                android:gravity="center" />
+            <Button
+                android:id="@+id/gender_m"
+                android:layout_width="0dp"
+                android:layout_height="33dp"
+                android:layout_gravity="center"
+                android:layout_weight="3"
+                android:background="@drawable/gender_m"
+                android:gravity="center"
+                android:text="남"
+                android:textSize="11pt"
+                android:textStyle="bold" />
+            <Button
+                android:id="@+id/gender_w"
+                android:layout_width="0dp"
+                android:layout_height="33dp"
+                android:layout_gravity="center"
+                android:layout_weight="3"
+                android:background="@drawable/gender_w"
+                android:gravity="center"
+                android:text="여"
+                android:textSize="11pt"
+                android:textStyle="bold" />
+        </LinearLayout>
+        <!--    <EditText
+                android:id="@+id/put_text2"
+                android:layout_margin="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:hint="주민번호(앞자리)"
+                android:textSize="30dp"
+                android:layout_gravity="center"
+                android:gravity="center" />-->
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+
+
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+    <LinearLayout
+        android:layout_marginRight="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:orientation="horizontal"
+        android:layout_gravity="right">
+        <Button
+            android:text="취소"
+            android:textSize="20dp"
+            android:id="@+id/btnCancle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:scaleType="center"/>
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#000000" />
+        <Button
+            android:text="확인"
+            android:textSize="20dp"
+            android:layout_marginLeft="4dp"
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:scaleType="center"/>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000"/>
+</LinearLayout>

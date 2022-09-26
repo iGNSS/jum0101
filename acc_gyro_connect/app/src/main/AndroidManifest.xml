@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.nineone.ver"
+    android:versionCode="43"
+    android:versionName="2.0">
+
+    <uses-sdk
+        android:minSdkVersion="18"
+        android:targetSdkVersion="18" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEM" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <uses-feature android:name="android.hardware.camera2.full" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/nrfuart_hdpi_icon"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
+        android:screenOrientation="fullSensor"
+        android:theme="@android:style/Theme.Holo.Light"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="n">
+
+        <!-- android:screenOrientation="portrait" -->
+        <activity
+            android:name=".SplashActivity"
+            android:theme="@style/Theme.AppCompat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="landscape"
+            android:theme="@style/Widget.MaterialComponents.MaterialCalendar.Fullscreen" />
+        <!--
+         android:configChanges="keyboardHidden|orientation|screenSize"
+        android:windowSoftInputMode="stateHidden"
+        -->
+        <activity android:name=".Delay_Count" />
+        <activity
+            android:name=".DeviceListActivity"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Holo.Dialog" />
+        <activity
+            android:name=".ChartList"
+            android:parentActivityName=".MainActivity"
+            android:requestLegacyExternalStorage="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".ChartMainList"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".ChartMain"
+            android:parentActivityName=".ChartMainList"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".ChartVideo"
+            android:parentActivityName=".ChartList"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".CVidioList"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".CVideo"
+            android:parentActivityName=".CVidioList"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".OptionSetting"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat" />
+
+        <service
+            android:name=".UartService"
+            android:enabled="true" />
+
+        <activity
+            android:name=".Update"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".UserListActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyDialog" />
+        <activity
+            android:name=".UserDialog"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyDialog" />
+        <activity
+            android:name="com.nineone.zntil.user_aSchool_dialog"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyDialog" />
+        <activity
+            android:name=".UserUpdateDialog"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyDialog" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"
+                tools:replace="android:resource" />
+        </provider>
+    </application>
+
+</manifest>

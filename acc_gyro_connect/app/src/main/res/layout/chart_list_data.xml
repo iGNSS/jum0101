@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/listdesign">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        tools:srcCompat="@drawable/ic_launcher_background" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_weight="10"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:padding="15dp">
+
+        <TextView
+            android:id="@+id/txt_time"
+            android:layout_width="0dp"
+            android:layout_weight="5"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:gravity="left|center_vertical"
+             android:textColor="@android:color/black"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            tools:text="TITLE" />
+        <TextView
+            android:id="@+id/txt_count"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:includeFontPadding="false"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="18dp"
+            android:textStyle="bold"
+            tools:text="TITLE" />
+
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/deletcheck"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:background="@drawable/chackbox"
+        android:button="@android:color/transparent"
+        tools:visibility="invisible" />
+
+
+</LinearLayout>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="snedcheck"
+        android:title="측정완료 후 데이터 전송"
+        android:summary="센서와 네트워크가 연결 되어있어야 데이터를 전송할 수 있습니다."
+        android:defaultValue="false"
+        android:disableDependentsState="true"/>
+    <SwitchPreference
+        android:key="essential_sendser"
+        android:title="센서연결필수"
+        android:defaultValue="true"
+        android:summary="센서가 연결되지 않을시 측정불가"/>
+    <SwitchPreference
+        android:key="essential_user"
+        android:title="사용자정보 입력필수"
+        android:defaultValue="true"
+        android:summary="사용자를 입력하지 않을시 측정불가"/>
+    <!--android:dependency="snedcheck"-->
+    <ListPreference
+        android:key="measurement_time"
+        android:title="측정시간"
+        android:entries="@array/timer"
+        android:entryValues="@array/timer"
+        android:defaultValue="@string/timer_value"
+        android:summary="%s"/>
+
+</PreferenceScreen>

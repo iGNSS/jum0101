@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChartVideo">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:layout_margin="5dp"
+        android:orientation="vertical">
+        <SurfaceView
+            android:id="@+id/vv"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="20        " />
+        <!--   <Button
+              android:id="@+id/button3"
+              android:layout_width="0dp"
+              android:layout_weight="3"
+              android:layout_height="wrap_content"
+              android:text="멈춤"/>
+
+     <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="0dp"
+          android:layout_weight="1"
+          android:layout_alignParentBottom="true"
+          android:background="@android:color/black"
+          android:orientation="horizontal" >
+
+      </LinearLayout>-->
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/LineChart4"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="7" />
+        <LinearLayout
+            android:id="@+id/controlBarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignParentBottom="true"
+            android:layout_weight="2"
+            android:background="@android:color/black"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/playerCurrentTimeText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="25dp"
+                android:text="0"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textAlignment="center"
+                android:textColor="@android:color/white" />
+            <!--  <SeekBar
+                android:id="@+id/seekBar1"
+                android:layout_width="0dp"
+                android:layout_weight="20"
+                android:layout_height="match_parent" />
+            <TextView
+                android:id="@+id/playerTotalTimeText"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="0"
+                android:textColor="@android:color/white" />-->
+            <Button
+                android:id="@+id/start_stop"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:includeFontPadding="false"
+                android:text="재생" />
+
+            <Button
+                android:id="@+id/Pause"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:includeFontPadding="false"
+                android:text="일시정지" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
