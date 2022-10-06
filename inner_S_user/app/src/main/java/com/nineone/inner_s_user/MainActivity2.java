@@ -51,7 +51,7 @@ import tjlabs.android.jupiter_android_v2.data.FineLocationTrackingOutput;
 public class MainActivity2 extends AppCompatActivity {
     private TextView mmessge;
     private TextView textView1, textView2, textView3, mmiiliscUV;
-    private TextView ID_name_text,mlogin_fail;
+    private TextView ID_name_text,mlogin_fail,mloncation;
     private TextView mlevel_post_result_text;
     private Button mlevel_post_result_button;
     private Button button1,SendButton;
@@ -281,9 +281,9 @@ public class MainActivity2 extends AppCompatActivity {
                     // Log.e("aabradom_B", String.valueOf((b+i)));
                     // Log.e("dd-187u", "187");
                 } catch (JSONException e) {
-                    mlogin_fail.setText("ID 전송 실패");
+                    mlogin_fail.setText(e.getMessage());
                     mid_send_success= false;
-                    failmessage(e.getMessage());
+                    //failmessage(e.getMessage());
                     Log.e("dd-189u", "\n" + e.getMessage());
                     e.printStackTrace();
                 }
@@ -325,10 +325,10 @@ public class MainActivity2 extends AppCompatActivity {
                                             @Override
                                             public void onClick(DialogInterface dialogInterface, int i) {*/
                                         String id_sussess_string = "ID 전송 성공 - " + ID_name_string;
-                                        mlogin_fail.setText(id_sussess_string);
+                                        mlogin_fail.setText("");
                                         mlevel_post_result_text.setText("Level을 전송해 주세요");
                                         mSector_Level_success = false;
-                                        //textView1.setText("Level을 먼저 전송해 주세요");
+                                       // textView1.setText("Level을 먼저 전송해 주세요");
                                         jupiterService = new JupiterService();
                                         jupiterService.setJupiterService(getApplication(), ID_name_string);
                                         jupiterService.sendUserInfo();
@@ -347,9 +347,9 @@ public class MainActivity2 extends AppCompatActivity {
                                 Runnable runnableRF4 = new Runnable() {
                                     @Override
                                     public void run() {
-                                        mlogin_fail.setText("ID 전송 실패");
+                                        mlogin_fail.setText(make);
                                         mid_send_success= false;
-                                        failmessage(make);
+                                      //  failmessage(make);
                                     }
                                 };
                                 namechange_handler.postDelayed(runnableRF4, 0);
@@ -357,8 +357,8 @@ public class MainActivity2 extends AppCompatActivity {
                             Log.e("dd-return_result2", success + "," + errors+","+message);
 
                         } catch (JSONException e) {
-                            mlogin_fail.setText("ID 전송 실패");
-                            failmessage(e.getMessage());
+                            mlogin_fail.setText(e.getMessage());
+                           // failmessage(e.getMessage());
                             mid_send_success= false;
                             Log.e("dd-211u", "\n" + e.getMessage());
                             // Handle error
@@ -368,15 +368,15 @@ public class MainActivity2 extends AppCompatActivity {
 
                 } else {
                     HttpURLConnection finalCon = con;
-                    mlogin_fail.setText("ID 전송 실패");
+                    mlogin_fail.setText(HttpResult+" "+con.getResponseMessage());
                     mid_send_success= false;
-                    failmessage(HttpResult+" "+con.getResponseMessage());
+                   // failmessage(HttpResult+" "+con.getResponseMessage());
                     Log.e("dd-212u", HttpResult+con.getResponseMessage());
                 }
             } catch (IOException e) {
-                mlogin_fail.setText("ID 전송 실패");
+                mlogin_fail.setText("주소를 확인할 수 없습니다.\n네트워크 연결을 확인해 주세요");
                 mid_send_success= false;
-                failmessage(e.getMessage());
+               // failmessage(e.getMessage());
                 Log.e("dd-215u", e.getMessage());
                 e.printStackTrace();
             }
@@ -407,9 +407,9 @@ public class MainActivity2 extends AppCompatActivity {
                     cred.put("user_id", ID_name_string);
                     cred.put("level_name", plevel);
                 } catch (JSONException e) {
-                    mlevel_post_result_text.setText("전송 실패");
+                    mlevel_post_result_text.setText(e.getMessage());
                     mSector_Level_success= false;
-                    failmessage(e.getMessage());
+                   // failmessage(e.getMessage());
                     Log.e("dd-189u", "\n" + e.getMessage());
                     e.printStackTrace();
                 }
@@ -458,9 +458,9 @@ public class MainActivity2 extends AppCompatActivity {
                                 Runnable runnableRF4 = new Runnable() {
                                     @Override
                                     public void run() {
-                                        mlevel_post_result_text.setText("전송 실패");
+                                        mlevel_post_result_text.setText(make);
                                         mSector_Level_success = false;
-                                        failmessage(make);
+                                       // failmessage(make);
                                     }
                                 };
                                 namechange_handler.postDelayed(runnableRF4, 0);
@@ -468,8 +468,8 @@ public class MainActivity2 extends AppCompatActivity {
                             Log.e("dd-return_result2", success + "," + errors+","+message);
 
                         } catch (JSONException e) {
-                            mlevel_post_result_text.setText("전송 실패");
-                            failmessage(e.getMessage());
+                            mlevel_post_result_text.setText(e.getMessage());
+                            //failmessage(e.getMessage());
                             mSector_Level_success = false;
                             Log.e("dd-211u", "\n" + e.getMessage());
                             // Handle error
@@ -479,15 +479,15 @@ public class MainActivity2 extends AppCompatActivity {
 
                 } else {
                     HttpURLConnection finalCon = con;
-                    mlevel_post_result_text.setText("전송 실패");
+                    mlevel_post_result_text.setText(HttpResult+" "+con.getResponseMessage());
                     mSector_Level_success = false;
-                    failmessage(HttpResult+" "+con.getResponseMessage());
+                  //  failmessage(HttpResult+" "+con.getResponseMessage());
                     Log.e("dd-212u", HttpResult+con.getResponseMessage());
                 }
             } catch (IOException e) {
-                mlevel_post_result_text.setText("전송 실패");
+                mlevel_post_result_text.setText("주소를 확인할 수 없습니다.\n네트워크 연결을 확인해 주세요");
                 mSector_Level_success = false;
-                failmessage(e.getMessage());
+                //failmessage(e.getMessage());
                 Log.e("dd-215u", e.getMessage());
                 e.printStackTrace();
             }
@@ -503,7 +503,6 @@ public class MainActivity2 extends AppCompatActivity {
                 alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-
                     }
                 });
                 alertDialog.show();
@@ -539,10 +538,11 @@ public class MainActivity2 extends AppCompatActivity {
         jupiterService.requestFineLocationTrackingUpdate(new JupiterCallBackManager.FineLocationTrackingCallBack() {
             @Override
             public void onResponse(@NonNull FineLocationTrackingOutput fineLocationTrackingOutput) {
-                Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
+              //  Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
                 //mmessge.setText(fineLocationTrackingOutput.toString());
             }
         });
+
 
 
     }
@@ -612,18 +612,21 @@ public class MainActivity2 extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             SendButton.setText("로그인");
-                            mlogin_fail.setText("로그아웃");
+                            mlogin_fail.setText("");
                             SendButton.getBackground().setTint(ContextCompat.getColor(getApplicationContext(), R.color.sky));
                             mSector_Level_success = false;
                             mid_send_success = false;
                             mlevel_post_result_text.setText("");
                             Log.e("notlogin", "asd");
+
                             if (mInformation_boolean) {
                                 textView1.setText("전송 중지");
                                 button1.setText("시작");
                                 mInformation_boolean = false;
                                 //      jupiterService.stopJupiterService();
                             }
+                            textView1.setText("전송 중지");
+                            button1.setText("시작");
                             jupiterService.stopJupiterService();
 
 
@@ -654,7 +657,6 @@ public class MainActivity2 extends AppCompatActivity {
                     if (mSector_Level_success) {
                         beforsend_bluetoothCheck();
                       /*  if (!mInformation_boolean) {
-
                             jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
                             JupiterService_callback();
                             textView1.setText("전송 중");
@@ -714,7 +716,8 @@ public class MainActivity2 extends AppCompatActivity {
         @Override
         public boolean onLongClick(View v) {
             if (v.getId() == R.id.IDname) {
-                if (!mInformation_boolean) {
+                if (!mid_send_success) {
+              //  if (!mInformation_boolean) {
                     final EditText editText = new EditText((MainActivity2.this));
                     editText.setGravity(Gravity.CENTER);
                     editText.setText(ID_name_string);
@@ -747,6 +750,17 @@ public class MainActivity2 extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
 
+                        }
+                    });
+
+                    alertDialog.show();
+                }else{
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity2.this);
+                    alertDialog.setMessage("로그아웃을 먼저 진행 해 주세요");
+
+                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
                         }
                     });
 
