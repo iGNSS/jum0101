@@ -853,6 +853,7 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
                                         + fineLocationTrackingOutput.getX()+"\n\n"
                                         + fineLocationTrackingOutput.getY()+"\n\n"
                                         + fineLocationTrackingOutput.getIndex();
+                               // Log.e("sendRSSISet ",)
                                 Runnable runnable12 = new Runnable() {
                                     @Override
                                     public void run() {

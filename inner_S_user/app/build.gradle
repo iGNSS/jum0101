@@ -44,7 +44,7 @@ dependencies {
 
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation "androidx.viewpager2:viewpager2:1.0.0"
-    implementation files('libs/TJlabs_release_1.0.6-inners.aar')
+    implementation files('libs/TJlabs_release_1.0.7-inners.aar')
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.4.1'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.4.1'
