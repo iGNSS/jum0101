@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">Inner S 0.1</string>
+    <string name="app_name">Inner S 0.2</string>
+    <string name="Index">Index</string>
+    <string name="Mobile_Time">Mobile Time</string>
+    <string name="Building_Name">Building Name</string>
+    <string name="Level_Name">&#160;Level Name</string>
+    <string name="XX">&#160;&#160;&#160;X</string>
+    <string name="YY">&#160;&#160;&#160;Y</string>
+
+
 </resources>

@@ -2,15 +2,26 @@ package com.nineone.inner_s_user;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.location.LocationManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -41,6 +52,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -48,8 +60,8 @@ import tjlabs.android.jupiter_android_v2.JupiterCallBackManager;
 import tjlabs.android.jupiter_android_v2.JupiterService;
 import tjlabs.android.jupiter_android_v2.data.FineLocationTrackingOutput;
 
-public class MainActivity2 extends AppCompatActivity {
-    private TextView mmessge;
+public class MainActivity2 extends AppCompatActivity implements SensorEventListener {
+    private TextView mmessge,mtextMessge;
     private TextView textView1, textView2, textView3, mmiiliscUV;
     private TextView ID_name_text,mlogin_fail,mloncation;
     private TextView mlevel_post_result_text;
@@ -70,6 +82,7 @@ public class MainActivity2 extends AppCompatActivity {
         setContentView(R.layout.activity_main2);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         bluetoothCheck();
+        SensorbaseTime = SystemClock.elapsedRealtime();
         ID_name_text = findViewById(R.id.IDname);
         mlogin_fail = findViewById(R.id.login_fail);
         //mlogin_fail.setText("로그인을 먼저 해 주세요");
@@ -77,10 +90,10 @@ public class MainActivity2 extends AppCompatActivity {
        // mlevel_post_result_text.setText("층을 전송해 주세요");
         mlevel_post_result_button = findViewById(R.id.Level_post_result_button);
 
-
         SendButton = findViewById(R.id.SendButton);
 
         mmessge = findViewById(R.id.mMessge);
+        mtextMessge =findViewById(R.id.mtextMessge);
         button1 = findViewById(R.id.Button1);
         textView1 = findViewById(R.id.TextView1);
 
@@ -91,56 +104,12 @@ public class MainActivity2 extends AppCompatActivity {
 
         ID_name_text.setOnLongClickListener(mLongClickListener);
 
-
-        sector_spinner = findViewById(R.id.Sector_spinner);
-        floor_spinner = findViewById(R.id.Floor_Spinner);
-
-      //  ArrayAdapter<CharSequence> ward_coutAdapter = ArrayAdapter.createFromResource(this, R.array.Table, android.R.layout.simple_spinner_dropdown_item);
-        //R.array.test는 저희가 정의해놓은 1월~12월 / android.R.layout.simple_spinner_dropdown_item은 기본으로 제공해주는 형식입니다.
-        ArrayAdapter<CharSequence> ward_coutAdapter = ArrayAdapter.createFromResource(this, R.array.Table, R.layout.spinner_item);
-
-       // ward_coutAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sector_spinner.setAdapter(ward_coutAdapter); //어댑터에 연결해줍니다.
-        sector_spinner.setSelection(0);
-        sector_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Sector_count=position;
-                Sector_name=(String) sector_spinner.getItemAtPosition(position);
-                Floor_chenck(Sector_count);
-            } //이 오버라이드 메소드에서 position은 몇번째 값이 클릭됬는지 알 수 있습니다.
-            //getItemAtPosition(position)를 통해서 해당 값을 받아올수있습니다.
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
         SendButton.setOnClickListener(mClickListener);
         mlevel_post_result_button.setOnClickListener(mClickListener);
         button1.setOnClickListener(mClickListener);
+        //senser_check();
+    }
 
-    }
-    private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothLeScanner mBluetoothLeScanner;
-    private static final int REQUEST_ENABLE_BT = 2;
-    private static final int BEFOR_SEND_BT = 3;
-    private void bluetoothCheck() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-        // mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        // 지원하지 않는다면 어플을 종료시킨다.
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "이 기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-        if (!mBluetoothAdapter.isEnabled()) {
-            //log.e("BLE1245", "124");
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
-        //log.e("BLE1245", "130");
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -168,8 +137,32 @@ public class MainActivity2 extends AppCompatActivity {
     }
     private String Floor_name=null;
     private int Floor_count=0;
+    private void Spinner(){
+       /* sector_spinner = findViewById(R.id.Sector_spinner);
+        floor_spinner = findViewById(R.id.Floor_Spinner);
+
+        //  ArrayAdapter<CharSequence> ward_coutAdapter = ArrayAdapter.createFromResource(this, R.array.Table, android.R.layout.simple_spinner_dropdown_item);
+        //R.array.test는 저희가 정의해놓은 1월~12월 / android.R.layout.simple_spinner_dropdown_item은 기본으로 제공해주는 형식입니다.
+        ArrayAdapter<CharSequence> ward_coutAdapter = ArrayAdapter.createFromResource(this, R.array.Table, R.layout.spinner_item);
+
+        // ward_coutAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sector_spinner.setAdapter(ward_coutAdapter); //어댑터에 연결해줍니다.
+        sector_spinner.setSelection(0);
+        sector_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Sector_count=position;
+                Sector_name=(String) sector_spinner.getItemAtPosition(position);
+                Floor_chenck(Sector_count);
+            } //이 오버라이드 메소드에서 position은 몇번째 값이 클릭됬는지 알 수 있습니다.
+            //getItemAtPosition(position)를 통해서 해당 값을 받아올수있습니다.
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });*/
+    }
     private void Floor_chenck(int count){
-        if(count == 0) {
+     /*   if(count == 0) {
             ArrayAdapter<CharSequence> ward_coutAdapter = ArrayAdapter.createFromResource(this, R.array.KIER_cout, R.layout.spinner_item);
             //R.array.test는 저희가 정의해놓은 1월~12월 / android.R.layout.simple_spinner_dropdown_item은 기본으로 제공해주는 형식입니다.
 
@@ -249,7 +242,7 @@ public class MainActivity2 extends AppCompatActivity {
                 public void onNothingSelected(AdapterView<?> parent) {
                 }
             });
-        }
+        }*/
     }
     private String url;
     private void ID_name_in_Http_post() {
@@ -326,12 +319,13 @@ public class MainActivity2 extends AppCompatActivity {
                                             public void onClick(DialogInterface dialogInterface, int i) {*/
                                         String id_sussess_string = "ID 전송 성공 - " + ID_name_string;
                                         mlogin_fail.setText("");
-                                        mlevel_post_result_text.setText("Level을 전송해 주세요");
+                                        mlevel_post_result_text.setText("");
                                         mSector_Level_success = false;
                                        // textView1.setText("Level을 먼저 전송해 주세요");
                                         jupiterService = new JupiterService();
                                         jupiterService.setJupiterService(getApplication(), ID_name_string);
                                         jupiterService.sendUserInfo();
+                                        jupiterService.setUVDListLength(3);
                                         mid_send_success = true;
                                         SendButton.setText("로그아웃");
                                         SendButton.getBackground().setTint(ContextCompat.getColor(getApplicationContext(), R.color.red));
@@ -377,6 +371,133 @@ public class MainActivity2 extends AppCompatActivity {
                 mlogin_fail.setText("주소를 확인할 수 없습니다.\n네트워크 연결을 확인해 주세요");
                 mid_send_success= false;
                // failmessage(e.getMessage());
+                Log.e("dd-215u", e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
+    }
+    private void Pressure_post() {
+        new Thread(() -> {
+            try {
+                Log.e("dd-", "164");
+                String url = "http://stag.nineone.com:9988/pressurecal";
+
+                URL object = null;
+                object = new URL(url);
+                Log.e("dd-", "168");
+                HttpURLConnection con = null;
+
+                con = (HttpURLConnection) object.openConnection();
+                con.setDoOutput(true);
+                con.setDoInput(true);
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setRequestMethod("POST");
+                // JSONArray array = new JSONArray();
+
+                JSONObject cred = new JSONObject();
+                try {
+                    cred.put("user_id", ID_name_string);
+                    cred.put("pressure", PRESSURE_avg);
+                    Log.e("PRESSURE_avg", String.valueOf(PRESSURE_avg));
+                } catch (JSONException e) {
+                    mlevel_post_result_text.setText(e.getMessage());
+                    mSector_Level_success= false;
+                    // failmessage(e.getMessage());
+                    Log.e("dd-189u", "\n" + e.getMessage());
+                    e.printStackTrace();
+                }
+                //array.put(cred);
+                OutputStream os = con.getOutputStream();
+                Log.e("dd-514u", cred.toString());
+                os.write(cred.toString().getBytes("UTF-8"));
+                long rfmillistime = System.currentTimeMillis();
+                os.close();
+                StringBuilder sb = new StringBuilder();
+                int HttpResult = con.getResponseCode();
+                if (HttpResult == HttpURLConnection.HTTP_OK) {
+
+                    BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"));
+                    // mmiilisRF.setText(Millis_time(rfmillistime));
+                    String line = null;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line + "\n");
+                    }
+                    Log.e("dd-fffu", sb.toString());
+                    if (sb.toString().length() != 0) {
+                        boolean success = false;
+                        String errors = null;
+                        String message = null;
+                        try {
+                            JSONObject job = new JSONObject(sb.toString());
+                            success = job.getBoolean("success");
+                            errors = job.getString("errors");
+                            message = job.getString("message");
+                            String make;
+                            if(success){
+                                make = "Success "+message;
+                                Runnable runnableRF4 = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                       // mlevel_post_result_text.setText(snedOK);
+                                        //  textView1.setText("전송 중지");
+                                        mSector_Level_success= true;
+                                        mlevel_post_result_text.setText(""+PRESSURE_avg);
+
+                                    }
+                                };
+                                namechange_handler.postDelayed(runnableRF4, 0);
+                            }else{
+                                make = errors+", "+message;
+                                Runnable runnableRF4 = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mlevel_post_result_text.setText(make);
+                                        mSector_Level_success = false;
+                                        // failmessage(make);
+                                    }
+                                };
+                                namechange_handler.postDelayed(runnableRF4, 0);
+                            }
+                            Log.e("dd-return_result2", success + "," + errors+","+message);
+
+                        } catch (JSONException e) {
+                            Runnable runnableRF5 = new Runnable() {
+                                @Override
+                                public void run() {
+                                    mlevel_post_result_text.setText(e.getMessage());
+                                }
+                            };
+                            namechange_handler.postDelayed(runnableRF5, 0);
+
+                            //failmessage(e.getMessage());
+                            mSector_Level_success = false;
+                            Log.e("dd-211u", "\n" + e.getMessage());
+                            // Handle error
+                        }
+                    }
+                    br.close();
+
+                } else {
+                    HttpURLConnection finalCon = con;
+
+                    mlevel_post_result_text.setText(HttpResult+" "+con.getResponseMessage());
+                    mSector_Level_success = false;
+                    //  failmessage(HttpResult+" "+con.getResponseMessage());
+                    Log.e("dd-212u", HttpResult+con.getResponseMessage());
+                }
+            } catch (IOException e) {
+
+                Runnable runnableRF5 = new Runnable() {
+                    @Override
+                    public void run() {
+                        mlevel_post_result_text.setText("주소를 확인할 수 없습니다.\n네트워크 연결을 확인해 주세요");
+                    }
+                };
+                namechange_handler.postDelayed(runnableRF5, 0);
+
+                mSector_Level_success = false;
+                //failmessage(e.getMessage());
                 Log.e("dd-215u", e.getMessage());
                 e.printStackTrace();
             }
@@ -513,14 +634,12 @@ public class MainActivity2 extends AppCompatActivity {
 
 
 
-    private TimerTask timerTask;
+  /*  private TimerTask timerTask;
     private Timer timer = new Timer();
     private void startTimerTask1() {
         timerTask = new TimerTask() {
             @Override
             public void run() { // 코드 작성
-
-
                 JupiterService_callback();
 
             }
@@ -532,20 +651,9 @@ public class MainActivity2 extends AppCompatActivity {
             timerTask.cancel();
             timerTask = null;
         }
-    }
-
-    private void JupiterService_callback(){
-        jupiterService.requestFineLocationTrackingUpdate(new JupiterCallBackManager.FineLocationTrackingCallBack() {
-            @Override
-            public void onResponse(@NonNull FineLocationTrackingOutput fineLocationTrackingOutput) {
-              //  Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
-                //mmessge.setText(fineLocationTrackingOutput.toString());
-            }
-        });
+    }*/
 
 
-
-    }
     @Override
     protected void onStart() {
         super.onStart();
@@ -555,6 +663,9 @@ public class MainActivity2 extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        IntentFilter filter2 = new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION);//gps 상태감지 필터
+        filter2.addAction(Intent.ACTION_PROVIDER_CHANGED);
+        registerReceiver(mBroadcastReceiver1, filter2);
         //  Log.e("connect_TAG", "onResume");
         //  startScan();
     }
@@ -563,7 +674,15 @@ public class MainActivity2 extends AppCompatActivity {
     protected void onPause() {
         //Log.e("connect_TAG", "onPause");
         super.onPause();
-        stopTimerTask();
+        //stopTimerTask();
+        if(mSensorManager!=null){
+            mSensorManager.unregisterListener(this);
+        }
+        try {
+            unregisterReceiver(mBroadcastReceiver1);
+        } catch (Exception ignored) {
+
+        }
         if(jupiterService!=null) {
             jupiterService.stopJupiterService();
         }
@@ -602,7 +721,6 @@ public class MainActivity2 extends AppCompatActivity {
         public void onClick(View v) {
             if (v.getId() == R.id.SendButton) {
                 if (!mid_send_success) {
-
                     ID_name_in_Http_post();
                 } else {
                     AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity2.this);
@@ -623,7 +741,7 @@ public class MainActivity2 extends AppCompatActivity {
                                 textView1.setText("전송 중지");
                                 button1.setText("시작");
                                 mInformation_boolean = false;
-                                //      jupiterService.stopJupiterService();
+                                //  jupiterService.stopJupiterService();
                             }
                             textView1.setText("전송 중지");
                             button1.setText("시작");
@@ -646,7 +764,14 @@ public class MainActivity2 extends AppCompatActivity {
 
             if (v.getId() == R.id.Level_post_result_button) {
                 if (mid_send_success) {
-                    Sector_Level_post(Floor_name);
+                    if (!mInformation_boolean) {
+
+                        porsenser();
+                    }else{
+                        mlevel_post_result_text.setText("전송을 중지 해 주세요");
+                    }
+                   // mlevel_post_result_text.setText(""+PRESSURE_avg);
+                  //  Sector_Level_post(Floor_name);
                 } else {
                     mlevel_post_result_text.setText("로그인을 먼저 진행 해 주세요");
                 }
@@ -654,7 +779,7 @@ public class MainActivity2 extends AppCompatActivity {
             if (v.getId() == R.id.Button1) {
 
                 if (mid_send_success) {
-                    if (mSector_Level_success) {
+                  //  if (mSector_Level_success) {
                         beforsend_bluetoothCheck();
                       /*  if (!mInformation_boolean) {
                             jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
@@ -669,9 +794,9 @@ public class MainActivity2 extends AppCompatActivity {
                             mInformation_boolean = false;
                             jupiterService.stopJupiterService();
                         }*/
-                    } else {
-                        textView1.setText("Level을 먼저 전송해 주세요");
-                    }
+                  //  } else {
+                  //      textView1.setText("Level을 먼저 전송해 주세요");
+                  //  }
                 } else {
                     textView1.setText("로그인을 먼저 진행 해 주세요");
                 }
@@ -695,12 +820,64 @@ public class MainActivity2 extends AppCompatActivity {
             startActivityForResult(enableIntent, BEFOR_SEND_BT);
         }else{
             if (!mInformation_boolean) {
+             //   Runnable runnableRF4 = new Runnable() {
+             //       @Override
+             //       public void run() {
+                        jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
 
-                jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
-                JupiterService_callback();
+
+                        jupiterService.requestFineLocationTrackingUpdate(new JupiterCallBackManager.FineLocationTrackingCallBack() {
+                            @Override
+                            public void onResponse(@NonNull FineLocationTrackingOutput fineLocationTrackingOutput) {
+                                Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
+                               // mmessge.setText(fineLocationTrackingOutput.toString());
+                                /*   String findlocation0 = "Index "+"\n"
+                                            + "Mobile Time "+"\n"
+                                            + "Building Name "+"\n"
+                                            + "Level "+"\n"
+                                            + "X "+"\n"
+                                            + "Y ";
+                                    String findlocation1 = fineLocationTrackingOutput.getIndex()+"\n"
+                                            + fineLocationTrackingOutput.getMobile_time()+"\n"
+                                            + fineLocationTrackingOutput.getBuilding()+"\n"
+                                            + fineLocationTrackingOutput.getLevel()+"\n"
+                                            + fineLocationTrackingOutput.getX()+"\n"
+                                            + fineLocationTrackingOutput.getY();*/
+                                String findlocation0 = "Building Name "+"\n\n"
+                                        + "Level Name "+"\n\n"
+                                        + "X "+"\n\n"
+                                        + "Y "+"\n\n"
+                                        + "Index";
+                                String findlocation1 = fineLocationTrackingOutput.getBuilding()+"\n\n"
+                                        + fineLocationTrackingOutput.getLevel()+"\n\n"
+                                        + fineLocationTrackingOutput.getX()+"\n\n"
+                                        + fineLocationTrackingOutput.getY()+"\n\n"
+                                        + fineLocationTrackingOutput.getIndex();
+                                Runnable runnable12 = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mtextMessge.setText(findlocation0);
+                                        mmessge.setText(findlocation1);
+                                    }
+                                };
+                                start_handler.postDelayed(runnable12, 0);
+
+
+                                //빌딩네임
+                                // 레벨네임
+                               // x
+                               //         y
+                               // 인덱스
+                            }
+                        });
+                //    }
+             //   };
+               // start_handler.postDelayed(runnableRF4, 2000);
+
                 textView1.setText("전송 중");
                 button1.setText("중지");
                 mInformation_boolean = true;
+               // JupiterService_callback();
                 //   startTimerTask1();
             } else {
                 textView1.setText("전송 중지");
@@ -770,6 +947,130 @@ public class MainActivity2 extends AppCompatActivity {
             return false;
         }
     };
+
+    private static SensorManager mSensorManager;
+    private Sensor mBarometer; // 기압계
+
+    private void senser_check() {
+        mlevel_post_result_text.setText("");
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mBarometer = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);//기압계
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) == null) {
+            Barometer_have_boolean = false;
+            Log.e("기압없음", "763");
+        }
+        mSensorManager.registerListener(this, mBarometer, SensorManager.SENSOR_DELAY_UI);
+    }
+    private Handler mHandler;
+    private ProgressDialog mProgressDialog;
+    private void porsenser(){
+        PRESSURE_add = new ArrayList<>();
+        senser_check();
+        mHandler = new Handler();
+
+        runOnUiThread(new Runnable() {//약간의 딜레이를 준후 차트 불러오기
+            @Override public void run() {
+                mProgressDialog = ProgressDialog.show(MainActivity2.this,"", "기압값을 전송중입니다.\n전송시간 : 10초",true);
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mProgressDialog!=null&&mProgressDialog.isShowing()){
+                                Pressure_post();
+
+
+                                mProgressDialog.dismiss();
+                                mSensorManager.unregisterListener(MainActivity2.this);
+                            }
+                        } catch ( Exception e ) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, 10000);
+            }
+        } );
+        //mSensorManager.unregisterListener(this);
+    }
+    private long SensorbaseTime;
+    private int SensorbaseTimecount = 2;
+    private ArrayList<Float> PRESSURE_add;
+    private float PRESSURE_avg;
+    private boolean Barometer_have_boolean = true;
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_PRESSURE) {//기압
+            //     long timestamp = sensorEvent.timestamp;
+            Log.e("기압dlTdma", String.valueOf(PRESSURE_add.size()));
+            float presure = sensorEvent.values[0];
+            presure = (float) (Math.round(presure * 100) / 100.0); //소수점 2자리 반올림
+            PRESSURE_add.add(presure);
+            if (getTime(SensorbaseTime) >= SensorbaseTimecount) {
+                float sum = 0;
+                int count = 0;
+                for (float device : PRESSURE_add) {
+                    sum += device;
+                    count++;
+                }
+                SensorbaseTimecount = 10;
+                PRESSURE_avg = sum / count;
+                SensorbaseTime = SystemClock.elapsedRealtime();
+            }
+        }
+    }
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+    private long getTime(long timesec) {
+        //경과된 시간 체크
+        long nowTime = SystemClock.elapsedRealtime();
+        //시스템이 부팅된 이후의 시간
+        long overTime = nowTime - timesec;
+        //
+        // Log.e("overtime", String.valueOf(overTime));
+        long sec = (overTime / 1000) % 60;
+        long min = ((overTime / 1000) / 60) % 60;
+        long hour = ((overTime / 1000) / 60) / 60;
+        //  long ms = overTime % 1000;
+
+        return sec;
+    }
+
+    private final BroadcastReceiver mBroadcastReceiver1 = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            Log.e("testdCONNECTEDgg", action + "," + intent.getAction());
+
+            if (action.equals(LocationManager.PROVIDERS_CHANGED_ACTION)) {
+                //log.e("off6", action + ", " + intent);
+            }
+        }
+    };
+    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothLeScanner mBluetoothLeScanner;
+    private static final int REQUEST_ENABLE_BT = 2;
+    private static final int BEFOR_SEND_BT = 3;
+    private void bluetoothCheck() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        // mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        // 지원하지 않는다면 어플을 종료시킨다.
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "이 기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        if (!mBluetoothAdapter.isEnabled()) {
+            //log.e("BLE1245", "124");
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        }
+        //log.e("BLE1245", "130");
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
