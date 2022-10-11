@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    
+    <script language="javascript" type="text/javascript" src="/routes/board2.js"></script>  
+    <title>Document</title>
+ </head>
+ <body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js" integrity="sha512-NxlWEbNbTV6acWnTsWRLIiwzOw0IwHQOYUCKBiu/NqZ+5jSy7gjMbpYI+/4KvaNuZ1qolbw+Vnd76pbIUYEG8g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <canvas id="myChart" width="800" height="200"></canvas>
+    <canvas id="myChart2" width="800" height="200"></canvas>
+    <canvas id="myChart3" width="800" height="200"></canvas>
+    <script>
+    var aa1 ="<%=aa0%>";   
+    var aa2 ="<%=aa1%>";
+    var aa3 ="<%=aa2%>";
+    var aa4 ="<%=aa3%>";
+    var b1 = aa1.split(',');
+    var b2 = aa2.split(',');
+    var b3 = aa3.split(',');
+    var b4 = aa4.split(',');
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels:b1 ,
+            datasets: [{
+                label: 'gyro x',
+                data: b2,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                pointRadius:0
+            }]
+        },
+         options: {
+             
+             scales:{
+                 y:{
+                     beginAtzero: true
+                 }
+             },
+             plugins: {
+                zoom: {
+                    zoom: {
+                        wheel:{
+                            enable:true
+                        }
+                    }
+                }
+            }
+          }
+        });
+        var ctx2 = document.getElementById('myChart2').getContext('2d');
+        var myChart2 = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels:b1 ,
+            datasets: [{
+                label: 'gyro y',
+                data: b3,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                pointRadius:0
+            }]
+        },
+       options: {
+           
+         responsive: false,
+         legend: {
+            position: 'top',
+         },
+         title: {
+            display: true,
+            text: 'Chart.js Doughnut Chart'
+         },
+         animation: {
+            animateScale: true,
+            animateRotate: true
+         }
+       
+        }
+      
+    });
+        var ctx3 = document.getElementById('myChart3').getContext('2d');
+        var myChart3 = new Chart(ctx3, {
+        type: 'line',
+        data: {
+            labels:b1 ,
+            datasets: [{
+                label: 'gyro z',
+                data: b4,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                pointRadius:0
+            }]
+        },
+       options: {
+         responsive: false,
+         legend: {
+            position: 'top',
+         },
+         title: {
+            display: true,
+            text: 'Chart.js Doughnut Chart'
+         },
+         animation: {
+            animateScale: true,
+            animateRotate: true
+         },
+         plugins: {
+             zoom: {
+                pan: {
+                    enabled: true,
+                    mode: 'xy',
+                    threshold: 5,
+                },
+                  zoom: {
+                      wheel: {
+                      },
+                      pinch: {
+                        enabled: true
+                      },
+                      mode: 'xy',
+                  },
+             }
+         },
+      }
+    });
+    
+    </script>
+ </body>
+</html>

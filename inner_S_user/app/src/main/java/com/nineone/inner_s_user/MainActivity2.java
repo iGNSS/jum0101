@@ -716,94 +716,7 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
             MainActivity2 activity = mActivity.get();
         }
     }
-    private View.OnClickListener mClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (v.getId() == R.id.SendButton) {
-                if (!mid_send_success) {
-                    ID_name_in_Http_post();
-                } else {
-                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity2.this);
-                    alertDialog.setTitle("로그아웃");
-                    alertDialog.setMessage("로그아웃 하시겠습니까?");
-                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            SendButton.setText("로그인");
-                            mlogin_fail.setText("");
-                            SendButton.getBackground().setTint(ContextCompat.getColor(getApplicationContext(), R.color.sky));
-                            mSector_Level_success = false;
-                            mid_send_success = false;
-                            mlevel_post_result_text.setText("");
-                            Log.e("notlogin", "asd");
 
-                            if (mInformation_boolean) {
-                                textView1.setText("전송 중지");
-                                button1.setText("시작");
-                                mInformation_boolean = false;
-                                //  jupiterService.stopJupiterService();
-                            }
-                            textView1.setText("전송 중지");
-                            button1.setText("시작");
-                            jupiterService.stopJupiterService();
-
-
-                        }
-                    });
-                    alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-
-                        }
-                    });
-                    alertDialog.show();
-
-                }
-
-            }
-
-            if (v.getId() == R.id.Level_post_result_button) {
-                if (mid_send_success) {
-                    if (!mInformation_boolean) {
-
-                        porsenser();
-                    }else{
-                        mlevel_post_result_text.setText("전송을 중지 해 주세요");
-                    }
-                   // mlevel_post_result_text.setText(""+PRESSURE_avg);
-                  //  Sector_Level_post(Floor_name);
-                } else {
-                    mlevel_post_result_text.setText("로그인을 먼저 진행 해 주세요");
-                }
-            }
-            if (v.getId() == R.id.Button1) {
-
-                if (mid_send_success) {
-                  //  if (mSector_Level_success) {
-                        beforsend_bluetoothCheck();
-                      /*  if (!mInformation_boolean) {
-                            jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
-                            JupiterService_callback();
-                            textView1.setText("전송 중");
-                            button1.setText("중지");
-                            mInformation_boolean = true;
-                            //   startTimerTask1();
-                        } else {
-                            textView1.setText("전송 중지");
-                            button1.setText("시작");
-                            mInformation_boolean = false;
-                            jupiterService.stopJupiterService();
-                        }*/
-                  //  } else {
-                  //      textView1.setText("Level을 먼저 전송해 주세요");
-                  //  }
-                } else {
-                    textView1.setText("로그인을 먼저 진행 해 주세요");
-                }
-            }
-
-        }
-    };
     private void beforsend_bluetoothCheck() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -889,6 +802,109 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
         }
         //log.e("BLE1245", "130");
     }
+    private View.OnClickListener mClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v.getId() == R.id.SendButton) {
+                if (!mid_send_success) {
+                    ID_name_in_Http_post();
+                } else {
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity2.this);
+                    alertDialog.setTitle("로그아웃");
+                    alertDialog.setMessage("로그아웃 하시겠습니까?");
+                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            SendButton.setText("로그인");
+                            mlogin_fail.setText("");
+                            SendButton.getBackground().setTint(ContextCompat.getColor(getApplicationContext(), R.color.sky));
+                            mSector_Level_success = false;
+                            mid_send_success = false;
+                            mlevel_post_result_text.setText("");
+                            Log.e("notlogin", "asd");
+
+                            if (mInformation_boolean) {
+                                textView1.setText("전송 중지");
+                                button1.setText("시작");
+                                mInformation_boolean = false;
+                                //  jupiterService.stopJupiterService();
+                            }
+                            textView1.setText("전송 중지");
+                            button1.setText("시작");
+                            jupiterService.stopJupiterService();
+
+
+                        }
+                    });
+                    alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    });
+                    alertDialog.show();
+
+                }
+
+            }
+
+            if (v.getId() == R.id.Level_post_result_button) {
+                if (mid_send_success) {
+                    if (!mInformation_boolean) {
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity2.this);
+                        alertDialog.setTitle("기압보정");
+                        alertDialog.setMessage("기압값 보정을 하시겠습니까?");
+                        alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                porsenser();
+                            }
+                        });
+                        alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        });
+                        alertDialog.show();
+
+                    }else{
+                        mlevel_post_result_text.setText("전송을 중지 해 주세요");
+                    }
+                    // mlevel_post_result_text.setText(""+PRESSURE_avg);
+                    //  Sector_Level_post(Floor_name);
+                } else {
+                    mlevel_post_result_text.setText("로그인을 먼저 진행 해 주세요");
+                }
+            }
+            if (v.getId() == R.id.Button1) {
+
+                if (mid_send_success) {
+                    //  if (mSector_Level_success) {
+                    beforsend_bluetoothCheck();
+                      /*  if (!mInformation_boolean) {
+                            jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
+                            JupiterService_callback();
+                            textView1.setText("전송 중");
+                            button1.setText("중지");
+                            mInformation_boolean = true;
+                            //   startTimerTask1();
+                        } else {
+                            textView1.setText("전송 중지");
+                            button1.setText("시작");
+                            mInformation_boolean = false;
+                            jupiterService.stopJupiterService();
+                        }*/
+                    //  } else {
+                    //      textView1.setText("Level을 먼저 전송해 주세요");
+                    //  }
+                } else {
+                    textView1.setText("로그인을 먼저 진행 해 주세요");
+                }
+            }
+
+        }
+    };
     private View.OnLongClickListener mLongClickListener = new View.OnLongClickListener() {
 
         @Override

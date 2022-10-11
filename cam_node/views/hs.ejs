@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <title>Document</title>
+ </head>
+ <body>
+  <script type="text/javascript">
+ 
+$(function() {
+	var fileName = "D:/expres/11/11.csv";	
+
+        // 파일 이름
+	var parseName = "";	// 파일 이름 + 숫자 (var -> int 할거)
+	var parse = 0; 		// var형 i를 정수로 변환시킨 값을 담을 변수
+
+	$.ajax({
+		url:fileName,
+		dataType:'text',
+		success: function(data) {
+			var allRow = data;
+			//.split(/\r?\n|\r/)
+			var textLine = "";
+			for(var singleRow = 0; singleRow < allRow.length; singleRow++) {
+				var collapse = allRow[singleRow].split(",");
+				
+				for(var count = 0; count < collapse.length; count++) {
+					textLine += collapse[count];
+				}
+			}
+			
+			$('#textArea').append(textLine);
+			$('#textArea').append("<br>");
+		}
+	});
+	
+});
+
+</script>
+ </body>
+</html>
