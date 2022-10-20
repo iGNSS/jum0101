@@ -448,7 +448,7 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
                                 };
                                 namechange_handler.postDelayed(runnableRF4, 0);
                             }else{
-                                make = errors+", "+message;
+                                make = "기압보정 실패\n"+message;
                                 Runnable runnableRF4 = new Runnable() {
                                     @Override
                                     public void run() {
@@ -742,7 +742,7 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
                         jupiterService.requestFineLocationTrackingUpdate(new JupiterCallBackManager.FineLocationTrackingCallBack() {
                             @Override
                             public void onResponse(@NonNull FineLocationTrackingOutput fineLocationTrackingOutput) {
-                                Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
+                                //Log.e("sectorDetectionOutput name", fineLocationTrackingOutput.toString());
                                // mmessge.setText(fineLocationTrackingOutput.toString());
                                 /*   String findlocation0 = "Index "+"\n"
                                             + "Mobile Time "+"\n"
@@ -857,6 +857,7 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
                         alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+
                                 porsenser();
                             }
                         });
@@ -981,31 +982,44 @@ public class MainActivity2 extends AppCompatActivity implements SensorEventListe
     private Handler mHandler;
     private ProgressDialog mProgressDialog;
     private void porsenser(){
+        jupiterService.startFineLocationTrackingService(JupiterService.PDR_SERVICE, 0);
+        textView1.setText("전송 중");
+        button1.setText("중지");
+        mInformation_boolean = true;
         PRESSURE_add = new ArrayList<>();
         senser_check();
-        mHandler = new Handler();
+        if(Barometer_have_boolean) {
+            mHandler = new Handler();
 
-        runOnUiThread(new Runnable() {//약간의 딜레이를 준후 차트 불러오기
-            @Override public void run() {
-                mProgressDialog = ProgressDialog.show(MainActivity2.this,"", "기압값을 전송중입니다.\n전송시간 : 10초",true);
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (mProgressDialog!=null&&mProgressDialog.isShowing()){
-                                Pressure_post();
+            runOnUiThread(new Runnable() {//약간의 딜레이를 준후 차트 불러오기
+                @Override
+                public void run() {
+                    mProgressDialog = ProgressDialog.show(MainActivity2.this, "", "기압값을 전송중입니다.\n전송시간 : 10초", true);
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                                    Pressure_post();
 
 
-                                mProgressDialog.dismiss();
-                                mSensorManager.unregisterListener(MainActivity2.this);
+                                    mProgressDialog.dismiss();
+                                    mSensorManager.unregisterListener(MainActivity2.this);
+                                    textView1.setText("전송 중지");
+                                    button1.setText("시작");
+                                    mInformation_boolean = false;
+                                    jupiterService.stopJupiterService();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        } catch ( Exception e ) {
-                            e.printStackTrace();
                         }
-                    }
-                }, 10000);
-            }
-        } );
+                    }, 10000);
+                }
+            });
+        }else{
+            mlevel_post_result_text.setText("기압센서없음");
+        }
         //mSensorManager.unregisterListener(this);
     }
     private long SensorbaseTime;
