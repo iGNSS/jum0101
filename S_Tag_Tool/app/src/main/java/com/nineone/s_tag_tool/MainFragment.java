@@ -83,6 +83,7 @@ import java.util.UUID;
 public class MainFragment extends Fragment {
 
     MainActivity activity;
+    final public static String STAG_0001 = "0001";
     final public static String STAG_0007 = "0007";
     final public static String STAG_00C8 = "00C8";
     final public static String STAG_00C9 = "00C9";

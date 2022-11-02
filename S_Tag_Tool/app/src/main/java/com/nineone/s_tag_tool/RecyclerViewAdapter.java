@@ -42,7 +42,7 @@ import static com.nineone.s_tag_tool.MainFragment.STAG_00C8;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00C9;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00CA;
 import static com.nineone.s_tag_tool.MainFragment.STAG_00D5;
-
+import static com.nineone.s_tag_tool.MainFragment.STAG_0001;
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final ArrayList<ScannedDevice> listData = new ArrayList<>();
 
@@ -83,7 +83,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public void BGW_adress_add_reset() {
         BGW_adress_add = "";
     }
-
+    String stag_save_data;
+    String[] u_tag_data_7 = new String[65000];
+    String[] u_tag_data_8 = new String[65000];
+    int[] count_a = new int[65000];
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         final ScannedDevice item = listData.get(position);
@@ -148,10 +151,115 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         //String index_num = "";
         long index_num = 0;
         boolean mAlarm_on = false;
+        int latitude=0;
+        int longitude=0;
+        short User_Move=0;
+        int Minor_Number= 0;
         int BGW_code = 0;
+        int step = 0;
+        float Direction = 0;
+        double Barometer=0;
+        String sensordata_2;
+
+        int i5 = 0;
+        String str3="";
         String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
         switch (DeviceNameArray[1]) {
+            case STAG_0001:
+                int parseInt3 = Integer.parseInt(DeviceNameArray[2],16);
+                Minor_Number = ConvertToIntLittle2(ble_data, sensorStartIdx + 18);
+                Log.e("Minor_Number2", String.valueOf(Minor_Number));
+                //viewHolder.tagadress.setText(parseInt3);
+                if(Minor_Number==1) {
+                    int BATTVal2 = ble_data[sensorStartIdx] & 0xff;
+                    BATTDisplayVal = BATTVal2 * 0.1;
+                    step = ConvertToIntLittle(ble_data, sensorStartIdx + 1);
+                    Direction = ConvertToIntLittle(ble_data, sensorStartIdx + 3);
+                    double Direction3 = Direction * 0.01;
+                    Barometer = ConvertToIntLittle(ble_data, sensorStartIdx + 5);
+                    BAROMETER_10 = (Barometer + 80000) * 0.01;
+                    latitude = ConvertToIntLittle(ble_data, sensorStartIdx + 7);
+                    float latitude2 = ConvertToIntLittle(ble_data, sensorStartIdx + 9);
+                    double latitude3 = latitude + (latitude2 * 0.01);
 
+                    longitude = ConvertToIntLittle(ble_data, sensorStartIdx + 11);
+                    int longitude2 = ConvertToIntLittle(ble_data, sensorStartIdx + 11);
+                    double longitude3 = longitude + (longitude2 * 0.01);
+
+                    User_Move = ble_data[sensorStartIdx + 15];
+                    i5 = parseInt3;
+
+                    String[] strArr6 = u_tag_data_7;
+                    StringBuilder sb3 = new StringBuilder();
+                    sb3.append("Batt: ");
+                    sb3.append(String.format("%.2f", BATTDisplayVal));
+                    sb3.append(" \r\nStepCount: ");
+                    sb3.append(String.format("%d",step));
+                    sb3.append(" \r\nDirection: ");
+                    sb3.append(String.format("%.2f",Direction * 0.01));
+                    sb3.append(" \r\nBAROMETER: ");
+                    sb3.append(String.format("%.2f", BAROMETER_10)).append(" hPa");
+                    sb3.append(" \r\nlatitud: ");
+                    sb3.append(String.valueOf(latitude3));
+                    sb3.append(" \r\nlongitude: ");
+                    sb3.append(String.valueOf(longitude3));
+                    sb3.append(" \r\nMove: ");
+                    sb3.append(String.format("%d", User_Move));
+                    sb3.append(" \r\nIndex_7: ");
+                    sb3.append(ble_data[24] & 15);
+                    sb3.append(" \r\n");
+                    strArr6[i5] = sb3.toString();
+                    stag_save_data = step + "," + Direction + ",0_0,0_0,0_0,0_0,0_0";
+                    //str3 = str3;
+                }else if(Minor_Number==2) {
+                    Log.e("ddd", ble_data[sensorStartIdx] + "," + ble_data[sensorStartIdx + 1] + "," + ble_data[sensorStartIdx + 2]);
+                    i5 = parseInt3;
+                    //str3 = str3;
+                    sensordata_2 = str3;
+                    int BTU001 = ConvertToIntLittle(ble_data, sensorStartIdx);
+                    String BTU001_1 = String.format("%02X", BTU001 & 0xffff);
+                    int BTU1_1 = (ble_data[sensorStartIdx + 2] & 0xff) * (-1);
+                    sensordata_2 += BTU001_1 + "_" + BTU1_1 + " , ";
+
+                    int BTU002 = ConvertToIntLittle(ble_data, sensorStartIdx + 3);
+                    String BTU002_1 = String.format("%02X", BTU002 & 0xffff);
+                    int BTU1_2 = (ble_data[sensorStartIdx + 5] & 0xff) * (-1);
+                    sensordata_2 += BTU002_1 + "_" + BTU1_2 + " , ";
+
+                    int BTU003 = ConvertToIntLittle(ble_data, sensorStartIdx + 6);
+                    int BTU1_3 = (ble_data[sensorStartIdx + 8] & 0xff) * (-1);
+                    String BTU003_1 = String.format("%02X", BTU003 & 0xffff);
+                    sensordata_2 += BTU003_1 + "_" + BTU1_3 + " , ";
+
+                    int BTU004 = ConvertToIntLittle(ble_data, sensorStartIdx + 9);
+                    int BTU1_4 = (ble_data[sensorStartIdx + 11] & 0xff) * (-1);
+                    String BTU004_1 = String.format("%02X", BTU004 & 0xffff);
+                    sensordata_2 += BTU004_1 + "_" + BTU1_4 + " , ";
+
+                    int BTU005 = ConvertToIntLittle(ble_data, sensorStartIdx + 12);
+                    int BTU1_5 = (ble_data[sensorStartIdx + 14] & 0xff) * (-1);
+                    String BTU005_1 = String.format("%02X", BTU005 & 0xffff);
+                    sensordata_2 += BTU005_1 + "_" + BTU1_5 + ".";
+
+                    stag_save_data = "0,0.0," + sensordata_2;
+                    sensordata_2 += "\r\n";
+                    sensordata_2 += "gps_state: " + ((ble_data[24] & 240) >> 4) + "\r\n";
+                    sensordata_2 += "Count: " + count_a[i5] + "\r\n";
+                    //sensordata_2 += "index_8: " + (ble_data[24] & 15) + "\r\n";
+                    if (BTU001 == 0 && BTU1_1 == 0 && BTU005 == 0 && BTU1_5 == 0) {
+                        count_a[i5] += count_a[i5] + 1;
+                    }
+                    u_tag_data_8[i5] = sensordata_2;
+                }
+                String[] strArr7 = u_tag_data_7;
+                if (strArr7[i5] != null) {
+                    str3 = strArr7[i5];
+                }
+                if (u_tag_data_8[i5] != null) {
+                    str3 = str3 + u_tag_data_8[i5];
+                }
+                viewHolder.tagdata.setText(str3);
+            break;
         /*    case STAG_0007:
                 int receDataLength = ble_data.length;
                 Log.e("Tag_Rece0", ", "+receDataLength);
@@ -534,12 +642,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     viewHolder.tagdevicetime.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
                     viewHolder.tagrssi.setTextColor(ContextCompat.getColor(mContext, R.color.gray));
                 }
-
-
-
                 break;
-
-
             default:
                 long index_num2 = 0;
                 sensordata = item.getScanRecordHexString();
@@ -944,7 +1047,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         int result = byteBuffer.getInt();
         return result;
     }
+    private int ConvertToIntLittle2(byte[] txValue, int startidx) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4);
+        // by choosing big endian, high order bytes must be put
+        // to the buffer before low order bytes
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        // since ints are 4 bytes (32 bit), you need to put all 4, so put 0
+        // for the high order bytes
+        byteBuffer.put(txValue[startidx+1]);
+        byteBuffer.put(txValue[startidx]);
+        byteBuffer.put((byte) 0x00);
+        byteBuffer.put((byte) 0x00);
 
+        byteBuffer.flip();
+        int result = byteBuffer.getInt();
+        return result;
+    }
 
     private short ConvertToShortLittle(byte[] txValue, int startidx) {
         ByteBuffer bb = ByteBuffer.allocate(2);

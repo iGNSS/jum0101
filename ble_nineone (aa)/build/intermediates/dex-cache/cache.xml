@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="true"
+        jar="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\libs\commons-io-2.4.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.0"
+        sha1="b1b6ea3b7e4aa4f492509a4952029cd8e48019ad">
+        <dex dex="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\build\intermediates\transforms\dex\debug\folders\1000\2\commons-io-2.4_7c4166b85b024122d534b56f51a18f8cdc067ba0\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.0"
+        sha1="12920f9016b8b05acbc2af7cdc13cef6946fe7d3">
+        <dex dex="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run_7585b8f1afc2e19554137c491544c2a3332abd05\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.0"
+        sha1="3e617ed027fceef99ba3e06d2b8ebecfea7dfad4">
+        <dex dex="D:\data\Dropbox\Working_source\AndroidStudioProject\ble_nineone\app\build\intermediates\transforms\dex\debug\folders\1000\10000\instant-run-bootstrap_39235daada4fbe80e4edafd0ca3276bdb527a6e1\classes.dex" />
+    </item>
+
+</items>
