@@ -160,7 +160,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         float Direction = 0;
         double Barometer=0;
         String sensordata_2;
-
+        String sneer_type_name1;
         int i5 = 0;
         String str3="";
         String string_O2 = "";String string_CO = "";String string_H2S = "";String string_CO2 = "";  String string_CH4 = "";
@@ -169,6 +169,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 int parseInt3 = Integer.parseInt(DeviceNameArray[2],16);
                 Minor_Number = ConvertToIntLittle2(ble_data, sensorStartIdx + 18);
                 Log.e("Minor_Number2", String.valueOf(Minor_Number));
+
+
+
+                index_num = Long.parseLong(DeviceNameArray[2],16);
+                sneer_type_name1 = "UTAG" + "-" + index_num;
+
+                viewHolder.tagadress.setText(sneer_type_name1);
+
+
+
                 //viewHolder.tagadress.setText(parseInt3);
                 if(Minor_Number==1) {
                     int BATTVal2 = ble_data[sensorStartIdx] & 0xff;
@@ -205,8 +215,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     sb3.append(String.valueOf(longitude3));
                     sb3.append(" \r\nMove: ");
                     sb3.append(String.format("%d", User_Move));
-                    sb3.append(" \r\nIndex_7: ");
-                    sb3.append(ble_data[24] & 15);
                     sb3.append(" \r\n");
                     strArr6[i5] = sb3.toString();
                     stag_save_data = step + "," + Direction + ",0_0,0_0,0_0,0_0,0_0";
@@ -647,7 +655,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 long index_num2 = 0;
                 sensordata = item.getScanRecordHexString();
                 viewHolder.tagdata.setText(sensordata);
-                viewHolder.tagadress.setText(item.getDevice().getAddress());
+                //viewHolder.tagadress.setText(item.getDevice().getAddress());
                 viewHolder.tagdata_etc.setText("");
 
                     //long  index_num2 = DeviceNameArray[2];
@@ -929,6 +937,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     public void item_Clear(){
+        count_a = new int[65000];
         listData.clear();
     }
     public int item_Count(){
