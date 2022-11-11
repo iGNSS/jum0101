@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Ble_item {
     private String Tag_Adress;
     private String Tag_Name;
+    private int Tag_Rssi;
     private ArrayList<Integer> Tag_Rssi_arrary = new ArrayList<>();
     private byte[] Tag_Adress_byte;
     private byte[] Tag_ScanRecord01,Tag_ScanRecord02;
@@ -12,6 +13,7 @@ public class Ble_item {
     public Ble_item(String Tag_Adress, String Tag_Name, int Tag_Rssi,byte[] Tag_Adress_byte, byte[] Tag_ScanRecord,int tag0102) {
         this.Tag_Adress = Tag_Adress;
         this.Tag_Name = Tag_Name;
+        this.Tag_Rssi = Tag_Rssi;
        // this.Tag_Rssi = new ArrayList<>();
         this.Tag_Rssi_arrary.add(Tag_Rssi);
         this.Tag_Adress_byte = Tag_Adress_byte;
@@ -23,6 +25,9 @@ public class Ble_item {
         }
 
     }
+
+    public int getTag_Rssi() {return Tag_Rssi;}
+    public void setTag_Rssi(int tag_Rssi) {Tag_Rssi = tag_Rssi;}
 
     public byte[] getTag_Adress_byte() {return Tag_Adress_byte;}
     public void setTag_Adress_byte(byte[] tag_Adress_byte) {Tag_Adress_byte = tag_Adress_byte;}

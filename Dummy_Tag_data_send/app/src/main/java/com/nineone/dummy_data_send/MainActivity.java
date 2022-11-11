@@ -5,8 +5,10 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +21,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -32,6 +35,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -77,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
@@ -84,16 +89,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-    private TextView textView1, textView2, textView3, mmiiliscUV, mmiilisRF, mErrerUV, mErrerRF;
-    private TextView UV_url_text, UV_port_text, UV_path_text;
-    private TextView RF_path_text;
-    private TextView ID_name_text;
-    private Button ID_name_button;
+    private TextView textView1, textView2, textView3, mmiiliscUV, mmiilisRF, mErrerUV, mErrerRF ,mErrerTag;
+    private TextView UV_url_text, UV_port_text,UV_delay_text;
     private Button button1;
     private boolean mInformation_boolean = false;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
-
+    private String UV_url_string, UV_port_string;
+    private int UV_delay_string;
+    private  SimpleDateFormat aftertime;
+    private int delay=1000;
+    //기압센서 빼기, ble 안될때 예외처리(화면에 표시), socket 전송되고 있는지 확인 메세지 표시
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,58 +107,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         UV_url_text = findViewById(R.id.UVadress);
         UV_port_text = findViewById(R.id.UVport);
-        UV_path_text = findViewById(R.id.UVpath);
-        RF_path_text = findViewById(R.id.RFpath);
-        ID_name_text = findViewById(R.id.IDname);
-        ID_name_button = findViewById(R.id.SendButton);
+        UV_delay_text = findViewById(R.id.UVdelay);
+
         textView1 = findViewById(R.id.TextView1);
         textView2 = findViewById(R.id.UVcount);
-        textView3 = findViewById(R.id.RFcount);
         mmiiliscUV = findViewById(R.id.miiliscUV);
-        mmiilisRF = findViewById(R.id.miiliscRF);
         mErrerUV = findViewById(R.id.errerUV);
-        mErrerRF = findViewById(R.id.errerRF);
+        mErrerTag = findViewById(R.id.errerTag);
         button1 = findViewById(R.id.Button1);
+        aftertime = new SimpleDateFormat("HH:mm:ss", Locale.KOREA);
         SharedPreferences sf = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
         // Datbuffer_Put();
-        UV_url_string = sf.getString("UV_url", "stag.nineone.com");
-        UV_port_string = sf.getString("UV_port", "9988");
-        UV_path_string = sf.getString("UV_path", "uv");
-        RF_path_string = sf.getString("RF_path", "rf");
-        ID_name_string = sf.getString("ID_name", "edankim72");
-
+        UV_url_string = sf.getString("UV_url", "10.10.10.11");
+        UV_port_string = sf.getString("UV_port", "3009");
+        UV_delay_string = sf.getInt("UV_delay",1000);
         UV_url_text.setText(UV_url_string);
         UV_port_text.setText(UV_port_string);
-        UV_path_text.setText(UV_path_string);
-
-        RF_path_text.setText(RF_path_string);
-
-        ID_name_text.setText(ID_name_string);
+        UV_delay_text.setText(String.valueOf(UV_delay_string));
         UV_url_text.setOnLongClickListener(mClickListener);
         UV_port_text.setOnLongClickListener(mClickListener);
-        UV_path_text.setOnLongClickListener(mClickListener);
-        RF_path_text.setOnLongClickListener(mClickListener);
-        ID_name_text.setOnLongClickListener(mClickListener);
-        ID_name_button.setOnLongClickListener(mClickListener);
+        UV_delay_text.setOnLongClickListener(mClickListener);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!mInformation_boolean) {
+                    delay = UV_delay_string;
+
                     startScan();
-                    porsenser();
+                    check_If_list_Empty();
+                   // porsenser();
                     textView1.setText("전송 중");
                     button1.setText("멈춤");
 
-                    mErrerRF.setText("");
 
                     mErrerUV.setText("");
+                    mErrerTag.setText("");
                     mInformation_boolean = true;
-                   // list_set_Http();
+                    // list_set_Http();
                 } else {
+                    mblecheck=false;
                     stopScan();
+                    check_If_list_Empty();
                     a = 0;
                     b = 0;
-                    mSensorManager.unregisterListener(MainActivity.this);
+                    tag_count=0;
+                   // mSensorManager.unregisterListener(MainActivity.this);
 
                     textView1.setText("전송 멈춤");
                     button1.setText("시작");
@@ -166,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         bluetoothCheck();
+        check_If_list_Empty();
     }
 
     private static final int REQUEST_ENABLE_BT = 2;//ble 켜져있는지 확인
@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 //   b++;
                 change = false;
                 // recordRF_check_in_Http_post();
-                textView3.setText(String.valueOf(b));
+               // textView3.setText(String.valueOf(b));
 
             }
         };
@@ -275,6 +275,190 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }*/
 
     //  private byte[] mdatabuffer = new byte[6500];
+
+
+
+
+
+    private void stopTimerTask() {//타이머 스톱 함수
+        if (timerTask != null) {
+            timerTask.cancel();
+            timerTask = null;
+        }
+    }
+
+    private boolean mIsScanning = false;
+
+    private void startScan() {
+        if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
+            mBluetoothLeScanner.startScan(leScanCallback);
+            RescanBaseTime = SystemClock.elapsedRealtime();
+            mIsScanning = true;
+            Log.e("startscan", "287");
+            invalidateOptionsMenu();
+        }
+        long now = System.currentTimeMillis();
+        SimpleDateFormat sdfNow = new SimpleDateFormat("MM_dd_HH_mm_ss");
+    }
+
+    private void stopScan() {
+        if (mBluetoothLeScanner != null) {
+            mBluetoothLeScanner.stopScan(leScanCallback);
+            mIsScanning = false;
+            Log.e("startscan", "295");
+        }
+        invalidateOptionsMenu();
+    }
+
+    private void reScan() {
+        if (mBluetoothLeScanner != null) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            mBluetoothLeScanner.stopScan(leScanCallback);
+
+            mBluetoothLeScanner.startScan(leScanCallback);
+        }
+    }
+
+    private void getEllapse() {
+
+        long now = SystemClock.elapsedRealtime();
+        long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
+        long min = (ell / 1000) / 60;
+        if (20 < min) {
+            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
+            Log.e("BLE Scan:", " ReStart");
+            RescanBaseTime = SystemClock.elapsedRealtime();
+            reScan();
+        }
+    }
+
+    private String Millis_time(long millis_time) {
+        long systemmillis = System.currentTimeMillis() - millis_time;
+        String stringmillis = String.valueOf(systemmillis);
+        return stringmillis;
+    }
+
+
+    private byte[] blecall_arr = new byte[500];
+    private boolean mblecheck = false;
+    private final ScanCallback leScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, final ScanResult result) {
+            mblecheck=true;
+            check_If_list_Empty();
+            mblecheck=false;
+            if (result.getDevice().getName() != null) {
+                BluetoothDevice bluetoothDevice = result.getDevice();
+                if (bluetoothDevice.getName().startsWith("TJ-0001")) {///asd
+                    //  Log.e("rssid1", String.valueOf(result.getRssi()));
+                    Log.e("result_ble1", String.valueOf(result.getDevice().getName()));
+                    Log.e("result_ble2", Arrays.toString(result.getScanRecord().getBytes()));
+                    String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
+                    byte[] U_tag_Address = new byte[13];
+                    byte[] U_tag_record = new byte[21];
+                    String adress = result.getDevice().getAddress();
+                    String[] address_arr = adress.trim().split(":");
+                    for (int i = 0; i < 6; i++) {
+                        U_tag_Address[i] = (byte) Long.parseLong(address_arr[i], 16);
+                    }
+                    byte rssi = (byte) result.getRssi();
+                    U_tag_Address[6] = rssi;
+                    U_tag_Address[7] = (byte) Long.parseLong("01", 16);
+                    U_tag_Address[8] = (byte) Long.parseLong("00", 16);
+
+                    U_tag_Address[9] = ((byte) ((Long.parseLong(DeviceNameArray[2], 16)) & 0xff));
+                    U_tag_Address[10] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 8);
+                    U_tag_Address[11] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 16);
+                    U_tag_Address[12] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 24);
+                    for (int j = 0; j < 21; j++) {
+                        U_tag_record[j] = (byte) (result.getScanRecord().getBytes()[j+9] & 0xff);
+                    }
+
+                    //Log.e("result_ble2", String.valueOf(result.getDevice().getName()));
+                    boolean contains = false;
+                    int Minor_Number = ConvertToIntLittle2(result.getScanRecord().getBytes(), 9 + 18);
+                    //Log.e("result_ble3", String.valueOf(Minor_Number));
+                    if (Minor_Number == 1) {
+                        for (Ble_item device : listData) {
+                            if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
+                                contains = true;
+                                // update
+                                device.setTag_int_Rssi(result.getRssi());
+                                device.setTag_Rssi(result.getRssi());
+                                device.setTag_ScanRecord01(U_tag_record);
+                                device.setTag0102(1);
+                                break;
+                            }
+                        }
+                        if (!contains) {
+                            if (DeviceNameArray.length >= 3) {
+                                //  Log.e("rssid2", String.valueOf(result.getRssi()));
+                                listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi(),U_tag_Address, U_tag_record, 1));
+                            }
+                        }
+                    } else if (Minor_Number == 2) {
+                        for (Ble_item device : listData) {
+                            if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
+                                contains = true;
+                                // update
+                                device.setTag_Rssi(result.getRssi());
+                                device.setTag_int_Rssi(result.getRssi());
+                                device.setTag_ScanRecord02(U_tag_record);
+                                device.setTag0102(2);
+                                break;
+                            }
+                        }
+                        if (!contains) {
+//                            String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
+                            if (DeviceNameArray.length >= 3) {
+                                //  Log.e("rssid2", String.valueOf(result.getRssi()));
+                                listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi(),U_tag_Address, U_tag_record, 2));
+                            }
+                        }
+                    }
+
+
+
+                    getEllapse();
+                } else {
+
+                }
+            }
+            Runnable runnable_ble_sned;
+
+            if(mInformation_boolean) {
+                if (!ble_sned_Boolean && listData != null) {
+                    ble_sned_Boolean = true;
+                    runnable_ble_sned = () -> {
+                        // Datbuffer_Put();
+
+                        recordUV_check_in_socket_thread thread = new recordUV_check_in_socket_thread();
+                        thread.start();
+
+                        //ble_ScanRecord_arr();
+                        //  ble_hashmap_add();
+                        // Network_Confirm();
+                    };
+                    start_handler.postDelayed(runnable_ble_sned, delay);
+                }
+            }
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+        }
+    };
+
+    private ArrayList<Byte> mbytearr = new ArrayList<>();
     private void Datbuffer_Put() {
         mdatabuffer.add((byte) Long.parseLong("02", 16));
         // int parsedResult = (int) Long.parseLong("D4", 16);
@@ -297,32 +481,67 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mdatabuffer.add((byte) Long.parseLong("00", 16));
         mdatabuffer.add((byte) Long.parseLong("00", 16));//move
         mdatabuffer.add((byte) Long.parseLong(String.valueOf(listData.size()), 16));//Reserve
+        Log.d("mdatabuffer0", String.valueOf(listData.size()));
         ble_ScanRecord_arr();
         mdatabuffer.addAll(mbytearr);
-       // mdatabuffer.addAll(mbytearr);
+        // mdatabuffer.addAll(mbytearr);
         mdatabuffer.add((byte) Long.parseLong("03", 16));
         Log.d("mdatabuffer1", String.valueOf(mdatabuffer.size()));
         Log.d("mdatabuffer2", Arrays.toString(mdatabuffer.toArray()));
-        if (listData.size() != 0) {
+       /* if (listData.size() != 0) {
             listData = new ArrayList<>();
             //  Send_Http_post();
+        }*/
+    }
+    private void ble_ScanRecord_arr() {
+        mbytearr = new ArrayList<>();
+        Log.e("U_tag_record", String.valueOf(listData.size()));
+        for (Ble_item device : listData) {
+            Log.e("U_tag_record", device.getTag_Name());
+            Log.e("U_tag_record", String.valueOf(listData.size()));
+            if (device.getTag_ScanRecord01() != null) {
+                Log.e("U_tag_record1", "1 " + String.valueOf(device.getTag_ScanRecord01().length));
+            }if ( device.getTag_ScanRecord02() != null) {
+                Log.e("U_tag_record2", "2 " + String.valueOf(device.getTag_ScanRecord02().length));
+            }
+            if (device.getTag_ScanRecord01() != null && device.getTag_ScanRecord02() != null) {
+              //  Log.e("U_tag_record1","1 "+ String.valueOf(device.getTag_Adress_byte().length));
+              //  Log.e("U_tag_record2","2 "+ String.valueOf(device.getTag_ScanRecord01().length));
+              //  Log.e("U_tag_record3","3 "+ String.valueOf(device.getTag_ScanRecord02().length));
+                for (int i = 0; i < device.getTag_Adress_byte().length; i++) {
+                    mbytearr.add(device.getTag_Adress_byte()[i]);
+
+                }
+                Log.e("byte_sussss11", Arrays.toString(device.getTag_Adress_byte()));
+                for (int i = 0; i < device.getTag_ScanRecord01().length; i++) {
+                    mbytearr.add(device.getTag_ScanRecord01()[i]);
+                }
+                Log.e("byte_sussss12", Arrays.toString(device.getTag_ScanRecord01()));
+                for (int i = 0; i < device.getTag_ScanRecord02().length; i++) {
+                    mbytearr.add(device.getTag_ScanRecord02()[i]);
+                }
+                Log.e("byte_sussss13", Arrays.toString(device.getTag_ScanRecord02()));
+            }
+            Log.e("byte_sussss14", Arrays.toString(mbytearr.toArray()));
+            Log.e("byte_sussss15", String.valueOf(mbytearr.size()));
         }
+       byte[] bytes2 = new byte[mbytearr.size()];
+        for (int i = 0; i < mbytearr.size(); i++) {
+            bytes2[i] = mbytearr.get(i);
+        }
+        String tmp = byteArrayToHex(bytes2);
+        Log.e("byte_sussss16", Arrays.toString(mbytearr.toArray()));
+        Log.e("byte_sussss17", tmp);
+        Log.e("rssid1", String.valueOf(mbytearr.size()));
+        Log.e("rssid2", String.valueOf(mbytearr.size() / 55));
+        Log.e("rssid3", Arrays.toString(mbytearr.toArray()));
+
 
     }
-    public String readUTF8 (DataInputStream in) throws IOException {
-        int length = in.readInt();
-        byte[] encoded = new byte[length];
-        in.readFully(encoded, 0, length);
-        return new String(encoded);
-    }
     private ArrayList<Byte> mdatabuffer = new ArrayList<>();
-    private String response; //서버 응답
-    private Handler handler = new Handler();
-    private DataInputStream data_send;
-    private byte mdatabuffer2 = 1;
-    private boolean socket_connect= false;
-    private DataInputStream mObjIStream = null;
-    private  int byteint = 0;
+    private boolean socket_connect = false;
+    private int tag_count =0;
+    private boolean tag_name_bool = false;
     class recordUV_check_in_socket_thread extends Thread {
         String host; // 서버 IP
         int port;
@@ -333,40 +552,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         byte[] bytes;
 
         public recordUV_check_in_socket_thread() {
-              this.host = "10.10.10.162";
+            this.host = UV_url_string;
             //this.host = "10.10.10.11";
-             this.port = 7210;
+            this.port = Integer.parseInt(UV_port_string);
             //this.port = 3009;
             //     this.data = databuffer;
         }
-
-       /*   @Override
-          public void run() {
-              Datbuffer_Put();
-              try {
-                  int portNumber = port;
-
-                  Socket sock = new Socket(host, portNumber); // 소켓 객체 만들기
-                  Log.e("서버","소켓 연결함.");
-
-                  ObjectOutputStream outstream = new ObjectOutputStream(sock.getOutputStream()); // 소켓 객체로 데이터 보내기
-                  outstream.writeObject(mdatabuffer);
-                  outstream.flush();
-                  Log.e("서버","데이터 전송함.");
-
-                  ObjectInputStream instream = new ObjectInputStream(sock.getInputStream());
-                  Log.e("서버","서버로부터 받음 : " + instream.readObject());
-                  sock.close();
-              } catch(Exception ex) {
-                  Log.e("서버","서버로부터 받음 : " + ex.getMessage());
-                  ex.printStackTrace();
-              }
-              mdatabuffer = new ArrayList<>();
-              bytes = new byte[mdatabuffer.size()];
-              ble_sned_Boolean = false;
-          }*/
         @Override
-        public  void run() {
+        public void run() {
             Datbuffer_Put();
             bytes = new byte[mdatabuffer.size()];
             for (int i = 0; i < mdatabuffer.size(); i++) {
@@ -378,10 +571,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             try {
                 socket = new Socket(host, port);
                 socket_connect = true;
-                Log.w("servers서버:", "서버 접속됨");
+
             } catch (IOException e1) {
                 socket_connect = false;
-                Log.w("servers서버:", "서버접속못함");
+                Runnable runnableUV2 = new Runnable() {
+                    @Override
+                    public void run() {
+                        mErrerUV.setText("서버접속실패");
+                    }
+                };
+                UVchange_handler.postDelayed(runnableUV2, 0);
+                Log.w("servers서버2:", "서버접속못함");
 
                 e1.printStackTrace();
             }
@@ -411,19 +611,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     //  DataInputStream dIn = new DataInputStream(socket.getInputStream());
                     Log.e("servers1", "전송함...");
                     //  byte[] buffer = new byte[1024];
-                   // StringBuilder inputLine = new StringBuilder();
+                    // StringBuilder inputLine = new StringBuilder();
                     Log.e("servers2", "전송함...");
                     //String tmpp;
                     //while ((tmpp = dIn.readLine()) != null) {
-                     //   Log.e("servers3", "전송함...");
-                      //  inputLine.append(tmpp);
+                    //   Log.e("servers3", "전송함...");
+                    //  inputLine.append(tmpp);
                     //}
-                    Log.e("servers4","전송함...");
+                    Log.e("servers4", "전송함...");
                     //byte buffer2 = dIn.readByte();
                     //  byteint = dIn.read(buffer);
                     Log.e("servers", "클라이언트: 데이터 수신 대기중...");
 
-                  //  String tmp = byteArrayToHex(buffer);
+                    //  String tmp = byteArrayToHex(buffer);
                     //  Log.e("servers", "클라이언트: 수신된 데이터:" + byteint);
                     //Log.e("servers", "클라이언트: 수신된 데이터2:" + inputLine.toString());
                     Log.e("servers", "수신");
@@ -436,16 +636,58 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     //dis.close();
                     //sb.toString();
                     //Log.e("서버", String.valueOf(dis.readByte()));
+                    Runnable runnableUV3 = new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.e("tests", "0");
+                            tag_name_bool=true;
+                            //mErrerUV.setText("HTTP_OK " + String.valueOf(HttpResult));
+                            long uvmillistime = System.currentTimeMillis();
+                            String item_updateMS = aftertime.format(uvmillistime);
+                            mmiiliscUV.setText(item_updateMS);
+                            tag_count++;
 
+                            textView2.setText(String.valueOf(tag_count));
+                            mErrerUV.setText("서버 접속\n데이터 전송 중");
+
+
+                            tag_name_bool = false;
+                            Log.e("servererror", String.valueOf(listData.size()));
+                            Log.e("tests", "1");
+                        }
+                    };
+                    UVchange_handler.postDelayed(runnableUV3, 0);
                     socket.close();
 
                 } catch (Exception e) {
                     Log.e("servererror", "eee");
                 }
             }
+
+
             mdatabuffer = new ArrayList<>();
             bytes = new byte[mdatabuffer.size()];
             ble_sned_Boolean = false;
+            Log.e("tests", "2");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    StringBuilder sb3 = new StringBuilder();
+                    for (Ble_item device : listData) {
+                        sb3.append(device.getTag_Name());
+                        sb3.append(" ");
+                        sb3.append(device.getTag_Rssi());
+                        sb3.append("\r\n");
+                    }
+                    mErrerTag.setText(sb3.toString().toString());
+                    if (listData.size() != 0 && !tag_name_bool) {
+                        listData = new ArrayList<>();
+                        //  Send_Http_post();
+                    }
+                    // Stuff that updates the UI
+                }
+            });
+            Log.e("tests", "3");
         }
        /* @Override
         public void run() {
@@ -495,223 +737,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     }
-
-    private void stopTimerTask() {//타이머 스톱 함수
-        if (timerTask != null) {
-            timerTask.cancel();
-            timerTask = null;
+    private void check_If_list_Empty() {
+        if (!mblecheck && mIsScanning) {
+            mErrerUV.setText("BLE 수신 오류");
+        } else if (!mIsScanning) {
+            mErrerUV.setText("");
         }
-    }
-
-    private boolean mIsScanning = false;
-
-    private void startScan() {
-        if ((mBluetoothLeScanner != null) && (!mIsScanning)) {
-            mBluetoothLeScanner.startScan(leScanCallback);
-            RescanBaseTime = SystemClock.elapsedRealtime();
-            mIsScanning = true;
-            Log.e("startscan", "287");
-            invalidateOptionsMenu();
-        }
-        long now = System.currentTimeMillis();
-        SimpleDateFormat sdfNow = new SimpleDateFormat("MM_dd_HH_mm_ss");
-    }
-
-    private void stopScan() {
-        if (mBluetoothLeScanner != null) {
-            mBluetoothLeScanner.stopScan(leScanCallback);
-            mIsScanning = false;
-            Log.e("startscan", "295");
-        }
-        invalidateOptionsMenu();
-    }
-
-    private void reScan() {
-        if (mBluetoothLeScanner != null) {
-            mBluetoothLeScanner.stopScan(leScanCallback);
-            mBluetoothLeScanner.startScan(leScanCallback);
-        }
-    }
-
-    private void getEllapse() {
-
-        long now = SystemClock.elapsedRealtime();
-        long ell = now - RescanBaseTime;                            //현재 시간과 지난 시간을 빼서 ell값을 구하고
-        long min = (ell / 1000) / 60;
-        if (20 < min) {
-            Log.e("SystemClock2", min + "," + RescanBaseTime + "," + ell);
-            Log.e("BLE Scan:", " ReStart");
-            RescanBaseTime = SystemClock.elapsedRealtime();
-            reScan();
-        }
-    }
-
-    private String Millis_time(long millis_time) {
-        long systemmillis = System.currentTimeMillis() - millis_time;
-        String stringmillis = String.valueOf(systemmillis);
-        return stringmillis;
-    }
-
-
-    private byte[] blecall_arr = new byte[500];
-    private final ScanCallback leScanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, final ScanResult result) {
-            if (result.getDevice().getName() != null) {
-
-                BluetoothDevice bluetoothDevice = result.getDevice();
-                if (bluetoothDevice.getName().startsWith("TJ-0001")) {///asd
-                    //  Log.e("rssid1", String.valueOf(result.getRssi()));
-                    Log.e("result_ble1", String.valueOf(result.getDevice().getName()));
-                    Log.e("result_ble2", Arrays.toString(result.getScanRecord().getBytes()));
-                    String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
-                    byte[] U_tag_Address = new byte[13];
-                    byte[] U_tag_record = new byte[21];
-                    String adress = result.getDevice().getAddress();
-                    String[] address_arr = adress.trim().split(":");
-                    for (int i = 0; i < 6; i++) {
-                        U_tag_Address[i] = (byte) Long.parseLong(address_arr[i], 16);
-                    }
-                    byte rssi = (byte) result.getRssi();
-                    U_tag_Address[6] = rssi;
-                    U_tag_Address[7] = (byte) Long.parseLong("01", 16);
-                    U_tag_Address[8] = (byte) Long.parseLong("00", 16);
-
-                    U_tag_Address[9] = ((byte) ((Long.parseLong(DeviceNameArray[2], 16)) & 0xff));
-                    U_tag_Address[10] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 8);
-                    U_tag_Address[11] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 16);
-                    U_tag_Address[12] = (byte) (((Long.parseLong(DeviceNameArray[2], 16)) & 0xff) << 24);
-                    for (int j = 0; j < 21; j++) {
-                        U_tag_record[j] = (byte) (result.getScanRecord().getBytes()[j+9] & 0xff);
-                    }
-
-                    //Log.e("result_ble2", String.valueOf(result.getDevice().getName()));
-                    boolean contains = false;
-                    int Minor_Number = ConvertToIntLittle2(result.getScanRecord().getBytes(), 9 + 18);
-                    //Log.e("result_ble3", String.valueOf(Minor_Number));
-                    if (Minor_Number == 1) {
-                        for (Ble_item device : listData) {
-                            if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
-                                contains = true;
-                                // update
-                                device.setTag_int_Rssi(result.getRssi());
-                                device.setTag_ScanRecord01(U_tag_record);
-                                device.setTag0102(1);
-                                break;
-                            }
-                        }
-                        if (!contains) {
-                            if (DeviceNameArray.length >= 3) {
-                                //  Log.e("rssid2", String.valueOf(result.getRssi()));
-                                listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi(),U_tag_Address, U_tag_record, 1));
-                            }
-                        }
-                    } else if (Minor_Number == 2) {
-                        for (Ble_item device : listData) {
-                            if (bluetoothDevice.getAddress().equals(device.getTag_Adress())) {
-                                contains = true;
-                                // update
-                                device.setTag_int_Rssi(result.getRssi());
-                                device.setTag_ScanRecord02(U_tag_record);
-                                device.setTag0102(2);
-                                break;
-                            }
-                        }
-                        if (!contains) {
-//                            String[] DeviceNameArray = bluetoothDevice.getName().trim().split("-");
-                            if (DeviceNameArray.length >= 3) {
-                                //  Log.e("rssid2", String.valueOf(result.getRssi()));
-                                listData.add(new Ble_item(bluetoothDevice.getAddress(), bluetoothDevice.getName(), result.getRssi(),U_tag_Address, U_tag_record, 2));
-                            }
-                        }
-                    }
-
-
-
-                    getEllapse();
-                } else {
-
-                }
-            }
-            Runnable runnable_ble_sned;
-            if(mInformation_boolean) {
-                if (!ble_sned_Boolean && listData != null) {
-                    ble_sned_Boolean = true;
-                    runnable_ble_sned = () -> {
-                        // Datbuffer_Put();
-                        recordUV_check_in_socket_thread thread = new recordUV_check_in_socket_thread();
-                        thread.start();
-                        //ble_ScanRecord_arr();
-                        //  ble_hashmap_add();
-                        // Network_Confirm();
-                    };
-                    start_handler.postDelayed(runnable_ble_sned, 3000);
-                }
-            }
-        }
-
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-        }
-    };
-
-    private ArrayList<Byte> mbytearr = new ArrayList<>();
-
-    private void ble_ScanRecord_arr() {
-        mbytearr = new ArrayList<>();
-        Log.e("U_tag_record", String.valueOf(listData.size()));
-        for (Ble_item device : listData) {
-            Log.e("U_tag_record", device.getTag_Name());
-            Log.e("U_tag_record", String.valueOf(listData.size()));
-            if (device.getTag_ScanRecord01() != null) {
-                Log.e("U_tag_record1", "1 " + String.valueOf(device.getTag_ScanRecord01().length));
-            }if ( device.getTag_ScanRecord02() != null) {
-                Log.e("U_tag_record2", "2 " + String.valueOf(device.getTag_ScanRecord02().length));
-            }
-            if (device.getTag_ScanRecord01() != null && device.getTag_ScanRecord02() != null) {
-              //  Log.e("U_tag_record1","1 "+ String.valueOf(device.getTag_Adress_byte().length));
-              //  Log.e("U_tag_record2","2 "+ String.valueOf(device.getTag_ScanRecord01().length));
-              //  Log.e("U_tag_record3","3 "+ String.valueOf(device.getTag_ScanRecord02().length));
-                for (int i = 0; i < device.getTag_Adress_byte().length; i++) {
-                    mbytearr.add(device.getTag_Adress_byte()[i]);
-
-                }
-                Log.e("byte_sussss11", Arrays.toString(device.getTag_Adress_byte()));
-                for (int i = 0; i < device.getTag_ScanRecord01().length; i++) {
-                    mbytearr.add(device.getTag_ScanRecord01()[i]);
-                }
-                Log.e("byte_sussss12", Arrays.toString(device.getTag_ScanRecord01()));
-                for (int i = 0; i < device.getTag_ScanRecord02().length; i++) {
-                    mbytearr.add(device.getTag_ScanRecord02()[i]);
-                }
-                Log.e("byte_sussss13", Arrays.toString(device.getTag_ScanRecord02()));
-            }
-            Log.e("byte_sussss14", Arrays.toString(mbytearr.toArray()));
-            Log.e("byte_sussss15", String.valueOf(mbytearr.size()));
-        }
-       byte[] bytes2 = new byte[mbytearr.size()];
-        for (int i = 0; i < mbytearr.size(); i++) {
-            bytes2[i] = mbytearr.get(i);
-        }
-        String tmp = byteArrayToHex(bytes2);
-        Log.e("byte_sussss16", Arrays.toString(mbytearr.toArray()));
-        Log.e("byte_sussss17", tmp);
-        Log.e("rssid1", String.valueOf(mbytearr.size()));
-        Log.e("rssid2", String.valueOf(mbytearr.size() / 55));
-        Log.e("rssid3", Arrays.toString(mbytearr.toArray()));
-
-     /*   if (listData.size() != 0) {
-            listData = new ArrayList<>();
-            //  Send_Http_post();
-        }*/
-
-    }
-
-    public String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder();
-        for (final byte b : a)
-            sb.append(String.format("%02x ", b & 0xff));
-        return sb.toString();
     }
 
     private ArrayList<Ble_item> listData = new ArrayList<>();
@@ -756,7 +787,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         int result = byteBuffer.getInt();
         return result;
     }
+    public String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder();
+        for (final byte b : a)
+            sb.append(String.format("%02x ", b & 0xff));
+        return sb.toString();
+    }
 
+    public String readUTF8(DataInputStream in) throws IOException {
+        int length = in.readInt();
+        byte[] encoded = new byte[length];
+        in.readFully(encoded, 0, length);
+        return new String(encoded);
+    }
     private long SensorbaseTime;
     private int SensorbaseTimecount = 2;
     private ArrayList<Float> PRESSURE_add;
@@ -858,205 +901,158 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         builder.setNegativeButton("취소", null);
         builder.show();
     }
-
+    
     private View.OnLongClickListener mClickListener = new View.OnLongClickListener() {
 
         @Override
         public boolean onLongClick(View v) {
+            if (!mInformation_boolean) {
+            } else {
+                Toast.makeText(getApplicationContext(), "전송을 중지해 주세요.", Toast.LENGTH_LONG).show();
+
+            }
             if (v.getId() == R.id.UVadress) {
-                final EditText editText = new EditText((MainActivity.this));
-                editText.setGravity(Gravity.CENTER);
-                editText.setText(UV_url_string);
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                alertDialog.setTitle("URL");
-                alertDialog.setView(editText);
-                alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (editText.getText().length() != 0) {
-                            SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("UV_url", editText.getText().toString());
-                            editor.apply();
-                            Runnable runnable12 = new Runnable() {
-                                @Override
-                                public void run() {
-                                    UV_url_string = sharedPreferences.getString("UV_url", "stag.nineone.com");
-                                    UV_url_text.setText(UV_url_string);
-                                }
-                            };
-                            listcange_handler.postDelayed(runnable12, 2);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "URL를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                if (!mInformation_boolean) {
+                    final EditText editText = new EditText((MainActivity.this));
+                    editText.setGravity(Gravity.CENTER);
+                    editText.setText(UV_url_string);
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+                    alertDialog.setTitle("URL");
+                    alertDialog.setView(editText);
+                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (editText.getText().length() != 0) {
+                                SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("UV_url", editText.getText().toString());
+                                editor.apply();
+                                Runnable runnable12 = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        UV_url_string = sharedPreferences.getString("UV_url", "stag.nineone.com");
+                                        UV_url_text.setText(UV_url_string);
+                                    }
+                                };
+                                listcange_handler.postDelayed(runnable12, 2);
+                            } else {
+                                Toast.makeText(getApplicationContext(), "URL를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-                alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                    });
+                    alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
-                    }
-                });
+                        }
+                    });
 
-                alertDialog.show();
+                    alertDialog.show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "전송을 중지해 주세요.", Toast.LENGTH_LONG).show();
+
+                }
             }
             if (v.getId() == R.id.UVport) {
-                final EditText editText = new EditText((MainActivity.this));
-                editText.setGravity(Gravity.CENTER);
-                editText.setText(UV_port_string);
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                alertDialog.setTitle("Port");
-                alertDialog.setView(editText);
-                alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (editText.getText().length() != 0) {
-                            SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("UV_port", editText.getText().toString());
-                            editor.apply();
-                            Runnable runnable12 = new Runnable() {
-                                @Override
-                                public void run() {
-                                    UV_port_string = sharedPreferences.getString("UV_port", "9988");
-                                    UV_port_text.setText(UV_port_string);
-                                }
-                            };
-                            listcange_handler.postDelayed(runnable12, 2);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "PORT를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                if (!mInformation_boolean) {
+                    final EditText editText = new EditText((MainActivity.this));
+                    editText.setGravity(Gravity.CENTER);
+                    editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL);
+                    editText.setText(UV_port_string);
+
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+                    alertDialog.setTitle("Port");
+                    alertDialog.setView(editText);
+                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (editText.getText().length() != 0) {
+                                SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("UV_port", editText.getText().toString());
+                                editor.apply();
+                                Runnable runnable12 = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        UV_port_string = sharedPreferences.getString("UV_port", "9988");
+                                        UV_port_text.setText(UV_port_string);
+                                    }
+                                };
+                                listcange_handler.postDelayed(runnable12, 2);
+                            } else {
+                                Toast.makeText(getApplicationContext(), "PORT를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-                alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                    });
+                    alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
-                    }
-                });
-                alertDialog.show();
-            }
-            if (v.getId() == R.id.UVpath) {
-                final EditText editText = new EditText((MainActivity.this));
-                editText.setGravity(Gravity.CENTER);
-                editText.setText(UV_path_string);
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                alertDialog.setTitle("UV Path");
-                alertDialog.setView(editText);
-                alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (editText.getText().length() != 0) {
-                            SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("UV_path", editText.getText().toString());
-                            editor.apply();
-                            Runnable runnable12 = new Runnable() {
-                                @Override
-                                public void run() {
-                                    UV_path_string = sharedPreferences.getString("UV_path", "api/mobile/recordUV");
-                                    UV_path_text.setText(UV_path_string);
-                                }
-                            };
-                            listcange_handler.postDelayed(runnable12, 2);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "PATH를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                         }
-                    }
-                });
-                alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                    });
+                    alertDialog.show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "전송을 중지해 주세요.", Toast.LENGTH_LONG).show();
 
-                    }
-                });
-
-                alertDialog.show();
+                }
             }
-            if (v.getId() == R.id.RFpath) {
-                final EditText editText = new EditText((MainActivity.this));
-                editText.setGravity(Gravity.CENTER);
-                editText.setText(RF_path_string);
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                alertDialog.setTitle("RF Path");
-                alertDialog.setView(editText);
-                alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (editText.getText().length() != 0) {
-                            SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("RF_path", editText.getText().toString());
-                            editor.apply();
-                            Runnable runnable12 = new Runnable() {
-                                @Override
-                                public void run() {
-                                    RF_path_string = sharedPreferences.getString("RF_path", "api/mobile/recordRF");
-                                    RF_path_text.setText(RF_path_string);
+            if (v.getId() == R.id.UVdelay) {
+                if (!mInformation_boolean) {
+                    final EditText editText = new EditText((MainActivity.this));
+                    editText.setGravity(Gravity.CENTER);
+                    editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL);
+                    editText.setText(String.valueOf(UV_delay_string));
+
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+                    alertDialog.setTitle("Delay");
+                    alertDialog.setMessage("Min:1000, Max:5000\n단위:ms");
+                    alertDialog.setView(editText);
+
+                    alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (editText.getText().length() != 0) {
+
+                                if (Integer.parseInt(editText.getText().toString()) >= 1000 && Integer.parseInt(editText.getText().toString()) <= 5000) {
+                                    SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putInt("UV_delay", Integer.parseInt(editText.getText().toString()));
+                                    editor.apply();
+                                    Runnable runnable12 = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            UV_delay_string = sharedPreferences.getInt("UV_delay", 1000);
+                                            UV_delay_text.setText(String.valueOf(UV_delay_string));
+                                        }
+                                    };
+                                    listcange_handler.postDelayed(runnable12, 2);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "올바른 값을 입력해 주세요.", Toast.LENGTH_LONG).show();
                                 }
-                            };
-                            listcange_handler.postDelayed(runnable12, 2);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "주소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Delay 값을 입력해 주세요.", Toast.LENGTH_LONG).show();
+                            }
                         }
-                    }
-                });
-                alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                    });
 
-                    }
-                });
+                    alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
-                alertDialog.show();
-            }
-            if (v.getId() == R.id.IDname) {
-                final EditText editText = new EditText((MainActivity.this));
-                editText.setGravity(Gravity.CENTER);
-                editText.setText(ID_name_string);
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
-                alertDialog.setTitle("ID");
-                alertDialog.setView(editText);
-
-                alertDialog.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (editText.getText().length() != 0) {
-                            SharedPreferences sharedPreferences = getSharedPreferences("Change_settings", MODE_PRIVATE); //text라는 key에 저장된 값이 있는지 확인. 아무값도 들어있지 않으면 ""를 반환
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("ID_name", editText.getText().toString());
-                            editor.apply();
-                            Runnable runnable12 = new Runnable() {
-                                @Override
-                                public void run() {
-                                    ID_name_string = sharedPreferences.getString("ID_name", "edankim72");
-                                    ID_name_text.setText(ID_name_string);
-                                }
-                            };
-                            listcange_handler.postDelayed(runnable12, 2);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "ID를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                         }
-                    }
-                });
-                alertDialog.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+                    });
+                    alertDialog.show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "전송을 중지해 주세요.", Toast.LENGTH_LONG).show();
 
-                    }
-                });
+                }
+            }
 
-                alertDialog.show();
-            }
-            if (v.getId() == R.id.SendButton) {
-                ID_name_in_Http_post();
-            }
             return false;
         }
     };
-    private String UV_url_string, UV_port_string, UV_path_string;
-    private String RF_path_string;
-    private String ID_name_string;
+
 
     private void ID_name_in_Http_post() {
         new Thread(() -> {
@@ -1078,7 +1074,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 JSONObject cred = new JSONObject();
                 try {
-                    cred.put("user_id", ID_name_string);
+                    //cred.put("user_id", ID_name_string);
                     //cred.put("ble", SEND_HASHMAP)
                     cred.put("device_model", Build.MODEL);
                     Log.e("SystemB", Build.MODEL);
@@ -1100,9 +1096,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 int HttpResult = con.getResponseCode();
                 if (HttpResult == HttpURLConnection.HTTP_OK) {
 
-                    BufferedReader br = new BufferedReader(
-                            new InputStreamReader(con.getInputStream(), "utf-8"));
-                    mmiilisRF.setText(Millis_time(rfmillistime));
+                    BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"));
+                  //  mmiilisRF.setText(Millis_time(rfmillistime));
                     String line = null;
                     while ((line = br.readLine()) != null) {
                         sb.append(line + "\n");
