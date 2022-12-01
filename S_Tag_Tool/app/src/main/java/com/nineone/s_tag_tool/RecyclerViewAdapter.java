@@ -188,13 +188,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     double Direction3 = Direction * 0.01;
                     Barometer = ConvertToIntLittle(ble_data, sensorStartIdx + 5);
                     BAROMETER_10 = (Barometer + 80000) * 0.01;
+
                     latitude = ConvertToIntLittle(ble_data, sensorStartIdx + 7);
                     float latitude2 = ConvertToIntLittle(ble_data, sensorStartIdx + 9);
                     double latitude3 = latitude + (latitude2 * 0.01);
+                    String latitude4 = String.valueOf(latitude) + String.valueOf(latitude2);
 
                     longitude = ConvertToIntLittle(ble_data, sensorStartIdx + 11);
-                    int longitude2 = ConvertToIntLittle(ble_data, sensorStartIdx + 11);
+                    float longitude2 = ConvertToIntLittle(ble_data, sensorStartIdx + 13);
                     double longitude3 = longitude + (longitude2 * 0.01);
+                    String longitude4 = String.valueOf(longitude) + String.valueOf(longitude2);
 
                     User_Move = ble_data[sensorStartIdx + 15];
                     i5 = parseInt3;
@@ -210,9 +213,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     sb3.append(" \r\nBAROMETER: ");
                     sb3.append(String.format("%.2f", BAROMETER_10)).append(" hPa");
                     sb3.append(" \r\nlatitud: ");
-                    sb3.append(String.valueOf(latitude3));
+                    sb3.append(String.valueOf(latitude4));
                     sb3.append(" \r\nlongitude: ");
-                    sb3.append(String.valueOf(longitude3));
+                    sb3.append(String.valueOf(longitude4));
                     sb3.append(" \r\nMove: ");
                     sb3.append(String.format("%d", User_Move));
                     sb3.append(" \r\n");
