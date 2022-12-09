@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/white"
+    android:gravity="top|center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:background="@drawable/textdesign"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="20sp"
+            android:paddingEnd="20sp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|right"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="Host :"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/UVadress"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/black" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="20sp"
+            android:paddingEnd="20sp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|right"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="PORT :"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/UVport"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/black" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="20sp"
+            android:paddingEnd="20sp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|right"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="DELAY :"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/UVdelay"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:gravity="center"
+                android:text=" ms" />
+        </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/black" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="20sp"
+            android:paddingEnd="20sp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|right"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="Number :"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/wardname"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/TextView1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="전송 멈춤"
+        android:textColor="@color/black" />
+
+    <Button
+        android:id="@+id/Button1"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1.5"
+        android:gravity="center"
+        android:text="시작"
+        android:textColor="@color/white" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:paddingStart="15sp"
+        android:paddingEnd="0dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="수신횟수 : "
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/UVcount"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/black" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/gray" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="갱신시간 : "
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/miiliscUV"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:text="0"
+            android:textColor="@color/black" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/gray" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal"
+        android:paddingStart="15sp"
+        android:paddingEnd="0dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="상태 : "
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/errerUV"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:textColor="@color/black" />
+
+
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/gray" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:orientation="horizontal"
+        android:paddingStart="15sp"
+        android:paddingEnd="0dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Tag 개수 : "
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/errerTag"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:textColor="@color/black" />
+
+
+    </LinearLayout>
+    <!-- <TextView
+        android:id="@+id/errerUV"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:includeFontPadding="false"
+        android:textColor="@color/black"
+        android:gravity="center" />-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/black" />
+
+
+</LinearLayout>
