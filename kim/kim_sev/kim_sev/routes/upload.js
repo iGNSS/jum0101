@@ -18,6 +18,7 @@ const upload = multer({
   storage: multer.diskStorage({
 
     destination: function (req, file, cb) {
+      console.log(file.originalname);
       fs.readdir('routes/uploads/', (error) => {
         // uploads 폴더 없으면 생성
         if (error) {
@@ -29,11 +30,11 @@ const upload = multer({
           cb(null, 'routes/uploads/');
         }
       });
-
       console.log(req.body);
     },
     filename: function (req, file, cb) {
-      today = new Date();
+      console.log(typeof(file));
+     today = new Date();
       var year = today.getFullYear(); // 년도
       var month = today.getMonth() + 1;  // 월
       var date = today.getDate();  // 날짜
@@ -42,11 +43,12 @@ const upload = multer({
       var minutes = today.getMinutes();  // 분
       var seconds = today.getSeconds();  // 초
       var milliseconds = today.getMilliseconds();
-      var dateString = year + '.' + month + '.' + date + "_" + hours + '_' + minutes + '_' + seconds + "_";
+      var dateString = year + '.' + month + '.' + date + "_" + hours + '_' + minutes + '_' + seconds + "_" + "W" +"_";
       datename = dateString + "cam.jpg";
-      cb(null, dateString + "cam.jpg");
+      cb(null, dateString + file.originalname);
       //  cb(null, dateString + path.extname(file.originalname));
-      console.log(file.originalname);
+     // console.log(file.originalname);
+     
     }
   }),
 });
@@ -55,35 +57,11 @@ router.get('/', function (req, res, next) {
   res.render('upload', { title: 'Express' });
 });
 
-router.post('/',  function (request, respond) {
-  console.log('================1');
-  console.log(request.body);
+router.post('/', upload.single('imageFile'),  function(req, res) {
+  //var Keywords = req.body.Keywords;
 
-  console.log("=================2");
-  console.log(request.date);
-
-  if (request.file) {
-    respond.send('OK');
-    console.log("=================3");
-    console.log(request.file);
-    console.log("0");
-    console.log(request.body.ID);
-
-    if (request.file) {
-      console.log("1");
-      console.error('connection error')
-    } else {
-      console.log("2");
-      // const sql = "INSERT INTO cam_device_id (device_id, group_id, device_place, device_time, device_type, standard_photoname) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
-      // const values = ["nineone", 1, 'nineone', new Date(), 'raspberry', datename];
-      console.log(request.dateString);
-
-    }
-    console.log("3");
-
-  } else {
-    respond.status(400).send('You need'); // BAD REQUEST 
-  }
+  console.log(req.file);
+  res.status(200).send("WIFI OK");
 });
 //router.post('/', function(req, res, next) {
 //  res.render('upload', { title: 'Express' });

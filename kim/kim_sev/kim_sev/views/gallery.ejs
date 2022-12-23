@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>photo list</title>
+      <link rel="stylesheet" href="/stylesheets/gallery.css">
+     
+</head>
+
+<body>
+      <div id="content">
+            <!-- UI Object -->
+            <h1>갤러리</h1>
+     
+            <div class="fixed_img_col">
+                  <ul>
+                        <% for(var i=0; i<imgs.length; i++) { %>
+                              <li>
+                                    <a>
+                                          <span class="thumb">
+                                                <img src=<%=imgs[i]%> >
+                                          </span>
+                                          <strong>
+                                                <%=filename[i]%>
+                                          </strong>
+                                    </a>
+                                    
+                              </li>
+                              <% } %>
+                  </ul>
+
+                  <p class="paragraph">.</p>
+            </div>
+      </div>
+      <!-- //UI Object -->
+
+</body>
+
+</html>

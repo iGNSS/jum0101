@@ -1,0 +1,86 @@
+html,body{width:100%;height:100%}
+	body,p,h1,h2,h3,h4,h5,h6,ul,ol,li,dl,dt,dd,table,th,td,form,fieldset,legend,input,textarea,button,select{margin:0;padding:0}
+	body,input,textarea,select,button,table{font-family:'Malgun Gothic',Dotum,AppleGothic,sans-serif;font-size:12px}
+	img,fieldset{border:0}
+	img{vertical-align: top}
+	ul,ol{list-style:none}
+	em,address{font-style:normal}
+	a{text-decoration:none}
+	a:hover,a:active,a:focus{text-decoration:underline}	
+
+	/* style */
+	#content {
+		width: 800px;
+		margin: 0 auto;
+	}
+	#content h1 {
+		padding: 15px 0;
+		border-bottom: 1px solid #ccc;
+	}
+
+	.fixed_img_col ul {
+		border-bottom: 1px solid #ccc;
+		*zoom:1;
+	}
+	.fixed_img_col ul:after {
+		content: '';
+		display: block;
+		clear: both;
+	}
+	.fixed_img_col li {
+		position: relative;
+		top: 1px;
+		float: left;
+		width: 250px;
+		height: 300px;
+		border-bottom: 1px solid #ccc;
+		padding: 20px 15px 0 15px;
+	}
+	.fixed_img_col li a {
+		display: block;
+		color: #333;
+		text-decoration: none;
+	}
+	.fixed_img_col li a .thumb {
+		display: block;
+		position: relative;
+		background-color: #ededed;
+		text-align: center;
+		line-height: 120px;
+	}
+	.fixed_img_col li a .thumb img {
+		width: 250px;
+		height: 250px;
+	}
+	.fixed_img_col li a .thumb em {
+		display: none;
+		opacity: .6;
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		background-color: #000;
+		color: #fff;
+		font-weight: bold;
+		font-family: verdana,sans-serif;
+	}
+	.fixed_img_col li a:hover .thumb em {
+		display: block;
+	}
+	.fixed_img_col li a strong {
+		display: block;
+		padding: 6px 0 2px;
+		/*text-decoration: underline;*/
+		line-height: 1.4;
+	}
+	.fixed_img_col li a:hover strong {
+		text-decoration: underline;
+	}
+	.fixed_img_col li p {
+		color: #666;
+		font-size: .9em;
+	}
+
+	#content .paragraph {
+		padding: 5px 0;
+	}
